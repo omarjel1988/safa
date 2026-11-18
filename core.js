@@ -69,8 +69,8 @@
     prefetch: function () { return []; },
     writes: ['webSaveInvoice', 'webSaveJournal', 'webJUpdate', 'webJDelete', 'webPUpdate', 'webPDelete', 'webAddItem', 'webFillCodes', 'webAddSupplier',
       'webSupSaveEntry', 'webSupDeleteEntry', 'webSupSaveSupplier', 'webSupDeleteSupplier', 'webInvReplace', 'webInvDelete', 'webInvAttach',
-      'webSaveSettings', 'webSetPin', 'webBackupNow', 'webAutoBackup', 'webSetRate'],
-    nocache: ['webPdf', 'webInvPdf', 'webSupPdf'],
+      'webSaveSettings', 'webSetPin', 'webBackupNow', 'webAutoBackup', 'webSetRate', 'webSetGeminiKey'],
+    nocache: ['webPdf', 'webInvPdf', 'webSupPdf', 'webInvExtract', 'webAiState'],
     offline: {
       webSaveJournal: function (p) {
         return { ok: true, offline: true, msg: '📴 حُفظت دون اتصال، وستُرسل تلقائيًا عند عودة الإنترنت', bal: (W.B && W.B.bal) || { cash: 0, due: 0 } };
