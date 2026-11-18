@@ -7,6 +7,11 @@
   var APP = window.APP;
   if (!APP) return;
   var W = window;
+  /* بعد عرض الواجهة تعمل نسخة واحدة فقط من هذا الملف */
+  var GEN = W.__RT_GEN = (W.__RT_GEN || 0) + 1;
+  function live() { return GEN === W.__RT_GEN; }
+  /* متغيرات الواجهة المعرّفة بـ const ليست على window، نقرؤها من النطاق العام */
+  function gS() { try { return (0, eval)('typeof S !== "undefined" ? S : null'); } catch (e) { return null; } }
 
   /* ---------- تخزين IndexedDB بسيط ---------- */
   var DBP = null;
@@ -44,15 +49,24 @@
     parse: function (a) { var n = String(a[0] || ''), h = n.indexOf('#'); return { fn: h > -1 ? n.slice(0, h) : n, tok: h > -1 ? n.slice(h + 1) : '', args: a[1] || [] }; },
     body: function (c, a) { return { a: a }; },
     retok: function (a, tok) { var n = String(a[0] || ''), h = n.indexOf('#'); a = a.slice(); a[0] = (h > -1 ? n.slice(0, h) : n) + (tok ? '#' + tok : ''); return a; },
-    shell: { shell: 1 },
-    writes: APP.writes || [],
-    offline: APP.offline || {},
-    nocache: APP.nocache || []
+    shell: { a: ['shell', []] },
+    shellOut: function (v) { return typeof v === 'string' ? JSON.parse(v) : v; },
+    ok: function (v) { try { var o = typeof v === 'string' ? JSON.parse(v) : v; return o && o.ok === false ? (o.msg || 'خطأ') : ''; } catch (e) { return ''; } },
+    writes: ['add', 'update', 'remove', 'newAccount', 'archive', 'unarchive', 'saveSettings', 'upload', 'undo', 'flush', 'renameAcc', 'closeAcc',
+      'saveOrder', 'mergeAcc', 'savePT', 'rescanPT', 'coSave', 'pinSet', 'pinOff', 'lockNow', 'backupNow', 'mailNow'],
+    nocache: [],
+    prefetch: function () { var S = gS(); return ((S && S.acc) || []).map(function (x) { return ['account', [x.name]]; }); },
+    offline: {
+      add: function (e) { return JSON.stringify({ ok: true, offline: true, mirror: !!(e && e.mirror) }); }
+    }
   } : {
     parse: function (a) { var args = (a[1] || []).slice(), tok = args.length ? args.pop() : ''; return { fn: String(a[0] || ''), tok: tok, args: args }; },
     body: function (c, a) { return { fn: a[0], args: a[1] || [] }; },
     retok: function (a, tok) { var args = (a[1] || []).slice(); args[args.length - 1] = tok; return [a[0], args]; },
     shell: { fn: 'webShell', args: [''] },
+    shellOut: function (v) { return v; },
+    ok: function (v) { return v && v.ok === false ? (v.msg || 'خطأ') : ''; },
+    prefetch: function () { return []; },
     writes: ['webSaveInvoice', 'webSaveJournal', 'webJUpdate', 'webJDelete', 'webPUpdate', 'webPDelete', 'webAddItem', 'webFillCodes', 'webAddSupplier',
       'webSupSaveEntry', 'webSupDeleteEntry', 'webSupSaveSupplier', 'webSupDeleteSupplier', 'webInvReplace', 'webInvDelete', 'webInvAttach',
       'webSaveSettings', 'webSetPin', 'webBackupNow', 'webAutoBackup', 'webSetRate'],
@@ -137,7 +151,7 @@
 
   /* ---------- المزامنة ---------- */
   function sync() {
-    if (SYNCING || !navigator.onLine) return Promise.resolve();
+    if (!live() || SYNCING || !navigator.onLine) return Promise.resolve();
     return ready.then(function () {
       if (!OUT.length) return;
       SYNCING = true; badge();
@@ -146,7 +160,7 @@
         if (!OUT.length) return;
         var x = OUT[0], a = LASTTOK ? M.retok(x.a, LASTTOK) : x.a;
         return post(M.body(M.parse(a), a)).then(function (v) {
-          var bad = v && v.ok === false && !v.dup ? v.msg : (v && v.dup ? v.msg : '');
+          var bad = M.ok(v);
           if (bad) failed.push(x.d + ': ' + bad);
           afterWrite(x.fn, v);
           OUT.shift(); done++; saveOut(); return next();
@@ -162,9 +176,10 @@
     SYNCING = false; badge();
     if (done) {
       try { if (W.qClear) W.qClear(); } catch (e) {}
-      try { if (W.S && W.S.cache) W.S.cache = {}; } catch (e) {}
+      try { var S = gS(); if (S && S.cache) { S.cache = {}; S.pidx = null; } } catch (e) {}
       note('✅ تمت مزامنة ' + done + ' عملية', '#2E7D32');
       try { if (W.refreshView && APP.mode !== 'ghadaq') W.refreshView(); } catch (e) {}
+      try { var S2 = gS(); if (APP.mode === 'ghadaq' && W.go && S2 && S2.page) W.go(S2.page); } catch (e) {}
     }
     if (failed.length) alert('تعذّر حفظ بعض العمليات المرسلة بعد عودة الاتصال، أعد إدخالها:\n\n' + failed.join('\n'));
   }
@@ -212,19 +227,20 @@
   W.google.script = { run: runner(null, null), host: { close: function () {}, setHeight: function () {}, setWidth: function () {}, editor: { focus: function () {} } } };
 
   /* ---------- تشغيل ---------- */
-  W.addEventListener('online', function () { offline(false); setTimeout(sync, 1500); });
-  W.addEventListener('offline', function () { offline(true); });
+  W.addEventListener('online', function () { if (live()) { offline(false); setTimeout(sync, 1500); } });
+  W.addEventListener('offline', function () { if (live()) offline(true); });
   document.addEventListener('visibilitychange', function () { if (!document.hidden) sync(); });
-  if (!W.__rtTimer) W.__rtTimer = setInterval(function () { if (OUT.length) sync(); }, 30000);
+  setInterval(function () { if (live() && OUT.length) sync(); }, 30000);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { badge(); setTimeout(sync, 3000); });
   else { badge(); setTimeout(sync, 3000); }
 
   /* تحديث صفحة الواجهة نفسها: تُحفظ النسخة الجديدة وتُطبَّق تلقائيًا عند العودة للتطبيق */
   var SHELLNEW = false, SHELLAT = 0;
   function checkShell() {
-    if (!navigator.onLine || Date.now() - SHELLAT < 300000) return;
+    if (!live() || !navigator.onLine || Date.now() - SHELLAT < 300000) return;
     SHELLAT = Date.now();
     post(M.shell).then(function (s) {
+      s = M.shellOut(s);
       if (!s || s.length < 1000) return;
       return kget('shell').then(function (old) { if (old !== s) return kset('shell', s).then(function () { if (old) SHELLNEW = true; }); });
     }).catch(function () {});
@@ -235,6 +251,22 @@
     checkShell();
   });
   setTimeout(checkShell, 6000);
+
+  /* تحميل مسبق للحسابات/الصفحات لتعمل دون اتصال */
+  var PFAT = 0;
+  function prefetch() {
+    if (!live() || !navigator.onLine || Date.now() - PFAT < 600000) return;
+    var list = M.prefetch(); if (!list.length) return;
+    PFAT = Date.now();
+    var i = 0;
+    (function next() {
+      if (i >= list.length || !navigator.onLine) return;
+      var x = list[i++];
+      call(M.retok([x[0], x[1].concat(APP.mode === 'ghadaq' ? [] : [''])], LASTTOK)).then(function () { setTimeout(next, 400); }, function () { setTimeout(next, 400); });
+    })();
+  }
+  setTimeout(prefetch, 9000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) setTimeout(prefetch, 3000); });
 
   W.RT = { call: call, sync: sync, kget: kget, kset: kset, post: post, M: M };
 })();
