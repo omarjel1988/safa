@@ -268,5 +268,27 @@
   setTimeout(prefetch, 9000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) setTimeout(prefetch, 3000); });
 
+  /* ---------- تأكيد الخروج عند زر الرجوع ---------- */
+  var LEAVING = false;
+  function exitBox() {
+    if (document.getElementById('rt-exit')) return;
+    var n = OUT.length, o = document.createElement('div'); o.id = 'rt-exit';
+    o.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(15,23,32,.5);display:flex;align-items:center;justify-content:center;padding:20px;direction:rtl;font-family:system-ui,-apple-system,sans-serif';
+    o.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:360px;width:100%;padding:22px 20px 16px;box-shadow:0 20px 50px rgba(0,0,0,.3);text-align:center">' +
+      '<div style="font-size:19px;font-weight:700;margin-bottom:8px">الخروج من ' + (APP.short || 'التطبيق') + '؟</div>' +
+      '<div style="color:#555;font-size:15px;line-height:1.7;margin-bottom:16px">' + (n ? '⚠︎ لديك ' + n + ' عملية بانتظار المزامنة، وستُرسل عند فتح التطبيق مع الإنترنت.' : 'هل تريد الخروج من التطبيق؟') + '</div>' +
+      '<div style="display:flex;gap:10px"><button id="rt-stay" style="flex:1;min-height:46px;border:0;border-radius:11px;background:' + (APP.color || '#1F4E79') + ';color:#fff;font:700 16px inherit">البقاء</button>' +
+      '<button id="rt-go" style="flex:1;min-height:46px;border:1px solid #ccc;border-radius:11px;background:#fff;color:#B00020;font:700 16px inherit">خروج</button></div></div>';
+    document.body.appendChild(o);
+    document.getElementById('rt-stay').onclick = function () { o.remove(); history.pushState({ rt: 1 }, ''); };
+    document.getElementById('rt-go').onclick = function () { LEAVING = true; o.remove(); history.back(); setTimeout(function () { try { window.close(); } catch (e) { /* */ } }, 300); };
+  }
+  function armBack() { try { if (!history.state || !history.state.rt) history.pushState({ rt: 1 }, ''); } catch (e) { /* */ } }
+  W.addEventListener('popstate', function () {
+    if (!live() || LEAVING || !document.body) return;
+    exitBox();
+  });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', armBack); else setTimeout(armBack, 0);
+
   W.RT = { call: call, sync: sync, kget: kget, kset: kset, post: post, M: M };
 })();
