@@ -97,8 +97,11 @@
   var ready = kget('outbox').then(function (v) { OUT = v ? JSON.parse(v) : []; badge(); });
   function saveOut() { badge(); return kset('outbox', JSON.stringify(OUT)); }
 
-  function call(a) {
-    var c = M.parse(a);
+  var DELS = APP.mode === 'ghadaq' ? ['remove'] : ['webJDelete', 'webPDelete', 'webInvDelete', 'webSupDeleteEntry', 'webSupDeleteSupplier'];
+  function call(a, now) {
+    var c0 = M.parse(a);
+    if (!now && DELS.indexOf(c0.fn) > -1) return undoWait().then(function () { return call(a, true); });
+    var c = c0;
     if (c.tok) LASTTOK = c.tok;
     var keyP = sha(c.fn + '|' + JSON.stringify(c.args));
     if (isWrite(c.fn)) {
@@ -209,6 +212,34 @@
   }
   function note(t, c) { var b = el(); if (!b) return; b.textContent = t; b.style.background = c; b.style.display = 'block'; NOTE = Date.now() + 4000; setTimeout(function () { NOTE = 0; badge(); }, 4100); }
 
+  /* ---------- التراجع عن الحذف: الحذف يُنفَّذ بعد 5 ثوانٍ إلا إذا ضغطت «تراجع» ---------- */
+  function undoWait() {
+    return new Promise(function (res, rej) {
+      var old = document.getElementById('rt-undo'); if (old) old.remove();
+      var n = 5, b = document.createElement('div'); b.id = 'rt-undo';
+      b.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom));z-index:9995;background:#1F2933;color:#fff;border-radius:14px;padding:10px 12px 10px 16px;display:flex;align-items:center;gap:14px;box-shadow:0 10px 30px rgba(0,0,0,.3);font:700 15px Cairo,system-ui,sans-serif;direction:rtl;white-space:nowrap';
+      b.innerHTML = '<span>🗑 سيتم الحذف خلال <b id="rt-un">5</b> ث</span><button style="border:0;border-radius:10px;background:#FFB74D;color:#1F2933;font:800 15px Cairo,system-ui,sans-serif;padding:8px 16px">تراجع</button>';
+      document.body.appendChild(b);
+      var t = setInterval(function () { n--; var x = document.getElementById('rt-un'); if (x) x.textContent = n; if (n <= 0) { clearInterval(t); b.remove(); res(); } }, 1000);
+      b.querySelector('button').onclick = function () { clearInterval(t); b.remove(); var e = new Error('↩︎ تم التراجع، لم يُحذف شيء'); e.app = true; e.undo = true; rej(e); };
+    });
+  }
+
+  /* ---------- سجل الأخطاء: يُرسل تلقائيًا إلى الملف لتشخيصه ---------- */
+  var ERRN = 0, ERRS = {};
+  function logErr(kind, m, extra) {
+    try {
+      m = String(m || '').slice(0, 500);
+      if (!m || ERRS[m] || ERRN > 15 || !navigator.onLine || /PIN_REQUIRED|LOCKED|تم التراجع|Failed to fetch|NetworkError|Load failed|اتصال/.test(m)) return;
+      ERRS[m] = 1; ERRN++;
+      var S = gS(), view = APP.mode === 'ghadaq' ? (S && S.page) : (W.CUR || '');
+      var rec = { app: APP.id, kind: kind, msg: m, extra: String(extra || '').slice(0, 1500), view: String(view || ''), ua: navigator.userAgent.slice(0, 200), at: new Date().toISOString() };
+      post(APP.mode === 'ghadaq' ? { a: ['logErr', [rec]] } : { fn: 'webLogError', args: [rec] }).catch(function () {});
+    } catch (e) { /* */ }
+  }
+  W.addEventListener('error', function (e) { if (live()) logErr('js', e.message, (e.filename || '') + ':' + (e.lineno || '') + ' ' + (e.error && e.error.stack || '')); });
+  W.addEventListener('unhandledrejection', function (e) { if (live()) { var r = e.reason; logErr('promise', r && r.message || r, r && r.stack); } });
+
   /* ---------- بديل google.script.run ---------- */
   function runner(ok, fail) {
     return new Proxy({}, {
@@ -218,7 +249,7 @@
         if (k === 'withUserObject') return function () { return runner(ok, fail); };
         return function () {
           var a = Array.prototype.slice.call(arguments);
-          call(a).then(function (v) { if (ok) ok(v); }, function (e) { if (fail) fail(e); else console.error(e); });
+          call(a).then(function (v) { if (ok) ok(v); }, function (e) { if (e && e.app && !e.undo) logErr('server', e.message, String(a[0]).split('#')[0]); if (fail) fail(e); else console.error(e); });
         };
       }
     });
