@@ -159,11 +159,7 @@
       document.body.appendChild(nav);
       NAVKEY = null;
     }
-    if (!fab || !document.body.contains(fab)) {
-      fab = el('<button class="ui-fab" title="إضافة سريعة">' + svg('plus') + '</button>');
-      fab.onclick = function () { CFG.fab(); };
-      document.body.appendChild(fab);
-    }
+    /* الزر العائم أُلغي بطلب المستخدم */
     sync();
   }
   function fillNav() {
