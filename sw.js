@@ -1,5 +1,5 @@
 /* يحفظ ملفات التطبيق في الجهاز ليفتح دون اتصال */
-var V = 'safa-v20';
+var V = 'safa-v21';
 var FILES = ['./', './index.html', './core.js', './loader.js', './ui.js', './ui2.js', './icon-180.png', './icon-192.png', './icon-512.png', './manifest.json',
   './ghadaq/', './ghadaq/index.html', './ghadaq/manifest.json', './ghadaq/icon-180.png', './ghadaq/icon-192.png', './ghadaq/icon-512.png'];
 self.addEventListener('install', function (e) {
