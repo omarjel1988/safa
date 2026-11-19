@@ -195,7 +195,7 @@
     target.parentNode.insertBefore(b, target);
     if (TPL === null) tplLoad();
   }
-  setInterval(barWatch, 700);
+  /* زر القوالب أُلغي بطلب المستخدم */
 
   /* ================= 4) البحث الموحّد السريع ================= */
   var ICON_S = '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>';
