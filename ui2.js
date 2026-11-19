@@ -125,9 +125,9 @@
     ], '<div style="color:#8796A5;font-size:13px;margin-bottom:10px">تُطبع أو تُشارك الصفحة المفتوحة حاليًا كما تظهر أمامك (مع الفلاتر).</div>');
   }
   function headerBtns() {
-    var h = GH ? document.querySelector('header .top') : document.querySelector('header .hb');
+    var h = GH ? document.querySelector('header .top .ui-hgrp') : document.querySelector('header .hb');
     if (!h || h.querySelector('.ui-share')) return;
-    var aa = h.querySelector('.ui-hbtn'); if (!aa) return;
+    var aa = h.querySelector('.ui-aa'); if (!aa) return;
     var b = el('<button class="ui-hbtn ui-share" title="طباعة ومشاركة"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px"><path d="M4 12v8h16v-8"/><path d="M12 3v12M7 8l5-5 5 5"/></svg></button>');
     b.onclick = shareSheet;
     h.insertBefore(b, aa);

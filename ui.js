@@ -42,7 +42,7 @@
     open: function (k) { if (k === 'more') return moreSheet(); W.go(k); },
     entry: ['entry'],
     fab: function () { W.go('entry'); },
-    header: function () { return document.querySelector('header .top'); },
+    header: function () { return document.querySelector('header .top .ui-hgrp'); },
     dark: function () { var S = g('S'); return !!(S && S.dark); },
     setDark: function (d) { try { W.setLook(d ? 1 : 0); } catch (e) { /* */ } },
     zoom: function () { var S = g('S'); return S ? S.zoom : 1; },
@@ -107,6 +107,8 @@
     '.ui-seg{display:inline-flex;background:#EEF2F6;border-radius:10px;padding:3px;gap:3px;flex-wrap:wrap}.ui-seg button{border:0;background:transparent;padding:8px 12px;border-radius:8px;font:700 13.5px Cairo,-apple-system,sans-serif;color:#637082}.ui-seg button.on{background:#fff;color:var(--ui);box-shadow:0 1px 3px rgba(0,0,0,.12)}',
     GH ? '' : '.hb button[data-ui]{display:inline-flex;align-items:center;gap:6px}.hb button[data-ui] svg{width:19px;height:19px;flex:0 0 auto}.hb button#homeBtn.hide{display:none}' +
       '@media (max-width:700px){.hb{gap:6px}.hb h1{font-size:18px;gap:7px}.hb button{padding:6px 9px!important;min-width:40px;justify-content:center}.hb .ui-lb{display:none}.hb .ui-hbtn{margin:0}}',
+    GH ? '.ui-hgrp{display:flex;align-items:center;gap:8px}.ui-hgrp .ui-hbtn{margin:0;display:inline-flex;align-items:center;justify-content:center;gap:6px}.ui-hgrp .ui-hi svg{width:19px;height:19px;flex:0 0 auto}.ui-hgrp .ui-hbtn.hide{display:none}.top .brand{min-width:0}' +
+      '@media (max-width:700px){.ui-hgrp{gap:6px}.ui-hgrp .ui-hbtn{padding:6px 9px;min-width:40px}.ui-hgrp .ui-lb{display:none}}' : '',
     '.ui-hbtn{background:rgba(255,255,255,.17);color:#fff;border:0;border-radius:10px;padding:6px 11px;font:800 15px Cairo,-apple-system,sans-serif;min-height:38px;margin-inline-start:6px}',
     '@keyframes uiF{from{opacity:0}}@keyframes uiU{from{transform:translateY(40px);opacity:.4}}@keyframes uiIn{from{opacity:0;transform:translateY(8px)}}',
     '.ui-in{animation:uiIn .22s ease-out}',
@@ -191,8 +193,26 @@
     home: IC.home,
     set: IC.gear
   };
+  /* توحيد رأس يومية غدق مع مكتبة الصفاء: تحديث، مشاركة، Aa، الإعدادات، الرئيسية */
+  function hbtn(k, lb, fn) {
+    var b = el('<button type="button" class="ui-hbtn ui-hi" data-ui="' + k + '" title="' + lb + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + HIC[k] + '</svg>' + (k === 'set' ? '' : '<span class="ui-lb">' + lb + '</span>') + '</button>');
+    b.onclick = fn; return b;
+  }
+  function tidyGh() {
+    var top = document.querySelector('header .top'); if (!top || top.querySelector('.ui-hgrp')) return;
+    var grp = el('<div class="ui-hgrp"></div>');
+    var old = top.querySelector('button[onclick*="go(S.page)"]');
+    grp.appendChild(hbtn('ref', 'تحديث', function () { var S = g('S'); W.go(S ? S.page : 'dash'); }));
+    grp.appendChild(hbtn('set', 'الإعدادات', function () { W.go('sett'); }));
+    grp.appendChild(hbtn('home', 'الرئيسية', function () { W.go('dash'); }));
+    Array.prototype.forEach.call(top.querySelectorAll(':scope > .ui-hbtn'), function (b) { b.remove(); });
+    if (old) old.remove();
+    top.appendChild(grp);
+    ghHome();
+  }
+  function ghHome() { var b = document.querySelector('.ui-hgrp [data-ui="home"]'), S = g('S'); if (b) b.classList.toggle('hide', !S || S.page === 'dash'); }
   function tidyHeader() {
-    if (GH) return;
+    if (GH) return tidyGh();
     var h = CFG.header(); if (!h) return;
     Array.prototype.forEach.call(h.querySelectorAll('button'), function (b) {
       if (b.dataset.ui) return;
@@ -205,11 +225,11 @@
     });
   }
   function headerBtn() {
-    tidyHeader();
-    var h = CFG.header(); if (!h || h.querySelector('.ui-hbtn')) return;
-    var b = el('<button class="ui-hbtn" title="المظهر والإعدادات">Aa</button>');
+    tidyHeader(); if (GH) ghHome();
+    var h = CFG.header(); if (!h || h.querySelector('.ui-aa')) return;
+    var b = el('<button class="ui-hbtn ui-aa" title="المظهر والإعدادات">Aa</button>');
     b.onclick = lookSheet;
-    if (GH) h.insertBefore(b, h.querySelector('button')); else { var hb = document.getElementById('homeBtn'); h.insertBefore(b, hb ? hb.previousElementSibling || hb : null); }
+    if (GH) h.insertBefore(b, h.querySelector('[data-ui="set"]')); else { var hb = document.getElementById('homeBtn'); h.insertBefore(b, hb ? hb.previousElementSibling || hb : null); }
   }
   var LOCKM = Number(ls('ui_lock') || 10);
   function lookSheet() {
