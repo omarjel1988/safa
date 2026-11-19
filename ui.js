@@ -161,7 +161,7 @@
   /* ---------- شريط التنقل + زر الإضافة ---------- */
   var nav, fab;
   var NAVKEY = null;
-  /* سحبة واحدة تنقل الشريط إلى آخره (أو أوله) بدل سحبات متعددة */
+  /* كل سحبة تنقل الشريط صفحة واحدة (مجموعة الأزرار التالية) */
   function flick(n) {
     var x0 = 0, y0 = 0, sl = 0, dx = 0, on = false, horiz = null;
     function rail() { return getComputedStyle(n).flexDirection === 'column'; }
@@ -179,7 +179,11 @@
     }, { passive: false });
     n.addEventListener('touchend', function () {
       if (!on) return; on = false;
-      if (horiz && Math.abs(dx) > 25) n.scrollTo({ left: dx > 0 ? -1e5 : 1e5, behavior: 'smooth' });
+      if (horiz && Math.abs(dx) > 25) {
+        /* صفحة واحدة لكل سحبة: تنتقل بمقدار الأزرار الظاهرة على الشاشة */
+        var bw = (n.querySelector('button') || {}).offsetWidth || 76, page = Math.max(1, Math.floor(n.clientWidth / bw) - 1) * bw;
+        n.scrollTo({ left: sl - (dx > 0 ? 1 : -1) * page, behavior: 'smooth' });
+      }
       setTimeout(function () { n.style.scrollSnapType = ''; }, 600);
       if (!n._drag) return; setTimeout(function () { n._drag = false; }, 400);
     });
