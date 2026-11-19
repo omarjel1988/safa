@@ -22,12 +22,21 @@
     plus: '<path d="M12 5v14M5 12h14"/>',
     search: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/>',
     list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+    gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+    tag: '<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
+    check: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+    archive: '<path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/>',
+    cal: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
     more: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'
   };
   function svg(k) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + IC[k] + '</svg>'; }
   var CFG = GH ? {
     color: '#0f4c5c',
-    nav: [['dash', 'الرئيسية', 'home'], ['entry', 'إدخال قيد', 'plus'], ['accts', 'الحسابات', 'users'], ['search', 'بحث', 'search'], ['more', 'المزيد', 'more']],
+    nav: function () {
+      var ICO = { dash: 'home', entry: 'plus', accts: 'users', search: 'search', stmt: 'list', month: 'cal', year: 'chart', match: 'check', rcpt: 'inv', price: 'tag', cmp: 'chart', sett: 'gear', logp: 'list', arch: 'archive' };
+      return Array.prototype.map.call(document.querySelectorAll('#nav button[data-p]'), function (b) { return [b.dataset.p, b.textContent.trim(), ICO[b.dataset.p] || 'list']; });
+    },
+    scroll: true,
     cur: function () { var S = g('S'); return S ? S.page : ''; },
     is: function (k, c) { return k === c; },
     open: function (k) { if (k === 'more') return moreSheet(); W.go(k); },
@@ -73,10 +82,11 @@
     '.ui-bnav button{flex:1;border:0;background:transparent;color:#7A8794;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font:700 11.5px Cairo,-apple-system,sans-serif;border-radius:12px;min-height:52px;-webkit-tap-highlight-color:transparent}',
     '.ui-bnav button svg{width:24px;height:24px}.ui-bnav button.on{color:var(--ui)}.ui-bnav button.on svg{background:color-mix(in srgb,var(--ui) 14%,transparent);border-radius:10px;padding:3px 10px;width:44px;box-sizing:border-box}',
     'body.ui-has-nav{padding-bottom:calc(70px + env(safe-area-inset-bottom))}',
+    '.ui-bnav.sc{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}.ui-bnav.sc::-webkit-scrollbar{display:none}.ui-bnav.sc button{flex:0 0 76px;scroll-snap-align:start}',
     '.ui-fab{position:fixed;left:16px;bottom:calc(80px + env(safe-area-inset-bottom));z-index:61;width:58px;height:58px;border-radius:18px;border:0;background:var(--ui);color:#fff;box-shadow:0 8px 22px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;transition:transform .15s}',
     '.ui-fab svg{width:28px;height:28px}.ui-fab:active{transform:scale(.92)}.ui-fab.hide{display:none}',
     '@media (min-width:1000px) and (orientation:landscape){.ui-bnav{top:0;bottom:0;left:auto;right:0;width:88px;flex-direction:column;justify-content:flex-start;gap:6px;padding:calc(14px + env(safe-area-inset-top)) 6px 14px;border-top:0;border-left:1px solid rgba(0,0,0,.08)}' +
-      '.ui-bnav button{flex:0 0 auto;min-height:64px}body.ui-has-nav{padding-bottom:0;padding-right:88px}.ui-fab{bottom:24px;left:24px}' + (GH ? '' : 'main{max-width:1200px}') + '}',
+      '.ui-bnav button{flex:0 0 auto;min-height:64px}.ui-bnav.sc{overflow-x:hidden;overflow-y:auto}.ui-bnav.sc button{flex:0 0 auto}body.ui-has-nav{padding-bottom:0;padding-right:88px}.ui-fab{bottom:24px;left:24px}' + (GH ? '' : 'main{max-width:1200px}') + '}',
     GH ? '@media (max-width:999px),(orientation:portrait){#nav{display:none!important}}' : '',
     '.ui-sheet{position:fixed;inset:0;z-index:9990;background:rgba(15,23,32,.45);display:flex;align-items:flex-end;justify-content:center;animation:uiF .15s}',
     '.ui-sheet .bx{background:#fff;color:#17212B;width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:10px 14px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.25);animation:uiU .2s ease-out;max-height:85vh;overflow:auto;font-family:Cairo,-apple-system,sans-serif;direction:rtl}',
@@ -133,7 +143,9 @@
   var nav, fab;
   function buildNav() {
     if (nav && document.body.contains(nav)) return;
-    nav = el('<div class="ui-bnav">' + CFG.nav.map(function (n) { return '<button data-k="' + n[0] + '">' + svg(n[2]) + '<span>' + n[1] + '</span></button>'; }).join('') + '</div>');
+    var items = typeof CFG.nav === 'function' ? CFG.nav() : CFG.nav;
+    if (!items.length) return;
+    nav = el('<div class="ui-bnav' + (CFG.scroll ? ' sc' : '') + '">' + items.map(function (n) { return '<button data-k="' + n[0] + '">' + svg(n[2]) + '<span>' + n[1] + '</span></button>'; }).join('') + '</div>');
     nav.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) CFG.open(b.dataset.k); });
     document.body.appendChild(nav);
     document.body.classList.add('ui-has-nav');
@@ -146,6 +158,7 @@
     if (!nav) return;
     var c = CFG.cur(), raw = GH ? c : g('CUR');
     Array.prototype.forEach.call(nav.querySelectorAll('button'), function (b) { b.classList.toggle('on', CFG.is(b.dataset.k, c)); });
+    var on = nav.querySelector('button.on'); if (CFG.scroll && on && on !== nav._on) { nav._on = on; try { on.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' }); } catch (e) { /* */ } }
     if (fab) fab.classList.toggle('hide', CFG.entry.indexOf(raw) > -1 || !!document.getElementById('pin'));
   }
 
