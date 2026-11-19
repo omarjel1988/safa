@@ -30,6 +30,12 @@
   }
   var css = document.createElement('style');
   css.textContent = [
+    '.card:has(#isup){border-top:5px solid var(--c,#1F4E79)}.card:has(#isup)>h2::before{content:"🧾 "}',
+    '#ilines{counter-reset:ln;margin-top:18px;padding:12px 10px 4px;border-radius:16px;background:color-mix(in srgb,#E89B2D 9%,transparent);border:1.5px solid color-mix(in srgb,#E89B2D 40%,transparent)}',
+    '#ilines::before{content:"📦 الأصناف";display:block;font:800 17px Cairo,-apple-system,sans-serif;color:#B66A00;margin:0 4px 10px}',
+    '#ilines .card.line{counter-increment:ln;border-inline-start:5px solid #E89B2D;margin-bottom:10px}#ilines .card.line::before{content:"صنف " counter(ln);display:inline-block;font:800 12px Cairo,-apple-system,sans-serif;color:#fff;background:#E89B2D;border-radius:8px;padding:2px 10px;margin-bottom:8px}',
+    'button[onclick^="addInvLine"]{background:#E89B2D!important;color:#fff!important;border:0!important;min-height:52px;font-size:17px!important;font-weight:800!important;border-radius:14px!important;box-shadow:0 6px 16px rgba(232,155,45,.35);margin-top:8px}button[onclick^="addInvLine"]:active{transform:scale(.98)}',
+    'html.ui-dark #ilines::before{color:#F2B65C}',
     '.u3-bar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}.u3-bar button{flex:1 1 auto;min-height:44px;border:1.5px dashed var(--ui);border-radius:12px;background:transparent;color:var(--ui);font:800 14.5px Cairo,system-ui,sans-serif;padding:6px 12px}',
     '.u3-in{width:100%;min-height:46px;font-size:16px;border:1px solid #c9d3dd;border-radius:12px;padding:8px 12px;box-sizing:border-box;margin:0 0 10px;font-family:inherit;background:#fff;color:#17212B}',
     '.u3-row{display:flex;align-items:center;gap:8px;padding:10px 4px;border-bottom:1px solid #EEF2F6}.u3-row .t{flex:1;min-width:0}.u3-row .t b{display:block}.u3-row .t small{color:#8796A5}.u3-row button{border:0;background:#F3F6F9;border-radius:10px;min-height:38px;padding:4px 12px;font:700 14px inherit;color:inherit}',
