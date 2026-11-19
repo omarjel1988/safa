@@ -109,6 +109,7 @@
     GH ? '' : '.hb button[data-ui]{display:inline-flex;align-items:center;gap:6px}.hb button[data-ui] svg{width:19px;height:19px;flex:0 0 auto}.hb button#homeBtn.hide{display:none}' +
       '@media (max-width:700px){.hb{gap:6px}.hb h1{font-size:18px;gap:7px}.hb button{padding:6px 9px!important;min-width:40px;justify-content:center}.hb .ui-lb{display:none}.hb .ui-hbtn{margin:0}}',
     GH ? '.ui-hgrp{display:flex;align-items:center;gap:8px}.ui-hgrp .ui-hbtn{margin:0;display:inline-flex;align-items:center;justify-content:center;gap:6px}.ui-hgrp .ui-hi svg{width:19px;height:19px;flex:0 0 auto}.ui-hgrp .ui-hbtn.hide{display:none}.top .brand{min-width:0}' +
+      'button[onclick^="newEntryM"]{display:none!important}' +
       '.lgt td.x{min-width:240px;max-width:360px;word-break:normal!important;overflow-wrap:break-word}' +
       '@media (max-width:600px){.grid:has(>.acc){grid-template-columns:1fr 1fr!important;gap:8px!important}.grid>.acc{padding:10px 10px 9px;min-width:0}.grid>.acc .n{font-size:14px;overflow-wrap:anywhere}.grid>.acc .bal{font-size:17px;margin:4px 0;overflow-wrap:anywhere}.grid>.acc .m{flex-direction:column;gap:1px;font-size:11.5px}}' +
       '@media (max-width:600px){.form:has(#ns),.form:has(#ms),.form:has(#es){grid-template-columns:1fr 1fr!important}.form:has(#ns)>*,.form:has(#ms)>*,.form:has(#es)>*{grid-column:1/-1}.form>div:has(>#ns),.form>div:has(>#nw),.form>div:has(>#ms),.form>div:has(>#mw),.form>div:has(>#es),.form>div:has(>#ew){grid-column:auto!important;min-width:0}}' +
