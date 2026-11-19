@@ -306,9 +306,7 @@
       if (inp.dataset.u3 || !/image/.test(inp.accept || '')) return;
       inp.dataset.u3 = '1';
       if (inp.id === 'cof' || inp.style.display === 'none' || getComputedStyle(inp).display === 'none') return;
-      var b = el('<button type="button" class="u3-cam">📷 تصوير الآن</button>');
-      b.onclick = function () { inp.setAttribute('capture', 'environment'); inp.click(); setTimeout(function () { inp.removeAttribute('capture'); }, 1500); };
-      inp.insertAdjacentElement('afterend', b);
+      var b = inp; /* زر «تصوير الآن» أُلغي بطلب المستخدم؛ تبقى معاينة الصورة */
       inp.addEventListener('change', function () {
         var old = inp.parentNode.querySelector('.u3-thumb'); if (old) old.remove();
         var f = inp.files && inp.files[0]; if (!f || !/^image/.test(f.type)) return;
