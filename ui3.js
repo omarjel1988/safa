@@ -44,6 +44,9 @@
     'html.ui-dark .u3-in,body.dark .u3-in{background:#0F1720;color:#E6EDF3;border-color:#2A3644}html.ui-dark .u3-row,body.dark .u3-row{border-color:#243140}html.ui-dark .u3-row button,body.dark .u3-row button{background:#1E2A36}',
     'html.ui-dark .u3-ban,body.dark .u3-ban{background:#33251a;border-color:#6b4a2c;color:#FFD9A8}html.ui-dark .u3-ly .c{background:#1E2A36}html.ui-dark .u3-ly .c small{color:#9AA7B4}',
     'body.dark .u3-chip.r{background:#3a1c1f;color:#f5c2c2}body.dark .u3-chip.o{background:#382d14;color:#f3dca0}body.dark .u3-chip.g{background:#16301f;color:#b8e6c6}body.dark .u3-thumb{border-color:#34494f}',
+    'body:not(.u3x) .tiles{grid-template-columns:1fr 1fr!important;gap:10px!important}body:not(.u3x) .tile{padding:14px 13px!important;min-height:150px!important;border-radius:18px!important}body:not(.u3x) .tile b{font-size:17px!important}body:not(.u3x) .tile small{font-size:12px!important;line-height:1.5}body:not(.u3x) .tile em{font-size:11.5px!important;padding:2px 9px!important}body:not(.u3x) .tile svg{width:28px!important;height:28px!important}',
+    '@media (min-width:900px){body:not(.u3x) .tiles{grid-template-columns:repeat(4,1fr)!important}}',
+    '.u3-nosrch{display:none!important}.tiles + [data-u3mv]{margin-top:14px!important}',
     '@media print{.u3-bar,.u3-cam,.u3-ban{display:none!important}}'
   ].join('');
   document.head.appendChild(css);
@@ -392,6 +395,28 @@
     }
   }
   setInterval(homeExtras, 700);
+
+  /* رئيسية الصفاء: إخفاء مربع البحث، والمبالغ أسفل الأقسام الرئيسية */
+  function homeLayout() {
+    if (GH || g('CUR') !== 'home') return;
+    var v = document.getElementById('view'); if (!v) return;
+    var f = v.querySelector(':scope > form.srch'); if (f) f.classList.add('u3-nosrch');
+    var tiles = v.querySelector(':scope > .tiles'); if (!tiles) return;
+    var after = tiles;
+    Array.prototype.forEach.call(v.children, function (c) {
+      if (c === tiles || c.classList.contains('hero') || c.id === 'u3-jban' || c.classList.contains('u3-nosrch') || c.id === 'dash2') return;
+      if (c.compareDocumentPosition(tiles) & Node.DOCUMENT_POSITION_FOLLOWING) c.dataset.u3mv = '1';
+    });
+    Array.prototype.slice.call(v.querySelectorAll(':scope > [data-u3mv]')).forEach(function (c) { if (c.previousElementSibling !== after) after.insertAdjacentElement('afterend', c); after = c; });
+  }
+  (function () {
+    var ob = null;
+    setInterval(function () {
+      var v = document.getElementById('view'); if (!v || GH) return;
+      if (!ob || ob._v !== v) { if (ob) ob.disconnect(); ob = new MutationObserver(function () { homeLayout(); }); ob._v = v; ob.observe(v, { childList: true }); }
+      homeLayout();
+    }, 300);
+  })();
 
   /* ================= 12) كشف مورد مختصر للإرسال على واتساب ================= */
   function supShortText() {
