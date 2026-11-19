@@ -328,6 +328,16 @@
     });
   }
   if (GH) { setInterval(genMir, 300); document.addEventListener('change', function (e) { if (e.target && /^[nm]a$/.test(e.target.id)) genMir(); }, true); }
+  /* يومية غدق: تاريخ القيد الجديد = تاريخ اليوم من الجهاز (حتى يفتح التقويم على الشهر الحالي) */
+  function todayIso() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  if (GH) setInterval(function () {
+    ['nd', 'md'].forEach(function (id) {
+      var i = document.getElementById(id); if (!i || i.dataset.u3d) return;
+      i.dataset.u3d = '1';
+      var t = todayIso(); if (i.value !== t) i.value = t;
+      var S = g('S'); if (S && S.today !== t) S.today = t;
+    });
+  }, 250);
   /* إخفاء رابط نموذج Google Form في فاتورة الشراء */
   setInterval(function () {
     if (GH) return;
