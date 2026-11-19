@@ -128,6 +128,14 @@
     'html.ui-dark .lst li,html.ui-dark .dn li,html.ui-dark .ui-sheet .rw{border-color:#243140}html.ui-dark .ui-sheet .it{background:#1E2A36}html.ui-dark nav button.on{background:#E6EDF3}',
     'html.ui-dark .ui-bnav{background:rgba(18,26,35,.96);border-color:#243140}html.ui-dark .ui-bnav button{color:#8796A5}html.ui-dark .ui-bnav button.on{color:#7FB3E6}',
     'html.ui-dark svg text{fill:#9AA7B4}html.ui-dark [style*="background:#F4F8FC"],html.ui-dark [style*="background:#EEF3F8"],html.ui-dark [style*="background:#fff"]{background:#16202B!important}',
+    'html.ui-dark main h1,html.ui-dark main h2,html.ui-dark main h3,html.ui-dark .card h1,html.ui-dark .card h2,html.ui-dark main a{color:color-mix(in srgb,var(--c,#1F4E79) 38%,#EAF1F7)!important}' +
+      'html.ui-dark .btn:not(.sec):not(.ghost):not(.warn):not(.grn){background:color-mix(in srgb,var(--c,#1F4E79) 72%,#8DB4DC);border-color:transparent;color:#fff}' +
+      'html.ui-dark .btn.sec,html.ui-dark .btn.ghost{color:color-mix(in srgb,var(--c,#1F4E79) 38%,#EAF1F7);border-color:color-mix(in srgb,var(--c,#1F4E79) 55%,#9FB8D0);background:transparent}' +
+      'html.ui-dark .btn.warn,html.ui-dark .x{color:#FF8A80;border-color:#B5524A}html.ui-dark .btn.warn.arm{background:#C62828;color:#fff}html.ui-dark .btn.grn{background:#2E7D32;border-color:#2E7D32}' +
+      'html.ui-dark main td b{color:color-mix(in srgb,var(--c,#1F4E79) 38%,#EAF1F7)!important}html.ui-dark .pos{color:#81C784}html.ui-dark .neg{color:#FF8A80}' +
+      'html.ui-dark main button.on,html.ui-dark .seg button.on{background:#2A3A4C!important;color:#fff!important;box-shadow:none}' +
+      'html.ui-dark .bar{background:rgba(18,26,35,.96)!important;border-color:#243140!important}html.ui-dark .bar .tot{color:#9AA7B4}html.ui-dark .bar .tot b{color:#E6EDF3}',
+    'body.dark .btn:not(.sec):not(.org):not(.red){background:#1F7A8C}body.dark details.pd summary{color:#7CC4D2}body.dark .ic.e{color:#7CC4D2}body.dark .ic.d,body.dark .neg{color:#FF8A80}body.dark a{color:#7CC4D2}body.dark .mut{color:#9CB1B6}body.dark label{color:#A9BEC3}',
     'html.ui-dark #kp{background:#1C2632}html.ui-dark #kp button{background:#2C3846;color:#E6EDF3}html.ui-dark #kp .f{background:#3A4756}',
     'body.dark .ui-bnav{background:rgba(21,36,42,.96);border-color:#28393f}body.dark .ui-sheet .bx{background:#15242a;color:#e2edef}body.dark .ui-sheet .it{background:#1d3138}body.dark .ui-sheet .rw{border-color:#28393f}body.dark .ui-seg{background:#0e181b}body.dark .ui-seg button.on{background:#1d3138}body.dark .ui-bnav button.on{color:#6cc3d3}body.dark .ui-bnav button.on svg{background:rgba(108,195,211,.15)}',
     /* توحيد الخط والأزرار بين التطبيقين */
