@@ -378,7 +378,7 @@
   }
   /* خانات التاريخ: اتجاه من اليسار لليمين (يتجنب خلل تقويم Safari في الصفحات العربية) */
   setInterval(function () {
-    Array.prototype.forEach.call(document.querySelectorAll('input[type=date]:not([data-u3l])'), function (i) { i.dataset.u3l = '1'; i.setAttribute('dir', 'ltr'); i.setAttribute('lang', 'en'); });
+    Array.prototype.forEach.call(document.querySelectorAll('input[type=date][data-u3l]'), function (i) { delete i.dataset.u3l; i.removeAttribute('dir'); i.removeAttribute('lang'); }); /* أُلغي: عكس عرض التاريخ */
   }, 300);
   /* إخفاء رابط نموذج Google Form في فاتورة الشراء */
   setInterval(function () {
