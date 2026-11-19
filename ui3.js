@@ -339,7 +339,7 @@
     ['nd', 'md'].forEach(function (id) {
       var i = document.getElementById(id); if (!i || i.dataset.u3d) return;
       i.dataset.u3d = '1';
-      var t = todayIso(); if (i.value !== t) i.value = t;
+      var t = todayIso(); i.setAttribute('value', t); i.defaultValue = t; if (i.value !== t) i.value = t;
       var S = g('S'); if (S && S.today !== t) S.today = t;
     });
   }, 250);
@@ -376,6 +376,10 @@
       };
     }, 400);
   }
+  /* خانات التاريخ: اتجاه من اليسار لليمين (يتجنب خلل تقويم Safari في الصفحات العربية) */
+  setInterval(function () {
+    Array.prototype.forEach.call(document.querySelectorAll('input[type=date]:not([data-u3l])'), function (i) { i.dataset.u3l = '1'; i.setAttribute('dir', 'ltr'); i.setAttribute('lang', 'en'); });
+  }, 300);
   /* إخفاء رابط نموذج Google Form في فاتورة الشراء */
   setInterval(function () {
     if (GH) return;
