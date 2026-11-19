@@ -67,7 +67,7 @@
     var btn = el('<button type="button" class="bio-btn" style="width:100%;min-height:50px;margin-top:12px;border:0;border-radius:12px;background:#111827;color:#fff;font:800 16px Cairo,system-ui,sans-serif">🔓 الدخول ببصمة الوجه</button>');
     btn.onclick = function () {
       bioUnlock(function (pin) {
-        if (GH) { var i = document.getElementById('lpin'); if (i) { i.value = pin; if (W.doUnlock) W.doUnlock(); } }
+        if (GH) { var i = document.getElementById('lpin'); if (i) { i.value = pin; if (W.doUnlock) Promise.resolve(W.doUnlock()).then(function () { var er = document.getElementById('lerr'); if (er && /غير صحيح/.test(er.textContent)) { ls(BK, null); btn.remove(); er.innerHTML = '<div class="warn">الرمز المحفوظ مع البصمة قديم. أدخل الرمز يدويًا، ثم فعّل البصمة من جديد من زر Aa.</div>'; } }); } }
         else { var j = document.getElementById('pinin'); if (j) { j.value = pin; var f = j.closest('form'); if (f) { if (f.requestSubmit) f.requestSubmit(); else f.dispatchEvent(new Event('submit', { cancelable: true })); } } }
       });
     };
