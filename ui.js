@@ -52,10 +52,18 @@
     backup: function () { var S = g('S'); return RT.post({ a: ['dlBackup' + (S && S.tok ? '#' + S.tok : ''), []] }).then(function (v) { return typeof v === 'string' ? JSON.parse(v) : v; }); }
   } : {
     color: '#1F4E79',
-    nav: [['home', 'الرئيسية', 'home'], ['p', 'المشتريات', 'inv'], ['j', 'اليومية', 'book'], ['s', 'الموردين', 'users'], ['r', 'التقارير', 'chart']],
-    cur: function () { var C = g('CUR'), V = g('VIEW_SEC'); return C ? ((V && V[C]) || (C === 'home' ? 'home' : '')) : ''; },
+    nav: function () {
+      var V = g('VIEW_SEC'), C = g('CUR'), SEC = g('SECTIONS'), sec = V && C ? V[C] : '';
+      if (!sec || sec === 'x' || !SEC || !SEC[sec]) return [];
+      var ICO = { inv: 'plus', pinv: 'inv', psearch: 'search', plog: 'list', items: 'tag', pprice: 'chart', sup: 'users', jentry: 'plus', daily: 'cal', jsearch: 'search', jlog: 'list',
+        sentry: 'plus', sstmt: 'list', ssum: 'chart', ssup: 'users', slog: 'list', rmon: 'cal', ryear: 'chart' };
+      return SEC[sec].tabs.map(function (t) { return [t[0], t[1], ICO[t[0]] || (/سجل/.test(t[1]) ? 'list' : /بحث/.test(t[1]) ? 'search' : /مورد/.test(t[1]) ? 'users' : /ملخص|تقرير/.test(t[1]) ? 'chart' : /إدخال/.test(t[1]) ? 'plus' : 'inv')]; });
+    },
+    navKey: function () { var V = g('VIEW_SEC'), C = g('CUR'); return V && C ? (V[C] || '') : ''; },
+    scroll: true,
+    cur: function () { return g('CUR') || ''; },
     is: function (k, c) { return k === c; },
-    open: function (k) { var SEC = g('SECTIONS'); if (k === 'home') return W.go('home'); W.go(SEC && SEC[k] && SEC[k].tabs.length ? SEC[k].tabs[0][0] : 'home'); },
+    open: function (k) { W.go(k); },
     entry: ['inv', 'jentry', 'sentry'],
     fab: function () {
       sheet('إضافة سريعة', [['🧾 فاتورة شراء', function () { W.go('inv'); }], ['📒 حركة يومية', function () { W.go('jentry'); }], ['👤 قيد مورد', function () { W.go('sentry'); }]]);
@@ -87,7 +95,9 @@
     '.ui-fab svg{width:28px;height:28px}.ui-fab:active{transform:scale(.92)}.ui-fab.hide{display:none}',
     '@media (min-width:1000px) and (orientation:landscape){.ui-bnav{top:0;bottom:0;left:auto;right:0;width:88px;flex-direction:column;justify-content:flex-start;gap:6px;padding:calc(14px + env(safe-area-inset-top)) 6px 14px;border-top:0;border-left:1px solid rgba(0,0,0,.08)}' +
       '.ui-bnav button{flex:0 0 auto;min-height:64px}.ui-bnav.sc{overflow-x:hidden;overflow-y:auto}.ui-bnav.sc button{flex:0 0 auto}body.ui-has-nav{padding-bottom:0;padding-right:88px}.ui-fab{bottom:24px;left:24px}' + (GH ? '' : 'main{max-width:1200px}') + '}',
-    GH ? '@media (max-width:999px),(orientation:portrait){#nav{display:none!important}}' : '',
+    GH ? '@media (max-width:999px),(orientation:portrait){#nav{display:none!important}}' : 'body.ui-has-nav #tabs{display:none!important}.ui-bnav.sc button{flex:1 0 76px}',
+    'body.ui-no-nav .ui-fab{bottom:calc(20px + env(safe-area-inset-bottom))}',
+    GH ? '' : 'body[data-sec=p],body[data-sec=j],body[data-sec=s]{--ui:var(--c)}',
     '.ui-sheet{position:fixed;inset:0;z-index:9990;background:rgba(15,23,32,.45);display:flex;align-items:flex-end;justify-content:center;animation:uiF .15s}',
     '.ui-sheet .bx{background:#fff;color:#17212B;width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:10px 14px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.25);animation:uiU .2s ease-out;max-height:85vh;overflow:auto;font-family:Cairo,-apple-system,sans-serif;direction:rtl}',
     '@media (min-width:700px){.ui-sheet{align-items:center}.ui-sheet .bx{border-radius:20px}}',
@@ -141,21 +151,35 @@
 
   /* ---------- شريط التنقل + زر الإضافة ---------- */
   var nav, fab;
+  var NAVKEY = null;
   function buildNav() {
-    if (nav && document.body.contains(nav)) return;
-    var items = typeof CFG.nav === 'function' ? CFG.nav() : CFG.nav;
-    if (!items.length) return;
-    nav = el('<div class="ui-bnav' + (CFG.scroll ? ' sc' : '') + '">' + items.map(function (n) { return '<button data-k="' + n[0] + '">' + svg(n[2]) + '<span>' + n[1] + '</span></button>'; }).join('') + '</div>');
-    nav.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) CFG.open(b.dataset.k); });
-    document.body.appendChild(nav);
-    document.body.classList.add('ui-has-nav');
-    fab = el('<button class="ui-fab" title="إضافة سريعة">' + svg('plus') + '</button>');
-    fab.onclick = function () { CFG.fab(); };
-    document.body.appendChild(fab);
+    if (!nav || !document.body.contains(nav)) {
+      nav = el('<div class="ui-bnav' + (CFG.scroll ? ' sc' : '') + '"></div>');
+      nav.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) CFG.open(b.dataset.k); });
+      document.body.appendChild(nav);
+      NAVKEY = null;
+    }
+    if (!fab || !document.body.contains(fab)) {
+      fab = el('<button class="ui-fab" title="إضافة سريعة">' + svg('plus') + '</button>');
+      fab.onclick = function () { CFG.fab(); };
+      document.body.appendChild(fab);
+    }
     sync();
+  }
+  function fillNav() {
+    var key = CFG.navKey ? CFG.navKey() : 'all';
+    if (key === NAVKEY && nav.children.length) return;
+    NAVKEY = key; nav._on = null;
+    var items = typeof CFG.nav === 'function' ? CFG.nav() : CFG.nav;
+    nav.innerHTML = items.map(function (n) { return '<button data-k="' + n[0] + '">' + svg(n[2]) + '<span>' + n[1] + '</span></button>'; }).join('');
+    var show = items.length > 0;
+    nav.style.display = show ? '' : 'none';
+    document.body.classList.toggle('ui-has-nav', show);
+    document.body.classList.toggle('ui-no-nav', !show);
   }
   function sync() {
     if (!nav) return;
+    fillNav();
     var c = CFG.cur(), raw = GH ? c : g('CUR');
     Array.prototype.forEach.call(nav.querySelectorAll('button'), function (b) { b.classList.toggle('on', CFG.is(b.dataset.k, c)); });
     var on = nav.querySelector('button.on'); if (CFG.scroll && on && on !== nav._on) { nav._on = on; try { on.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' }); } catch (e) { /* */ } }
