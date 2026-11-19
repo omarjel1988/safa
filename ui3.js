@@ -318,6 +318,16 @@
     });
   }
   setInterval(camWatch, 900);
+  /* إخفاء رابط نموذج Google Form في فاتورة الشراء */
+  setInterval(function () {
+    if (GH) return;
+    Array.prototype.forEach.call(document.querySelectorAll('#view a[href*="forms"]:not([data-u3h])'), function (a) {
+      a.dataset.u3h = '1';
+      if (!/Google Form|نموذج/.test(a.textContent)) return;
+      var p = a.closest('.note') || a; p.style.display = 'none';
+    });
+  }, 400);
+
   /* رفع أسرع في يومية غدق: تصغير صورة السند إلى 1280 بكسل */
   if (GH) {
     var fdTry = setInterval(function () {
@@ -401,6 +411,7 @@
     if (GH || g('CUR') !== 'home') return;
     var v = document.getElementById('view'); if (!v) return;
     var f = v.querySelector(':scope > form.srch'); if (f) f.classList.add('u3-nosrch');
+    var h2 = v.querySelector(':scope > .hero h2'); if (h2) { var hr = new Date().getHours(), gr = hr >= 4 && hr < 12 ? 'صباح الخير ☀️' : 'مساء الخير 🌙'; if (h2.textContent !== gr) h2.textContent = gr; }
     var tiles = v.querySelector(':scope > .tiles'); if (!tiles) return;
     var after = tiles;
     Array.prototype.forEach.call(v.children, function (c) {
