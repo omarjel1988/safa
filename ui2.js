@@ -1,4 +1,4 @@
-/* إضافات الواجهة (2): الدخول ببصمة الوجه، الإدخال بالصوت، الطباعة، المشاركة عبر واتساب */
+/* إضافات الواجهة (2): الدخول ببصمة الوجه والقفل التلقائي، الإدخال بالصوت، الطباعة، المشاركة عبر واتساب */
 (function () {
   'use strict';
   var APP = window.APP, W = window;
@@ -75,6 +75,48 @@
   }
   setInterval(lockWatch, 600);
 
+  /* ================= 1-ب) القفل التلقائي بالبصمة بعد مدة عدم الاستخدام ================= */
+  var LKM = 'biolockm_' + APP.id, LKT = 'bioact_' + APP.id, locked = false, lastAct = Date.now();
+  function lockMins() { var v = parseInt(ls(LKM), 10); return isNaN(v) ? 5 : v; }
+  function touch() { if (locked) return; lastAct = Date.now(); ls(LKT, String(lastAct)); }
+  ['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(function (ev) { document.addEventListener(ev, touch, { passive: true, capture: true }); });
+  function storedPin() { var b = bioInfo(); try { return b ? decodeURIComponent(escape(atob(b.p))) : ''; } catch (e) { return ''; } }
+  function unlockNow(o) { locked = false; o.remove(); touch(); }
+  function showIdleLock() {
+    if (locked || !bioInfo() || document.getElementById('bio-idle')) return;
+    locked = true;
+    var o = el('<div id="bio-idle" style="position:fixed;inset:0;z-index:2147483000;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;font-family:Cairo,system-ui,sans-serif;direction:rtl">' +
+      '<div style="width:min(340px,88vw);text-align:center"><div style="font-size:54px">🔒</div>' +
+      '<div style="font:800 20px Cairo,system-ui,sans-serif;margin:6px 0 4px">' + E(APP.short || 'التطبيق') + '</div>' +
+      '<div style="color:#94a3b8;font-size:14px;margin-bottom:18px">قُفل التطبيق بعد مدة من عدم الاستخدام</div>' +
+      '<button type="button" id="bi-go" style="width:100%;min-height:54px;border:0;border-radius:14px;background:#fff;color:#0f172a;font:800 17px Cairo,system-ui,sans-serif">🔓 فتح ببصمة الوجه</button>' +
+      '<input id="bi-pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="أو أدخل رمز الدخول" style="width:100%;min-height:48px;margin-top:14px;font-size:18px;text-align:center;border:1px solid #334155;background:#1e293b;color:#fff;border-radius:12px;box-sizing:border-box">' +
+      '<div id="bi-err" style="color:#f87171;font-weight:700;min-height:22px;margin-top:8px"></div></div></div>');
+    document.body.appendChild(o);
+    var b = bioInfo(), er = o.querySelector('#bi-err'), inp = o.querySelector('#bi-pin');
+    function tryBio() {
+      navigator.credentials.get({ publicKey: { challenge: rnd(32), rpId: location.hostname, allowCredentials: [{ type: 'public-key', id: unb64(b.id) }], userVerification: 'required', timeout: 60000 } })
+        .then(function (a) { if (a) unlockNow(o); })
+        .catch(function (e) { er.textContent = (e && e.name === 'NotAllowedError') ? '' : 'تعذّر التحقق بالبصمة'; });
+    }
+    o.querySelector('#bi-go').onclick = tryBio;
+    inp.oninput = function () {
+      var v = inp.value.replace(/[٠-٩]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); }).trim(), p = storedPin();
+      if (p && v === p) unlockNow(o); else if (v.length >= p.length && p) er.textContent = 'رمز غير صحيح';
+      else er.textContent = '';
+    };
+    if (document.visibilityState === 'visible') setTimeout(tryBio, 250);
+  }
+  function idleCheck() {
+    var m = lockMins(); if (!m || locked || !bioInfo()) return;
+    var t = Math.max(lastAct, parseInt(ls(LKT), 10) || 0);
+    if (Date.now() - t >= m * 60000) showIdleLock();
+  }
+  (function () { var t = parseInt(ls(LKT), 10); if (t) { lastAct = t; idleCheck(); } touch(); })();
+  setInterval(idleCheck, 10000);
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') idleCheck(); });
+  W.addEventListener('pageshow', idleCheck);
+
   /* ================= 9 + 10) الطباعة والمشاركة ================= */
   var pcss = document.createElement('style');
   pcss.textContent = '@media print{header,nav,.ui-bnav,.ui-hbtn,#rt-badge,#rt-new,#rt-undo,#ui-mic,.ui-sheet,button,.noprint,.pdf,#toast,#kp{display:none!important}' +
@@ -143,6 +185,13 @@
       var r = el('<div class="rw bio-row"><b>الدخول ببصمة الوجه</b><button class="ui-hbtn" style="background:' + (on ? '#C62828' : 'var(--ui)') + '">' + (on ? 'إيقاف' : 'تفعيل') + '</button></div>');
       r.querySelector('button').onclick = function () { var s = r.closest('.ui-sheet'); if (s) s.remove(); if (on) { ls(BK, null); msg('أُوقف الدخول ببصمة الوجه'); } else bioEnable(); };
       var rws = bx.querySelectorAll('.rw'); bx.insertBefore(r, rws[rws.length - 1] || null);
+      if (on) {
+        var m = lockMins(), opts = [[1, 'دقيقة'], [3, '3 دقائق'], [5, '5 دقائق'], [10, '10 دقائق'], [15, '15 دقيقة'], [30, '30 دقيقة'], [60, 'ساعة'], [0, 'بدون قفل']];
+        var r2 = el('<div class="rw bio-row2"><b>القفل التلقائي بعد</b><select style="min-height:38px;border-radius:10px;border:1px solid #ccc;font:700 14px Cairo,system-ui,sans-serif;padding:0 8px">' +
+          opts.map(function (x) { return '<option value="' + x[0] + '"' + (x[0] === m ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select></div>');
+        r2.querySelector('select').onchange = function () { ls(LKM, this.value); touch(); msg(this.value === '0' ? 'أُوقف القفل التلقائي' : 'سيُقفل التطبيق بعد ' + this.options[this.selectedIndex].text + ' من عدم الاستخدام'); };
+        bx.insertBefore(r2, r.nextSibling);
+      }
     });
   }, 400);
 })();
