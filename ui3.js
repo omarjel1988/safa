@@ -70,6 +70,11 @@
       var opts = Array.prototype.slice.call(s.options), hits = opts.filter(function (o) { return names[o.value]; });
       if (hits.length < 2) { s.dataset.fv = mk(); return; }
       opts.forEach(function (o) { if (!o.hasAttribute('value')) o.setAttribute('value', o.value); var base = o.textContent.replace(/^⭐ /, ''); o.textContent = F.indexOf(o.value) > -1 ? '⭐ ' + base : base; });
+      if (GH) { /* ترتيب أسماء الحسابات أبجديًا في يومية غدق */
+        var cur0 = s.value, ph = opts.filter(function (o) { return !names[o.value]; }), anc = ph.length ? ph[ph.length - 1].nextSibling : s.firstChild;
+        hits.slice().sort(function (x, y) { return x.value.localeCompare(y.value, 'ar'); }).forEach(function (o) { s.insertBefore(o, anc); anc = o.nextSibling; });
+        s.value = cur0; opts = Array.prototype.slice.call(s.options);
+      }
       if (!F.length) { s.dataset.fv = mk(); return; }
       var cur = s.value, first = opts.filter(function (o) { return !names[o.value]; }).pop();
       var anchor = first ? first.nextSibling : s.firstChild;
