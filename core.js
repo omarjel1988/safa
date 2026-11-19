@@ -317,6 +317,11 @@
   function armBack() { try { if (!history.state || !history.state.rt) history.pushState({ rt: 1 }, ''); } catch (e) { /* */ } }
   W.addEventListener('popstate', function () {
     if (!live() || LEAVING || !document.body) return;
+    /* نافذة مفتوحة: الرجوع يغلقها */
+    var ov = document.querySelector('.ui-sheet,#dpop,#aikey');
+    if (ov) { ov.remove(); document.body.style.overflow = ''; history.pushState({ rt: 1 }, ''); return; }
+    /* مكتبة الصفاء: من داخل أي قسم يعود الرجوع إلى الرئيسية */
+    if (APP.mode !== 'ghadaq' && W.CUR && W.CUR !== 'home' && typeof W.go === 'function') { history.pushState({ rt: 1 }, ''); W.go('home'); return; }
     exitBox();
   });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', armBack); else setTimeout(armBack, 0);
