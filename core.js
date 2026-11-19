@@ -55,7 +55,7 @@
     ok: function (v) { try { var o = typeof v === 'string' ? JSON.parse(v) : v; return o && o.ok === false ? (o.msg || 'خطأ') : ''; } catch (e) { return ''; } },
     writes: ['add', 'update', 'remove', 'newAccount', 'archive', 'unarchive', 'saveSettings', 'upload', 'undo', 'flush', 'renameAcc', 'closeAcc',
       'saveOrder', 'mergeAcc', 'savePT', 'rescanPT', 'coSave', 'pinSet', 'pinOff', 'lockNow', 'backupNow', 'mailNow'],
-    nocache: ['devPing', 'devList', 'devOut', 'remGet', 'remTest', 'matchFixList', 'matchFixApply'],
+    nocache: ['devPing', 'devList', 'devOut', 'remGet', 'remTest', 'matchFixList', 'matchFixApply', 'match2'],
     prefetch: function () { var S = gS(); return ((S && S.acc) || []).map(function (x) { return ['account', [x.name]]; }); },
     offline: {
       add: function (e) { return JSON.stringify({ ok: true, offline: true, mirror: !!(e && e.mirror) }); }
