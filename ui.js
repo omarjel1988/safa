@@ -87,6 +87,7 @@
   /* ---------- الأنماط ---------- */
   var css = [
     ':root{--ui:' + CFG.color + '}',
+    'html,body{overflow-x:hidden;overflow-x:clip}.ui-bnav{transform:translateZ(0)}',
     '.ui-bnav{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;background:rgba(255,255,255,.96);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid rgba(0,0,0,.08);padding:4px 4px calc(4px + env(safe-area-inset-bottom));box-shadow:0 -4px 18px rgba(0,0,0,.06);font-family:Cairo,-apple-system,sans-serif}',
     '.ui-bnav button{flex:1;border:0;background:transparent;color:#7A8794;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font:700 11.5px Cairo,-apple-system,sans-serif;border-radius:12px;min-height:52px;-webkit-tap-highlight-color:transparent}',
     '.ui-bnav button svg{width:24px;height:24px}.ui-bnav button.on{color:var(--ui)}.ui-bnav button.on svg{background:color-mix(in srgb,var(--ui) 14%,transparent);border-radius:10px;padding:3px 10px;width:44px;box-sizing:border-box}',
@@ -204,6 +205,18 @@
       if (!n._drag) return; setTimeout(function () { n._drag = false; }, 400);
     });
   }
+  function fixVp() {
+    var ms = document.querySelectorAll('meta[name=viewport]'), want = 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover';
+    if (!ms.length) { var m = document.createElement('meta'); m.name = 'viewport'; document.head.appendChild(m); ms = [m]; }
+    Array.prototype.forEach.call(ms, function (m) { if (m.content !== want) m.content = want; });
+  }
+  fixVp();
+  document.addEventListener('focusout', function (e) {
+    var t = e.target; if (!t || !/^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName)) return;
+    var vv = W.visualViewport; if (!vv || vv.scale <= 1.01) return;
+    var m = document.querySelector('meta[name=viewport]'); if (!m) return;
+    var c = m.content; m.content = c + ', user-scalable=0'; setTimeout(function () { m.content = c; }, 300);
+  }, true);
   function buildNav() {
     if (!nav || !document.body.contains(nav)) {
       nav = el('<div class="ui-bnav' + (CFG.scroll ? ' sc' : '') + '"></div>');
@@ -390,7 +403,7 @@
       var og = W.go, ng = function () { var r = og.apply(this, arguments); setTimeout(function () { sync(); headerBtn(); }, 0); return r; };
       ng.__ui = 1; W.go = ng;
     }
-    setInterval(function () { sync(); headerBtn(); if (nav && !document.body.contains(nav)) { nav = null; buildNav(); } }, 1500);
+    setInterval(function () { sync(); headerBtn(); fixVp(); if (nav && !document.body.contains(nav)) { nav = null; buildNav(); } }, 1500);
     if (!GH && W.matchMedia) { try { W.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { if (ls('safa_dark') === null) applySafa(); }); } catch (e) { /* */ } }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(start, 0); });
