@@ -744,5 +744,26 @@
     };
   }, 400);
 
+  /* تفاصيل الورق: قائمة مطوية تحت البيان */
+  if (GH) {
+    var ppCss = document.createElement('style');
+    ppCss.textContent = '.u3-pp{margin-top:4px}.u3-pp>summary{display:inline-flex;align-items:center;gap:4px;cursor:pointer;list-style:none;font-size:12.5px;font-weight:700;color:var(--p,#1b6b7a);background:color-mix(in srgb,currentColor 10%,transparent);border-radius:8px;padding:2px 10px;-webkit-tap-highlight-color:transparent}' +
+      '.u3-pp>summary::-webkit-details-marker{display:none}.u3-pp>summary::after{content:"▾";font-size:12px;transition:transform .15s}.u3-pp[open]>summary::after{transform:rotate(180deg)}' +
+      '.u3-pp>.ppr{display:block;margin-top:4px;padding:6px 8px;border-radius:8px;background:color-mix(in srgb,currentColor 5%,transparent)}' +
+      '@media print{.u3-pp>summary{display:none}.u3-pp>.ppr{display:block!important}}';
+    document.head.appendChild(ppCss);
+    var ppWrap = function () {
+      Array.prototype.forEach.call(document.querySelectorAll('span.ppr:not([data-u3pp])'), function (sp) {
+        sp.setAttribute('data-u3pp', '1');
+        var d = document.createElement('details'); d.className = 'u3-pp';
+        var sm = document.createElement('summary'); sm.textContent = 'تفاصيل الورق';
+        d.appendChild(sm); sp.parentNode.insertBefore(d, sp); d.appendChild(sp);
+        d.addEventListener('click', function (e) { e.stopPropagation(); });
+      });
+    };
+    W.addEventListener('beforeprint', function () { Array.prototype.forEach.call(document.querySelectorAll('.u3-pp'), function (d) { d.open = true; }); });
+    new MutationObserver(function () { if (document.querySelector('span.ppr:not([data-u3pp])')) ppWrap(); }).observe(document.documentElement, { childList: true, subtree: true });
+    setTimeout(ppWrap, 500);
+  }
   if (GH) { var agTry = setInterval(function () { if (document.getElementById('nav') && W.go && g('S')) { clearInterval(agTry); agingSetup(); } }, 300); }
 })();
