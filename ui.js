@@ -33,9 +33,10 @@
   var CFG = GH ? {
     color: '#0f4c5c',
     nav: function () {
-      var ICO = { dash: 'home', entry: 'plus', accts: 'users', search: 'search', stmt: 'list', month: 'cal', year: 'chart', match: 'check', rcpt: 'inv', price: 'tag', cmp: 'chart', sett: 'gear', logp: 'list', arch: 'archive' };
+      var ICO = { dash: 'home', entry: 'plus', accts: 'users', search: 'search', stmt: 'list', month: 'cal', year: 'chart', aging: 'cal', match: 'check', rcpt: 'inv', price: 'tag', cmp: 'chart', sett: 'gear', logp: 'list', arch: 'archive' };
       return Array.prototype.map.call(document.querySelectorAll('#nav button[data-p]'), function (b) { return [b.dataset.p, b.textContent.trim(), ICO[b.dataset.p] || 'list']; });
     },
+    navKey: function () { return 'n' + document.querySelectorAll('#nav button[data-p]').length; },
     scroll: true,
     cur: function () { var S = g('S'); return S ? S.page : ''; },
     is: function (k, c) { return k === c; },
