@@ -19,8 +19,9 @@
     document.open(); document.write(html); document.close();
   }
   var coreP = Promise.all([fetch((APP.root || './') + 'core.js', { cache: navigator.onLine ? 'no-cache' : 'default' }).then(function (r) { return r.text(); }),
-    fetch((APP.root || './') + 'ui.js', { cache: navigator.onLine ? 'no-cache' : 'default' }).then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; })])
-    .then(function (x) { return x[0] + '<\/script><script>' + x[1]; });
+    fetch((APP.root || './') + 'ui.js', { cache: navigator.onLine ? 'no-cache' : 'default' }).then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; }),
+    fetch((APP.root || './') + 'ui2.js', { cache: navigator.onLine ? 'no-cache' : 'default' }).then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; })])
+    .then(function (x) { return x[0] + '<\/script><script>' + x[1] + '<\/script><script>' + x[2]; });
   Promise.all([RT.kget('shell'), coreP]).then(function (x) {
     var shell = x[0], core = x[1];
     if (shell) { render(shell, core); return; }

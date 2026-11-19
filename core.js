@@ -108,7 +108,11 @@
       if (c.args[0] && typeof c.args[0] === 'object' && M.offline[c.fn] && !c.args[0].__oid) c.args[0].__oid = APP.id + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
       var a2 = a; /* الكائن نفسه داخل a صار يحمل __oid لمنع التكرار عند إعادة الإرسال */
       if (!navigator.onLine && M.offline[c.fn]) return queue(c, a2);
-      return post(M.body(c, a2)).then(function (v) { afterWrite(c.fn, v); return v; }, function (e) {
+      return post(M.body(c, a2)).then(function (v) { afterWrite(c.fn, v); OWNAT = Date.now(); setTimeout(verCheck, 7000, true); return v; }, function (e) {
+        if (e && e.app && /^DUP\|/.test(e.message) && APP.mode !== 'ghadaq' && c.args[0] && typeof c.args[0] === 'object') {
+          if (confirm(e.message.slice(4) + '\n\nهل تريد الحفظ على أي حال؟')) { c.args[0].confirmDup = true; return call(a2, true); }
+          var er = new Error('لم يُحفظ شيء (تكرار)'); er.app = true; er.undo = true; throw er;
+        }
         if (netErr(e) && M.offline[c.fn]) return queue(c, a2);
         throw netErr(e) ? offErr() : e;
       });
@@ -162,6 +166,7 @@
       return (function next() {
         if (!OUT.length) return;
         var x = OUT[0], a = LASTTOK ? M.retok(x.a, LASTTOK) : x.a;
+        try { var p0 = APP.mode === 'ghadaq' ? (a[1] || [])[0] : (a[1] || [])[0]; if (p0 && typeof p0 === 'object') p0.__dupok = true; } catch (e) { /* */ }
         return post(M.body(M.parse(a), a)).then(function (v) {
           var bad = M.ok(v);
           if (bad) failed.push(x.d + ': ' + bad);
@@ -211,6 +216,35 @@
     b.style.display = 'block';
   }
   function note(t, c) { var b = el(); if (!b) return; b.textContent = t; b.style.background = c; b.style.display = 'block'; NOTE = Date.now() + 4000; setTimeout(function () { NOTE = 0; badge(); }, 4100); }
+
+  /* ---------- تنبيه بوجود بيانات جديدة من جهاز آخر ---------- */
+  var OWNAT = 0, KNOWN = null, VERAT = 0;
+  function tokNow() { if (APP.mode === 'ghadaq') { var S = gS(); return S && S.tok ? S.tok : ''; } return W.TOK || ''; }
+  function verCheck(own) {
+    if (!live() || !navigator.onLine || document.hidden || (!own && Date.now() - VERAT < 50000)) return;
+    VERAT = Date.now();
+    var t = tokNow();
+    post(APP.mode === 'ghadaq' ? { a: ['ver' + (t ? '#' + t : ''), []] } : { fn: 'webVer', args: [t] }).then(function (v) {
+      if (typeof v === 'string') { try { v = JSON.parse(v); } catch (e) { /* */ } }
+      var k = JSON.stringify(v);
+      if (own || KNOWN === null || Date.now() - OWNAT < 20000) { KNOWN = k; return; }
+      if (k !== KNOWN) { KNOWN = k; newData(); }
+    }).catch(function () { /* */ });
+  }
+  function newData() {
+    if (document.getElementById('rt-new')) return;
+    var b = document.createElement('div'); b.id = 'rt-new';
+    b.style.cssText = 'position:fixed;top:calc(64px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:9994;background:#1565C0;color:#fff;border-radius:22px;padding:9px 16px;font:700 14px Cairo,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25);direction:rtl;cursor:pointer;white-space:nowrap';
+    b.textContent = '🔄 توجد بيانات جديدة من جهاز آخر — اضغط للتحديث';
+    b.onclick = function () {
+      b.remove();
+      try { if (APP.mode === 'ghadaq') { var S = gS(); if (S) { S.cache = {}; S.pidx = null; S.charts = null; } if (W.boot) W.boot(); if (W.go && S) W.go(S.page); } else { if (W.qClear) W.qClear(); W.DASH = null; if (W.refreshView) W.refreshView(); } } catch (e) { /* */ }
+    };
+    document.body.appendChild(b);
+  }
+  setInterval(function () { verCheck(false); }, 15000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) setTimeout(verCheck, 1500, false); });
+  setTimeout(verCheck, 8000, true);
 
   /* ---------- التراجع عن الحذف: الحذف يُنفَّذ بعد 5 ثوانٍ إلا إذا ضغطت «تراجع» ---------- */
   function undoWait() {
