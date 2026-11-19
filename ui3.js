@@ -380,6 +380,52 @@
   setInterval(function () {
     Array.prototype.forEach.call(document.querySelectorAll('input[type=date][data-u3l]'), function (i) { delete i.dataset.u3l; i.removeAttribute('dir'); i.removeAttribute('lang'); }); /* أُلغي: عكس عرض التاريخ */
   }, 300);
+  /* الآيباد: تقويم خاص بالتطبيق بدل تقويم Safari (الذي يفتح على شهر خاطئ في الصفحات العربية) */
+  var IPAD_ = /iPad/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  if (IPAD_) {
+    var dpCss = document.createElement('style');
+    dpCss.textContent = '.u3-dp{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center}' +
+      '.u3-dp .bx{background:#fff;color:#17212B;border-radius:18px;padding:14px;width:340px;max-width:92vw;box-shadow:0 18px 50px rgba(0,0,0,.3);font-family:inherit;direction:rtl}' +
+      '.u3-dp .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.u3-dp .hd b{font-size:18px}.u3-dp .hd button{border:0;background:#EEF3F6;border-radius:10px;width:40px;height:40px;font-size:20px;color:inherit}' +
+      '.u3-dp .g{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}.u3-dp .g span{font-size:13px;color:#8796A5;padding:4px 0}' +
+      '.u3-dp .g button{border:0;background:transparent;border-radius:50%;height:40px;font-size:17px;color:inherit}.u3-dp .g button.t{color:#0E6B5E;font-weight:800}.u3-dp .g button.s{background:#0E6B5E;color:#fff;font-weight:800}' +
+      '.u3-dp .ft{display:flex;gap:8px;margin-top:10px}.u3-dp .ft button{flex:1;border:0;border-radius:12px;min-height:44px;font:800 15px inherit;background:#EEF3F6;color:inherit}.u3-dp .ft .ok{background:#0E6B5E;color:#fff}' +
+      'html.ui-dark .u3-dp .bx,body.dark .u3-dp .bx{background:#1A232D;color:#E6EDF3}html.ui-dark .u3-dp .hd button,html.ui-dark .u3-dp .ft button,body.dark .u3-dp .hd button,body.dark .u3-dp .ft button{background:#26323F}';
+    document.head.appendChild(dpCss);
+    var MN = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+    var pad = function (n) { return ('0' + n).slice(-2); };
+    var iso = function (y, m, d) { return y + '-' + pad(m + 1) + '-' + pad(d); };
+    var openDP = function (inp) {
+      var p = String(inp.value || '').match(/^(\d{4})-(\d{2})-(\d{2})/), now = new Date();
+      var sel = p ? { y: +p[1], m: +p[2] - 1, d: +p[3] } : null, y = sel ? sel.y : now.getFullYear(), m = sel ? sel.m : now.getMonth();
+      var tIso = iso(now.getFullYear(), now.getMonth(), now.getDate());
+      var o = el('<div class="u3-dp"><div class="bx"><div class="hd"><button data-n="-1" aria-label="الشهر السابق">›</button><b></b><button data-n="1" aria-label="الشهر التالي">‹</button></div><div class="g"></div>' +
+        '<div class="ft"><button data-a="today">اليوم</button><button data-a="clear">مسح</button><button data-a="close" class="ok">إغلاق</button></div></div></div>');
+      var draw = function () {
+        o.querySelector('.hd b').textContent = MN[m] + ' ' + y;
+        var first = new Date(y, m, 1).getDay(), days = new Date(y, m + 1, 0).getDate(), h = ['ح', 'ن', 'ث', 'ر', 'خ', 'ج', 'س'].map(function (x) { return '<span>' + x + '</span>'; }).join('');
+        for (var k = 0; k < first; k++) h += '<span></span>';
+        for (var d = 1; d <= days; d++) { var v = iso(y, m, d); h += '<button data-d="' + v + '" class="' + (inp.value === v ? 's' : v === tIso ? 't' : '') + '">' + d + '</button>'; }
+        o.querySelector('.g').innerHTML = h;
+      };
+      var set = function (v) { inp.value = v; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true })); o.remove(); };
+      o.onclick = function (e) {
+        if (e.target === o) return o.remove();
+        var n = e.target.closest('[data-n]'), d = e.target.closest('[data-d]'), a = e.target.closest('[data-a]');
+        if (n) { m += +n.dataset.n; if (m < 0) { m = 11; y--; } if (m > 11) { m = 0; y++; } draw(); }
+        else if (d) set(d.dataset.d);
+        else if (a) { if (a.dataset.a === 'today') set(tIso); else if (a.dataset.a === 'clear') set(''); else o.remove(); }
+      };
+      draw(); document.body.appendChild(o);
+    };
+    setInterval(function () {
+      Array.prototype.forEach.call(document.querySelectorAll('input[type=date]:not([data-u3dp])'), function (i) {
+        i.dataset.u3dp = '1';
+        var v = i.value; i.type = 'text'; i.value = v; i.readOnly = true; i.setAttribute('inputmode', 'none'); i.placeholder = i.placeholder || 'اختر التاريخ'; i.style.cursor = 'pointer';
+        i.addEventListener('click', function (e) { e.preventDefault(); i.blur(); openDP(i); });
+      });
+    }, 250);
+  }
   /* إخفاء رابط نموذج Google Form في فاتورة الشراء */
   setInterval(function () {
     if (GH) return;
