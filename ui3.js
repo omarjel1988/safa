@@ -338,6 +338,39 @@
       var S = g('S'); if (S && S.today !== t) S.today = t;
     });
   }, 250);
+  /* يومية غدق: حفظ القيد الجديد بدون انتظار — يُفرَّغ النموذج فورًا ويُرسل القيد في الخلفية */
+  if (GH) {
+    var snTry = setInterval(function () {
+      if (!g('saveNew') || !g('addSafe') || W.__u3sn) return;
+      W.__u3sn = 1; clearInterval(snTry);
+      var KEYS = ['b', 's', 'w', 'r', 'x0', 'x1', 'x2', 'x3', 'x4', 'x5'];
+      W.saveNew = function () {
+        var entryData = g('entryData'), clearEntry = g('clearEntry'), addSafe = g('addSafe'), toast = g('toast');
+        var e = entryData('n');
+        if (!String(e.b || '').trim()) return toast('أدخل البيان', 1);
+        if (!e.s && !e.w) return toast('أدخل مبلغ الصادر أو الوارد', 1);
+        var snap = {}; KEYS.forEach(function (k) { var x = document.getElementById('n' + k); if (x) snap[k] = x.value; });
+        var mc = document.getElementById('nm'), mChecked = mc && mc.checked;
+        var fe = document.getElementById('nf'), hasFile = !!(fe && fe.files && fe.files[0]);
+        clearEntry('n');
+        var nb = document.getElementById('nb'); if (nb) nb.focus();
+        toast('⏳ جارٍ حفظ «' + String(e.b).slice(0, 30) + '»…');
+        var restore = function () {
+          var cur = document.getElementById('nb'); if (!cur || cur.value.trim()) return;
+          KEYS.forEach(function (k) { var x = document.getElementById('n' + k); if (x && snap[k] != null) x.value = snap[k]; });
+          var m = document.getElementById('nm'); if (m) m.checked = mChecked;
+        };
+        return Promise.resolve(addSafe(e)).then(function (r) {
+          if (!r) { restore(); return; }
+          toast('✔ تم حفظ القيد في ' + e.acc + (r.mirror ? ' + نسخة في العام' : ''));
+          var up = hasFile && g('upAfterAdd') ? g('upAfterAdd')('n', e, r) : null;
+          return Promise.resolve(up).then(function () {
+            try { var b = g('boot'); if (b) b(); var l = g('loadLast'); if (l) l(); } catch (x) { /* */ }
+          });
+        }).catch(function (err) { restore(); toast('لم يُحفظ القيد: ' + (err && err.message || err), 1); });
+      };
+    }, 400);
+  }
   /* إخفاء رابط نموذج Google Form في فاتورة الشراء */
   setInterval(function () {
     if (GH) return;
