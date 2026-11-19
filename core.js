@@ -311,20 +311,23 @@
       '<div style="display:flex;gap:10px"><button id="rt-stay" style="flex:1;min-height:46px;border:0;border-radius:11px;background:' + (APP.color || '#1F4E79') + ';color:#fff;font:700 16px inherit">البقاء</button>' +
       '<button id="rt-go" style="flex:1;min-height:46px;border:1px solid #ccc;border-radius:11px;background:#fff;color:#B00020;font:700 16px inherit">خروج</button></div></div>';
     document.body.appendChild(o);
-    document.getElementById('rt-stay').onclick = function () { o.remove(); history.pushState({ rt: 1 }, ''); };
+    document.getElementById('rt-stay').onclick = function () { o.remove(); arm(); };
     document.getElementById('rt-go').onclick = function () { LEAVING = true; o.remove(); history.back(); setTimeout(function () { try { window.close(); } catch (e) { /* */ } }, 300); };
   }
-  function armBack() { try { if (!history.state || !history.state.rt) history.pushState({ rt: 1 }, ''); } catch (e) { /* */ } }
+  /* المتصفحات تتجاهل خانة الرجوع إن لم تُنشأ بعد لمسة من المستخدم، لذلك نُنشئها عند أول لمسة */
+  var ARMED = false;
+  function arm() { if (!live() || ARMED || LEAVING) return; try { history.pushState({ rt: 1 }, ''); ARMED = true; } catch (e) { /* */ } }
+  ['pointerdown', 'keydown', 'touchstart'].forEach(function (t) { W.addEventListener(t, arm, true); });
   W.addEventListener('popstate', function () {
     if (!live() || LEAVING || !document.body) return;
+    ARMED = false;
     /* نافذة مفتوحة: الرجوع يغلقها */
-    var ov = document.querySelector('.ui-sheet,#dpop,#aikey');
-    if (ov) { ov.remove(); document.body.style.overflow = ''; history.pushState({ rt: 1 }, ''); return; }
+    var ov = document.querySelector('.ui-sheet,#dpop,#aikey,#rt-exit');
+    if (ov) { ov.remove(); document.body.style.overflow = ''; return; }
     /* مكتبة الصفاء: من داخل أي قسم يعود الرجوع إلى الرئيسية */
-    if (APP.mode !== 'ghadaq' && W.CUR && W.CUR !== 'home' && typeof W.go === 'function') { history.pushState({ rt: 1 }, ''); W.go('home'); return; }
+    if (APP.mode !== 'ghadaq' && W.CUR && W.CUR !== 'home' && typeof W.go === 'function') { W.go('home'); return; }
     exitBox();
   });
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', armBack); else setTimeout(armBack, 0);
 
   W.RT = { call: call, sync: sync, kget: kget, kset: kset, post: post, M: M };
 })();

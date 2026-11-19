@@ -1,5 +1,5 @@
 /* يحفظ ملفات التطبيق في الجهاز ليفتح دون اتصال */
-var V = 'safa-v11';
+var V = 'safa-v12';
 var FILES = ['./', './index.html', './core.js', './loader.js', './ui.js', './icon-180.png', './icon-192.png', './icon-512.png', './manifest.json',
   './ghadaq/', './ghadaq/index.html', './ghadaq/manifest.json', './ghadaq/icon-180.png', './ghadaq/icon-192.png', './ghadaq/icon-512.png'];
 self.addEventListener('install', function (e) {
@@ -13,7 +13,7 @@ self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET') return;
   if (u.origin === location.origin) {
     /* الشبكة أولًا (لتصل التحديثات)، ثم النسخة المحفوظة دون اتصال */
-    e.respondWith(fetch(e.request).then(function (r) {
+    e.respondWith(fetch(e.request, { cache: 'no-cache' }).then(function (r) {
       if (r.ok) { var cl = r.clone(); caches.open(V).then(function (c) { c.put(e.request, cl); }); }
       return r;
     }).catch(function () { return caches.match(e.request, { ignoreSearch: true }).then(function (r) { return r || caches.match('./index.html'); }); }));

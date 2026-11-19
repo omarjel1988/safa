@@ -18,8 +18,8 @@
     html = /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, function (m) { return m + inj; }) : inj + html;
     document.open(); document.write(html); document.close();
   }
-  var coreP = Promise.all([fetch((APP.root || './') + 'core.js').then(function (r) { return r.text(); }),
-    fetch((APP.root || './') + 'ui.js').then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; })])
+  var coreP = Promise.all([fetch((APP.root || './') + 'core.js', { cache: navigator.onLine ? 'no-cache' : 'default' }).then(function (r) { return r.text(); }),
+    fetch((APP.root || './') + 'ui.js', { cache: navigator.onLine ? 'no-cache' : 'default' }).then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; })])
     .then(function (x) { return x[0] + '<\/script><script>' + x[1]; });
   Promise.all([RT.kget('shell'), coreP]).then(function (x) {
     var shell = x[0], core = x[1];
