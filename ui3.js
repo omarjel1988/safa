@@ -273,6 +273,7 @@
     if (after) after.insertAdjacentElement('afterend', b); else nav.appendChild(b);
     var og = W.go;
     W.go = function (p) {
+      if (p === 'entry') { var S0 = g('S'); if (S0 && S0.acc && S0.acc.some(function (a) { return a.name === 'العام'; })) S0.cur = 'العام'; }
       if (p !== 'aging') return og.apply(this, arguments);
       var S = g('S'); if (S) { S.page = 'aging'; S.after = null; }
       Array.prototype.forEach.call(document.querySelectorAll('#nav button'), function (x) { x.classList.toggle('on', x.dataset.p === 'aging'); });
