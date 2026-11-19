@@ -484,18 +484,144 @@
     api('remGet', []).then(draw).catch(function (e) { box.innerHTML = '<div style="color:#C62828">' + E(e && e.message || e) + '</div>'; });
   }
 
+  /* ================= 3) اختصارات الأيقونة + 4) الملفات المُشارَكة إلى التطبيق ================= */
+  function visible(id) { var e = document.getElementById(id); if (!e) return false; var c = getComputedStyle(e); return c.display !== 'none' && c.visibility !== 'hidden' && e.offsetWidth > 0; }
+  function appReady() {
+    if (visible(GH ? 'lock' : 'pin')) return false;
+    if (GH) { var S = g('S'); return !!(S && S.acc && S.acc.length && W.go); }
+    return !!(g('B') && g('CUR') && W.go);
+  }
+  function whenReady(fn, max) { var t0 = Date.now(), iv = setInterval(function () { if (appReady()) { clearInterval(iv); fn(); } else if (Date.now() - t0 > (max || 120000)) clearInterval(iv); }, 250); }
+  function waitFor(test, fn, max) { var t0 = Date.now(), iv = setInterval(function () { var r = test(); if (r) { clearInterval(iv); fn(r); } else if (Date.now() - t0 > (max || 15000)) clearInterval(iv); }, 200); }
+  (function () {
+    var qs = new URLSearchParams(location.search), to = qs.get('go'), sh = qs.get('share');
+    if (!to && !sh) return;
+    try { history.replaceState(history.state, '', location.pathname); } catch (e) { /* */ }
+    var OK = GH ? ['entry', 'accts', 'stmt', 'search', 'dash', 'month', 'aging'] : ['inv', 'jentry', 'sentry', 'sstmt', 'home', 'pinv', 'daily'];
+    if (to && OK.indexOf(to) > -1) whenReady(function () { setTimeout(function () { W.go(to); }, 150); });
+    if (!sh || !W.caches) return;
+    var key = new URL((APP.root || './') + 'share-file', location.href).href;
+    caches.open('share-inbox').then(function (c) { return c.match(key).then(function (r) { if (!r) return null; return r.blob().then(function (b) { c.delete(key); var n = decodeURIComponent(r.headers.get('X-Name') || 'file'); return new File([b], n, { type: b.type || r.headers.get('Content-Type') || '' }); }); }); }).then(function (f) {
+      if (!f) return;
+      whenReady(function () {
+        if (GH) {
+          W.go('entry');
+          waitFor(function () { return document.getElementById('nf'); }, function (inp) {
+            try { var dt = new DataTransfer(); dt.items.add(f); inp.files = dt.files; inp.dispatchEvent(new Event('change', { bubbles: true })); msg('📎 أُرفق «' + f.name + '» — أكمل بيانات القيد ثم احفظ'); } catch (e) { msg('تعذّر إرفاق الملف', 1); }
+          });
+        } else {
+          W.go('inv');
+          waitFor(function () { return g('aiRead') && document.getElementById('aifile'); }, function () { try { g('aiRead')(f); } catch (e) { msg('تعذّرت قراءة الملف', 1); } });
+        }
+      });
+    });
+  })();
+
+  /* ================= 8) التنقل بين التطبيقين ================= */
+  var OTHER = GH ? { url: '../', icon: '../icon-192.png?v=4', name: 'مكتبة الصفاء' } : { url: 'ghadaq/', icon: 'ghadaq/icon-192.png?v=4', name: 'يومية غدق' };
+  function goOther() { location.href = new URL(OTHER.url, location.href).href; }
+  setInterval(function () {
+    var h = GH ? document.querySelector('header .top .ui-hgrp') : document.querySelector('header .hb');
+    if (!h || h.querySelector('.u3-sw')) return;
+    var anchor = h.querySelector('.u3-sbtn'); if (!anchor) return;
+    var b = el('<button class="ui-hbtn u3-sw" title="الانتقال إلى ' + OTHER.name + '" aria-label="الانتقال إلى ' + OTHER.name + '"><img src="' + OTHER.icon + '" alt="" style="width:22px;height:22px;border-radius:6px;display:block"></button>');
+    b.onclick = goOther;
+    h.insertBefore(b, anchor);
+  }, 700);
+
+  /* ================= 10) الأجهزة المتصلة ================= */
+  function devId() { var k = 'rt_dev_' + APP.id, v = ls(k); if (!v) { v = (Date.now().toString(36) + Math.random().toString(36).slice(2, 10)); ls(k, v); } return v; }
+  function devName() {
+    var u = navigator.userAgent, d = /iPad|Macintosh.*Mobile|Macintosh.*Touch/.test(u) || (/Macintosh/.test(u) && navigator.maxTouchPoints > 1) ? 'آيباد' : /iPhone/.test(u) ? 'آيفون' : /Android/.test(u) ? (/Mobile/.test(u) ? 'جوال أندرويد' : 'تابلت أندرويد') : /Windows/.test(u) ? 'كمبيوتر ويندوز' : /Mac/.test(u) ? 'ماك' : 'جهاز';
+    var br = /Edg\//.test(u) ? 'Edge' : /SamsungBrowser/.test(u) ? 'Samsung' : /CriOS|Chrome\//.test(u) ? 'Chrome' : /Safari\//.test(u) ? 'Safari' : /Firefox/.test(u) ? 'Firefox' : '';
+    var st = W.matchMedia && W.matchMedia('(display-mode: standalone)').matches || navigator.standalone ? 'تطبيق' : 'متصفح';
+    return d + ' · ' + (br ? br + ' · ' : '') + st;
+  }
+  function devPing() { if (!navigator.onLine || !appReady()) return; api(GH ? 'devPing' : 'webDevPing', [{ id: devId(), n: devName() }]).catch(function () { /* */ }); }
+  whenReady(function () { setTimeout(devPing, 3000); setInterval(devPing, 10 * 60 * 1000); });
+  function ago(t) { var m = Math.round((Date.now() - t) / 60000); if (m < 2) return 'الآن'; if (m < 60) return 'قبل ' + m + ' دقيقة'; var h = Math.round(m / 60); if (h < 24) return 'قبل ' + h + ' ساعة'; return 'قبل ' + Math.round(h / 24) + ' يوم'; }
+  function devSheet() {
+    var o = sheet('📱 الأجهزة المتصلة', [], '<div id="u3-dl">جارٍ التحميل…</div>');
+    var box = o.querySelector('#u3-dl'), me = devId();
+    var draw = function (l) {
+      l = (l || []).slice().sort(function (a, b) { return (b.last || 0) - (a.last || 0); });
+      box.innerHTML = (l.length ? l.map(function (d) {
+        return '<div class="u3-row"><div class="t"><b>' + E(d.n || 'جهاز') + (d.id === me ? ' <span class="u3-chip g">هذا الجهاز</span>' : '') + '</b><small>آخر دخول: ' + ago(d.last) + ' · أول دخول: ' + new Date(d.first || d.last).toLocaleDateString('ar-SA-u-ca-gregory') + '</small></div>' +
+          (d.id === me ? '' : '<button data-out="' + E(d.id) + '" title="تسجيل خروج هذا الجهاز">خروج</button>') + '</div>';
+      }).join('') : '<div style="color:#8796A5">لا توجد أجهزة مسجّلة بعد.</div>') +
+        '<div style="color:#8796A5;font-size:13px;margin:10px 0">تُسجَّل الأجهزة عند فتح التطبيق. ' + (GH ? '' : 'في مكتبة الصفاء يُخرج زر «خروج» كل الأجهزة الأخرى معًا لأن رمز الدخول مشترك بينها. ') + 'يلزم أن يكون رمز الدخول مفعّلًا حتى يُطلب من الأجهزة المُخرَجة إدخاله من جديد.</div>' +
+        '<button class="it" id="u3-dall" style="background:#C62828;color:#fff;text-align:center">تسجيل خروج كل الأجهزة الأخرى</button>';
+      box.querySelector('#u3-dall').onclick = function () { out(''); };
+      Array.prototype.forEach.call(box.querySelectorAll('[data-out]'), function (b) { b.onclick = function () { out(b.dataset.out); }; });
+    };
+    var out = function (id) {
+      if (!confirm(id && GH ? 'تسجيل خروج هذا الجهاز؟ سيُطلب منه رمز الدخول من جديد.' : 'تسجيل خروج كل الأجهزة الأخرى؟ سيُطلب منها رمز الدخول من جديد.')) return;
+      api(GH ? 'devOut' : 'webDevOut', [{ id: id, me: me }]).then(function (r) {
+        if (!GH && r && r.tok !== undefined) { var st = g('setTok'); if (st) st(r.tok); }
+        msg(r && r.pin === false ? 'رمز الدخول غير مفعّل — فعّله من الإعدادات أولًا' : '✔ تم تسجيل الخروج');
+        return api(GH ? 'devList' : 'webDevList', []).then(draw);
+      }).catch(function (e) { msg('تعذّر: ' + (e && e.message || e), 1); });
+    };
+    api(GH ? 'devList' : 'webDevList', []).then(draw).catch(function (e) { box.innerHTML = '<div style="color:#C62828">' + E(e && e.message || e) + '</div>'; });
+  }
+
+  /* ================= 9) حالة النظام ================= */
+  function sysSheet() {
+    var o = sheet('🛠 حالة النظام', [], '<div id="u3-sy">جارٍ الفحص…</div>');
+    var box = o.querySelector('#u3-sy'), RT = W.RT || {};
+    var row = function (k, v) { return '<div class="u3-row"><div class="t"><b>' + k + '</b></div><div style="text-align:left">' + v + '</div></div>'; };
+    var lastok = Number(ls('rt_lastok_' + APP.id) || 0), outq = RT.out ? RT.out() : [];
+    Promise.all([
+      W.caches ? caches.keys().then(function (k) { return k.filter(function (x) { return /^safa-v/.test(x); })[0] || ''; }).catch(function () { return ''; }) : Promise.resolve(''),
+      navigator.storage && navigator.storage.estimate ? navigator.storage.estimate().catch(function () { return {}; }) : Promise.resolve({}),
+      RT.countCache ? RT.countCache() : Promise.resolve(0),
+      navigator.storage && navigator.storage.persisted ? navigator.storage.persisted().catch(function () { return false; }) : Promise.resolve(false)
+    ]).then(function (x) {
+      var mb = function (b) { return b ? (b / 1048576).toFixed(1) + ' م.ب' : '—'; };
+      box.innerHTML =
+        row('الاتصال', navigator.onLine ? '<span class="u3-chip g">متصل</span>' : '<span class="u3-chip r">دون اتصال</span>') +
+        row('آخر اتصال ناجح بالخادم', lastok ? ago(lastok) : '—') +
+        row('عمليات بانتظار المزامنة', outq.length ? '<span class="u3-chip o">' + outq.length + '</span>' : '<span class="u3-chip g">لا يوجد</span>') +
+        (outq.length ? '<div style="font-size:13px;color:#8796A5;padding:4px 0 8px">' + outq.map(function (q) { return '• ' + E(q.d || ''); }).join('<br>') + '</div>' : '') +
+        row('بيانات محفوظة على الجهاز', x[2] + ' عنصر · ' + mb(x[1].usage)) +
+        row('حفظ دائم للبيانات', x[3] ? 'مفعّل' : 'عادي') +
+        row('إصدار التطبيق', E(String(x[0]).replace('safa-v', '') || '—')) +
+        row('الجهاز', E(devName())) +
+        '<button class="it" id="u3-s1" style="background:var(--ui);color:#fff;text-align:center"' + (outq.length ? '' : ' disabled') + '>⟳ مزامنة الآن</button>' +
+        '<button class="it" id="u3-s2" style="text-align:center">⬇ تحديث التطبيق الآن</button>' +
+        '<button class="it" id="u3-s3" style="text-align:center">🧹 مسح الذاكرة المؤقتة وإعادة التحميل</button>' +
+        '<div style="color:#8796A5;font-size:12.5px;margin-top:6px">مسح الذاكرة المؤقتة لا يحذف أي بيانات من الملف ولا العمليات المعلّقة؛ يُعاد تحميل كل شيء من الخادم (يحتاج إنترنت).</div>';
+      box.querySelector('#u3-s1').onclick = function () { if (RT.sync) RT.sync(); o.remove(); msg('جارٍ المزامنة…'); };
+      box.querySelector('#u3-s2').onclick = function () {
+        this.textContent = 'جارٍ التحديث…';
+        var done = function () { location.reload(); };
+        if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) navigator.serviceWorker.getRegistration().then(function (r) { return r ? r.update() : null; }).catch(function () {}).then(function () { setTimeout(done, 800); });
+        else done();
+      };
+      box.querySelector('#u3-s3').onclick = function () {
+        if (!navigator.onLine) { msg('يلزم اتصال بالإنترنت لإعادة التحميل', 1); return; }
+        if (!confirm('مسح الذاكرة المؤقتة وإعادة تحميل التطبيق من الخادم؟')) return;
+        this.textContent = 'جارٍ المسح…';
+        Promise.all([RT.clearCache ? RT.clearCache() : 0, W.caches ? caches.keys().then(function (k) { return Promise.all(k.filter(function (n) { return /^safa-v/.test(n); }).map(function (n) { return caches.delete(n); })); }) : 0])
+          .catch(function () {}).then(function () { location.reload(); });
+      };
+    });
+  }
+
   /* صفوف إضافية في نافذة «المظهر والإعدادات» */
   setInterval(function () {
     var bx = document.querySelector('.ui-sheet .bx'); if (!bx || bx.querySelector('.u3-rows') || !/المظهر والإعدادات/.test(bx.textContent)) return;
     var h = '<div class="u3-rows">' +
       '<div class="rw"><b>⭐ المفضلة</b><button class="ui-hbtn" data-u3="fav" style="background:var(--ui)">تعديل</button></div>' +
+      '<div class="rw"><b>🛠 حالة النظام</b><button class="ui-hbtn" data-u3="sys" style="background:var(--ui)">فتح</button></div>' +
+      '<div class="rw"><b>📱 الأجهزة المتصلة</b><button class="ui-hbtn" data-u3="dev" style="background:var(--ui)">عرض</button></div>' +
       (GH ? '<div class="rw"><b>🔔 التذكير اليومي</b><button class="ui-hbtn" data-u3="rem" style="background:var(--ui)">إعداد</button></div>' :
         '<div class="rw"><b>تنبيه ارتفاع السعر</b><span class="ui-seg">' + [5, 10, 20].map(function (p) { return '<button data-rise="' + p + '" class="' + (riseTh() === p ? 'on' : '') + '">' + p + '%</button>'; }).join('') + '</span></div>') + '</div>';
     var r = el(h), rws = bx.querySelectorAll('.rw');
     bx.insertBefore(r, rws[rws.length - 1] || null);
     r.onclick = function (e) {
       var b = e.target.closest('[data-u3]'), p = e.target.closest('[data-rise]');
-      if (b) { closeSheets(); if (b.dataset.u3 === 'fav') favSheet(); else remSheet(); }
+      if (b) { closeSheets(); var k = b.dataset.u3; if (k === 'fav') favSheet(); else if (k === 'sys') sysSheet(); else if (k === 'dev') devSheet(); else remSheet(); }
       if (p) { ls('u3_rise', p.dataset.rise); Array.prototype.forEach.call(r.querySelectorAll('[data-rise]'), function (x) { x.classList.toggle('on', x === p); }); }
     };
   }, 400);

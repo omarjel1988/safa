@@ -39,6 +39,7 @@
       .then(function (t) {
         var j; try { j = JSON.parse(t); } catch (e) { throw new TypeError('رد غير متوقع من الخادم — تأكد من نشر الواجهة بوصول «أي شخص»'); }
         if (j && j.err !== undefined) { var er = new Error(j.err); er.app = true; throw er; }
+        try { localStorage.setItem('rt_lastok_' + APP.id, String(Date.now())); } catch (e) { /* */ }
         return j ? j.v : j;
       });
   }
@@ -54,7 +55,7 @@
     ok: function (v) { try { var o = typeof v === 'string' ? JSON.parse(v) : v; return o && o.ok === false ? (o.msg || 'خطأ') : ''; } catch (e) { return ''; } },
     writes: ['add', 'update', 'remove', 'newAccount', 'archive', 'unarchive', 'saveSettings', 'upload', 'undo', 'flush', 'renameAcc', 'closeAcc',
       'saveOrder', 'mergeAcc', 'savePT', 'rescanPT', 'coSave', 'pinSet', 'pinOff', 'lockNow', 'backupNow', 'mailNow'],
-    nocache: [],
+    nocache: ['devPing', 'devList', 'devOut', 'remGet', 'remTest'],
     prefetch: function () { var S = gS(); return ((S && S.acc) || []).map(function (x) { return ['account', [x.name]]; }); },
     offline: {
       add: function (e) { return JSON.stringify({ ok: true, offline: true, mirror: !!(e && e.mirror) }); }
@@ -70,7 +71,7 @@
     writes: ['webSaveInvoice', 'webSaveJournal', 'webJUpdate', 'webJDelete', 'webPUpdate', 'webPDelete', 'webAddItem', 'webFillCodes', 'webAddSupplier',
       'webSupSaveEntry', 'webSupDeleteEntry', 'webSupSaveSupplier', 'webSupDeleteSupplier', 'webInvReplace', 'webInvDelete', 'webInvAttach',
       'webSaveSettings', 'webSetPin', 'webBackupNow', 'webAutoBackup', 'webSetRate', 'webSetGeminiKey'],
-    nocache: ['webPdf', 'webInvPdf', 'webSupPdf', 'webInvExtract', 'webAiState', 'webPFindPdf'],
+    nocache: ['webDevPing', 'webDevList', 'webDevOut', 'webPdf', 'webInvPdf', 'webSupPdf', 'webInvExtract', 'webAiState', 'webPFindPdf'],
     offline: {
       webSaveJournal: function (p) {
         return { ok: true, offline: true, msg: '📴 حُفظت دون اتصال، وستُرسل تلقائيًا عند عودة الإنترنت', bal: (W.B && W.B.bal) || { cash: 0, due: 0 } };
@@ -382,5 +383,16 @@
     exitBox();
   });
 
-  W.RT = { call: call, sync: sync, kget: kget, kset: kset, post: post, M: M };
+  /* مسح البيانات المحفوظة مؤقتًا على الجهاز (مع الإبقاء على العمليات المعلّقة) */
+  function clearCache() {
+    return db().then(function (d) { return new Promise(function (res) {
+      var t = d.transaction('kv', 'readwrite'), st = t.objectStore('kv'), q = st.openCursor(), n = 0;
+      q.onsuccess = function () { var c = q.result; if (!c) return; if (c.key !== 'outbox') { c.delete(); n++; } c.continue(); };
+      t.oncomplete = function () { res(n); }; t.onerror = function () { res(n); };
+    }); }).catch(function () { return 0; });
+  }
+  function countCache() {
+    return db().then(function (d) { return new Promise(function (res) { var q = d.transaction('kv').objectStore('kv').count(); q.onsuccess = function () { res(q.result); }; q.onerror = function () { res(0); }; }); }).catch(function () { return 0; });
+  }
+  W.RT = { call: call, sync: sync, kget: kget, kset: kset, post: post, M: M, out: function () { return OUT.slice(); }, clearCache: clearCache, countCache: countCache };
 })();

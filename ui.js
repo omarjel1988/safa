@@ -110,7 +110,9 @@
     '.ui-seg{display:inline-flex;background:#EEF2F6;border-radius:10px;padding:3px;gap:3px;flex-wrap:wrap}.ui-seg button{border:0;background:transparent;padding:8px 12px;border-radius:8px;font:700 13.5px Cairo,-apple-system,sans-serif;color:#637082}.ui-seg button.on{background:#fff;color:var(--ui);box-shadow:0 1px 3px rgba(0,0,0,.12)}',
     GH ? '' : '.hb button[data-ui]{display:inline-flex;align-items:center;gap:6px}.hb button[data-ui] svg{width:19px;height:19px;flex:0 0 auto}.hb button#homeBtn.hide{display:none}' +
       '@media (max-width:700px){.hb{gap:6px}.hb h1{font-size:18px;gap:7px}.hb button{padding:6px 9px!important;min-width:40px;justify-content:center}.hb .ui-lb{display:none}.hb .ui-hbtn{margin:0}}',
-      '@media (max-width:440px){.hb{gap:4px}.hb h1{font-size:17px;gap:6px}.hb button{padding:5px 6px!important;min-width:35px}.hb button svg{width:18px!important;height:18px!important}}',
+      '@media (max-width:440px){.hb{gap:3px}.hb h1{font-size:16.5px;gap:5px}.hb button{padding:4px 5px!important;min-width:32px;min-height:34px}.hb button svg{width:17px!important;height:17px!important}.hb .u3-sw img{width:20px!important;height:20px!important}}' +
+      '@media (max-width:375px){.hb h1 i{display:none}.hb h1{font-size:15.5px}}' +
+      '@media (max-width:440px){header .top{padding-left:8px!important;padding-right:10px!important}.ui-hgrp{gap:3px!important}.ui-hgrp .ui-hbtn{padding:4px 5px!important;min-width:32px!important;min-height:34px}.ui-hgrp .ui-hi svg,.ui-hgrp .u3-sbtn svg{width:17px!important;height:17px!important}.top .brand{font-size:16px!important;white-space:nowrap}.ui-hgrp .u3-sw img{width:20px!important;height:20px!important}}',
     GH ? '.ui-hgrp{display:flex;align-items:center;gap:8px}.ui-hgrp .ui-hbtn{margin:0;display:inline-flex;align-items:center;justify-content:center;gap:6px}.ui-hgrp .ui-hi svg{width:19px;height:19px;flex:0 0 auto}.ui-hgrp .ui-hbtn.hide{display:none}.top .brand{min-width:0}' +
       'button[onclick^="newEntryM"]{display:none!important}' +
       '.lgt td.x{min-width:240px;max-width:360px;word-break:normal!important;overflow-wrap:break-word}' +
