@@ -90,12 +90,12 @@
     '.ui-bnav button{flex:1;border:0;background:transparent;color:#7A8794;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font:700 11.5px Cairo,-apple-system,sans-serif;border-radius:12px;min-height:52px;-webkit-tap-highlight-color:transparent}',
     '.ui-bnav button svg{width:24px;height:24px}.ui-bnav button.on{color:var(--ui)}.ui-bnav button.on svg{background:color-mix(in srgb,var(--ui) 14%,transparent);border-radius:10px;padding:3px 10px;width:44px;box-sizing:border-box}',
     'body.ui-has-nav{padding-bottom:calc(70px + env(safe-area-inset-bottom))}',
-    '.ui-bnav.sc{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}.ui-bnav.sc::-webkit-scrollbar{display:none}.ui-bnav.sc button{flex:0 0 76px;scroll-snap-align:start}',
+    '.ui-bnav button span{white-space:nowrap}.ui-bnav.sc button{padding:6px 10px!important}.ui-bnav.sc{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}.ui-bnav.sc::-webkit-scrollbar{display:none}.ui-bnav.sc button{flex:0 0 76px;scroll-snap-align:start}',
     '.ui-fab{position:fixed;left:16px;bottom:calc(80px + env(safe-area-inset-bottom));z-index:61;width:58px;height:58px;border-radius:18px;border:0;background:var(--ui);color:#fff;box-shadow:0 8px 22px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;transition:transform .15s}',
     '.ui-fab svg{width:28px;height:28px}.ui-fab:active{transform:scale(.92)}.ui-fab.hide{display:none}',
     '@media (min-width:1000px) and (orientation:landscape){.ui-bnav{top:0;bottom:0;left:auto;right:0;width:88px;flex-direction:column;justify-content:flex-start;gap:6px;padding:calc(14px + env(safe-area-inset-top)) 6px 14px;border-top:0;border-left:1px solid rgba(0,0,0,.08)}' +
       '.ui-bnav button{flex:0 0 auto;min-height:64px}.ui-bnav.sc{overflow-x:hidden;overflow-y:auto}.ui-bnav.sc button{flex:0 0 auto}body.ui-has-nav{padding-bottom:0;padding-right:88px}.ui-fab{bottom:24px;left:24px}' + (GH ? '' : 'main{max-width:1200px}') + '}',
-    GH ? '@media (max-width:999px),(orientation:portrait){#nav{display:none!important}}' : 'body.ui-has-nav #tabs{display:none!important}.ui-bnav.sc button{flex:1 0 76px}',
+    GH ? '@media (max-width:999px),(orientation:portrait){#nav{display:none!important}}' : 'body.ui-has-nav #tabs{display:none!important}.ui-bnav.sc button{flex:1 0 auto;min-width:72px}',
     'body.ui-no-nav .ui-fab{bottom:calc(20px + env(safe-area-inset-bottom))}',
     GH ? '' : 'body[data-sec=p],body[data-sec=j],body[data-sec=s]{--ui:var(--c)}',
     '.ui-sheet{position:fixed;inset:0;z-index:9990;background:rgba(15,23,32,.45);display:flex;align-items:flex-end;justify-content:center;animation:uiF .15s}',
@@ -105,6 +105,8 @@
     '.ui-sheet .it{display:block;width:100%;text-align:right;border:0;background:#F3F6F9;border-radius:12px;padding:14px;margin:0 0 8px;font:700 16px Cairo,-apple-system,sans-serif;color:inherit}',
     '.ui-sheet .it.red{color:#C62828}.ui-sheet .rw{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #EEF1F4;flex-wrap:wrap}.ui-sheet .rw b{font-size:15px}',
     '.ui-seg{display:inline-flex;background:#EEF2F6;border-radius:10px;padding:3px;gap:3px;flex-wrap:wrap}.ui-seg button{border:0;background:transparent;padding:8px 12px;border-radius:8px;font:700 13.5px Cairo,-apple-system,sans-serif;color:#637082}.ui-seg button.on{background:#fff;color:var(--ui);box-shadow:0 1px 3px rgba(0,0,0,.12)}',
+    GH ? '' : '.hb button[data-ui]{display:inline-flex;align-items:center;gap:6px}.hb button[data-ui] svg{width:19px;height:19px;flex:0 0 auto}.hb button#homeBtn.hide{display:none}' +
+      '@media (max-width:700px){.hb{gap:6px}.hb h1{font-size:18px;gap:7px}.hb button{padding:6px 9px!important;min-width:40px;justify-content:center}.hb .ui-lb{display:none}.hb .ui-hbtn{margin:0}}',
     '.ui-hbtn{background:rgba(255,255,255,.17);color:#fff;border:0;border-radius:10px;padding:6px 11px;font:800 15px Cairo,-apple-system,sans-serif;min-height:38px;margin-inline-start:6px}',
     '@keyframes uiF{from{opacity:0}}@keyframes uiU{from{transform:translateY(40px);opacity:.4}}@keyframes uiIn{from{opacity:0;transform:translateY(8px)}}',
     '.ui-in{animation:uiIn .22s ease-out}',
@@ -183,7 +185,27 @@
   }
 
   /* ---------- زر المظهر في الرأس ---------- */
+  /* رأس مكتبة الصفاء المضغوط: أزرار بأيقونات فقط في الشاشات الصغيرة حتى يظهر العنوان كاملًا */
+  var HIC = {
+    ref: '<path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/>',
+    home: IC.home,
+    set: IC.gear
+  };
+  function tidyHeader() {
+    if (GH) return;
+    var h = CFG.header(); if (!h) return;
+    Array.prototype.forEach.call(h.querySelectorAll('button'), function (b) {
+      if (b.dataset.ui) return;
+      var oc = b.getAttribute('onclick') || '', k = /refreshView/.test(oc) ? 'ref' : b.id === 'homeBtn' ? 'home' : /settings/.test(oc) ? 'set' : '';
+      if (!k) return;
+      b.dataset.ui = k;
+      var lb = k === 'ref' ? 'تحديث' : k === 'home' ? 'الرئيسية' : 'الإعدادات';
+      b.title = lb;
+      b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + HIC[k] + '</svg>' + (k === 'set' ? '' : '<span class="ui-lb">' + lb + '</span>');
+    });
+  }
   function headerBtn() {
+    tidyHeader();
     var h = CFG.header(); if (!h || h.querySelector('.ui-hbtn')) return;
     var b = el('<button class="ui-hbtn" title="المظهر والإعدادات">Aa</button>');
     b.onclick = lookSheet;
