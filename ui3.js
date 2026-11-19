@@ -519,10 +519,11 @@
 
   /* ================= 8) التنقل بين التطبيقين ================= */
   var OTHER = GH ? { url: '../', icon: '../icon-192.png?v=4', name: 'مكتبة الصفاء' } : { url: 'ghadaq/', icon: 'ghadaq/icon-192.png?v=4', name: 'يومية غدق' };
+  W.__u3noSw = 1; /* زر التنقل بين التطبيقين أُلغي بطلب المستخدم */
   function goOther() { location.href = new URL(OTHER.url, location.href).href; }
   setInterval(function () {
     var h = GH ? document.querySelector('header .top .ui-hgrp') : document.querySelector('header .hb');
-    if (!h || h.querySelector('.u3-sw')) return;
+    if (W.__u3noSw || !h || h.querySelector('.u3-sw')) return;
     var anchor = h.querySelector('.u3-sbtn'); if (!anchor) return;
     var b = el('<button class="ui-hbtn u3-sw" title="الانتقال إلى ' + OTHER.name + '" aria-label="الانتقال إلى ' + OTHER.name + '"><img src="' + OTHER.icon + '" alt="" style="width:22px;height:22px;border-radius:6px;display:block"></button>');
     b.onclick = goOther;
