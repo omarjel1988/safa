@@ -780,5 +780,36 @@
     new MutationObserver(function () { if (document.querySelector('span.ppr:not([data-u3pp])')) ppWrap(); }).observe(document.documentElement, { childList: true, subtree: true });
     setTimeout(ppWrap, 500);
   }
+  /* مطابقة العام: تصحيح اسم الحساب الناقص أو المختلف في قيود «العام» */
+  if (GH) {
+    var mfTry = setInterval(function () {
+      var om = W.match; if (typeof om !== 'function' || om._u3) return; clearInterval(mfTry);
+      var esc = function (t) { var f = g('esc'); return f ? f(t) : String(t); };
+      var nm = function () {
+        var res = om.apply(this, arguments);
+        Promise.resolve(res).then(function () { return api('matchFixList', [{}]); }).then(function (r) {
+          var box = document.getElementById('mr2'), S = g('S'); if (!box || !S || S.page !== 'match') return;
+          var old = document.getElementById('u3-mf'); if (old) old.remove();
+          var fx = (r && r.fixes) || []; if (!fx.length) return;
+          var c = el("<div class='card' id='u3-mf' style='border:2px solid #E89B2D;background:color-mix(in srgb,#E89B2D 8%,transparent)'><b>✏️ أسماء حسابات ناقصة أو مختلفة في «العام» (" + fx.length + ")</b>" +
+            "<div class='mut' style='margin:4px 0 8px'>هذه القيود في «العام» يقابلها قيد بنفس المبلغ والتاريخ في الحساب، لكن اسم الحساب فيها مختلف. التصحيح يجعل الاسم مطابقًا لاسم الحساب.</div>" +
+            "<div style='max-height:40vh;overflow:auto'>" + fx.map(function (f) {
+              return "<div style='padding:6px 0;border-bottom:1px solid rgba(0,0,0,.08)'><small class='mut'>" + esc(f.d || '') + ' • ' + esc(fmt(Number(f.s) || Number(f.w) || 0)) + "</small><div><s style='color:#C62828'>" + esc(f.old) + "</s> ← <b style='color:#2E7D32'>" + esc(f.nb) + '</b></div></div>';
+            }).join('') + "</div><button class='btn' id='u3-mfgo' style='width:100%;margin-top:10px'>تصحيح الأسماء (" + fx.length + ')</button></div>');
+          box.insertBefore(c, box.firstChild);
+          c.querySelector('#u3-mfgo').onclick = function () {
+            var b = this; b.disabled = true; b.textContent = 'جارٍ التصحيح…';
+            api('matchFixApply', [{}]).then(function (x) {
+              var t = g('toast'); if (t) t('تم تصحيح ' + ((x && x.fixes && x.fixes.length) || 0) + ' قيد');
+              var S2 = g('S'); if (S2) S2.cache = {};
+              W.match();
+            }).catch(function (e) { b.disabled = false; b.textContent = 'تصحيح الأسماء'; var t = g('toast'); if (t) t((e && e.message) || 'تعذّر التصحيح', 1); });
+          };
+        }).catch(function () { /* */ });
+        return res;
+      };
+      nm._u3 = 1; W.match = nm;
+    }, 300);
+  }
   if (GH) { var agTry = setInterval(function () { if (document.getElementById('nav') && W.go && g('S')) { clearInterval(agTry); agingSetup(); } }, 300); }
 })();
