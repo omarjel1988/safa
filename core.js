@@ -358,6 +358,9 @@
     /* نافذة مفتوحة: الرجوع يغلقها */
     var ov = document.querySelector('.ui-sheet,#dpop,#aikey,#rt-exit');
     if (ov) { ov.remove(); document.body.style.overflow = ''; return; }
+    /* نافذة يومية غدق (قيد جديد، تعديل، حذف…) */
+    var gov = document.getElementById('ov');
+    if (gov && getComputedStyle(gov).display !== 'none') { if (typeof W.closeM === 'function') W.closeM(); else gov.style.display = 'none'; return; }
     /* مكتبة الصفاء: من داخل أي قسم يعود الرجوع إلى الرئيسية */
     if (APP.mode !== 'ghadaq' && W.CUR && W.CUR !== 'home' && typeof W.go === 'function') { W.go('home'); return; }
     exitBox();
