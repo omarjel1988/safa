@@ -117,6 +117,36 @@
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') idleCheck(); });
   W.addEventListener('pageshow', idleCheck);
 
+  /* ================= توحيد لون شريط الإشعارات والشريط السفلي مع لون الشريط العلوي ================= */
+  var hcss = document.createElement('style');
+  hcss.textContent = 'html.u2-hc .ui-bnav{background:var(--u2-hc)!important;border-top-color:transparent!important;box-shadow:0 -4px 18px rgba(0,0,0,.18)!important}' +
+    'html.u2-hc .ui-bnav button{color:rgba(255,255,255,.72)!important}html.u2-hc .ui-bnav button.on{color:#fff!important}' +
+    'html.u2-hc .ui-bnav button.on svg{background:rgba(255,255,255,.22)!important}html.u2-hc{background-color:var(--u2-hc)}';
+  document.head.appendChild(hcss);
+  function solid(c) { return c && !/^(transparent|rgba\(0, 0, 0, 0\))$/.test(c) ? c : ''; }
+  function toHex(c) {
+    var m = String(c).match(/rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/); if (!m) return c;
+    return '#' + [m[1], m[2], m[3]].map(function (x) { return ('0' + (+x).toString(16)).slice(-2); }).join('');
+  }
+  function headColor() {
+    var h = document.querySelector('header'); if (!h) return '';
+    var cs = getComputedStyle(h), c = solid(cs.backgroundColor);
+    if (!c) { var m = (cs.backgroundImage || '').match(/rgba?\([^)]*\)|#[0-9a-f]{3,8}/i); c = m ? m[0] : ''; }
+    if (!c) { var t = h.querySelector('.top'); if (t) { var ct = getComputedStyle(t); c = solid(ct.backgroundColor); if (!c) { var m2 = (ct.backgroundImage || '').match(/rgba?\([^)]*\)|#[0-9a-f]{3,8}/i); c = m2 ? m2[0] : ''; } } }
+    return c ? toHex(c) : '';
+  }
+  var lastHC = '';
+  function syncBars() {
+    var c = headColor(); if (!c || c === lastHC) { if (c) { var mm = document.querySelector('meta[name=theme-color]'); if (mm && mm.content !== c) mm.content = c; } return; }
+    lastHC = c;
+    var root = document.documentElement; root.style.setProperty('--u2-hc', c); root.classList.add('u2-hc');
+    var m = document.querySelector('meta[name=theme-color]');
+    if (!m) { m = document.createElement('meta'); m.name = 'theme-color'; document.head.appendChild(m); }
+    m.content = c;
+  }
+  setInterval(syncBars, 300);
+  document.addEventListener('click', function () { setTimeout(syncBars, 60); }, true);
+
   /* ================= 9 + 10) الطباعة والمشاركة ================= */
   var pcss = document.createElement('style');
   pcss.textContent = '@media print{header,nav,.ui-bnav,.ui-hbtn,#rt-badge,#rt-new,#rt-undo,#ui-mic,.ui-sheet,button,.noprint,.pdf,#toast,#kp{display:none!important}' +
