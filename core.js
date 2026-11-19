@@ -195,13 +195,27 @@
   /* ---------- شارة الحالة ---------- */
   var OFF = false;
   function offline(v) { if (OFF !== v) { OFF = v; badge(); } }
+  /* مكان الشارة: بجانب اسم التطبيق في الأعلى إن وُجد، وإلا أسفل الشاشة */
+  function slot() { return document.querySelector('header .hb h1') || document.querySelector('header .top .brand'); }
+  function placeBadge(b) {
+    var s = slot();
+    if (s) {
+      if (b.parentNode !== s) s.appendChild(b);
+      b.style.cssText = 'position:static;display:none;margin-inline-start:8px;vertical-align:middle;padding:3px 10px;border-radius:14px;font:700 12px system-ui,-apple-system,sans-serif;color:#fff;cursor:pointer;direction:rtl;white-space:nowrap;line-height:1.5;box-shadow:none';
+      b.dataset.hd = '1';
+    }
+  }
+  if (!document.getElementById('rt-bcss')) { var cs = document.createElement('style'); cs.id = 'rt-bcss'; cs.textContent = '#rt-badge .lg{display:inline}#rt-badge .sh{display:none}@media (max-width:640px){#rt-badge[data-hd] .lg{display:none}#rt-badge[data-hd] .sh{display:inline}}header .brand #rt-badge{font-size:11.5px}#rt-badge .xs{display:none}header .hb #rt-badge{flex-shrink:0}@media (max-width:480px){header .hb h1{position:relative}header .hb #rt-badge .lg,header .hb #rt-badge .sh{display:none!important}header .hb #rt-badge .xs{display:inline}header .hb #rt-badge{position:absolute!important;left:0;top:50%;transform:translateY(-50%);width:24px;height:24px;padding:0!important;margin:0!important;border-radius:50%!important;text-align:center;line-height:24px!important;font-size:12px!important}}'; (document.head || document.documentElement).appendChild(cs); }
+  function setB(b, lg, sh) { b.innerHTML = '<span class="lg">' + lg + '</span><span class="sh">' + (sh || lg) + '</span><span class="xs">' + Array.from(sh || lg)[0] + '</span>'; b.title = lg; }
   function el() {
     var b = document.getElementById('rt-badge');
+    if (b && !b.dataset.hd) placeBadge(b);
     if (!b && document.body) {
       b = document.createElement('div'); b.id = 'rt-badge';
       b.style.cssText = 'position:fixed;bottom:calc(10px + env(safe-area-inset-bottom));left:10px;z-index:9999;padding:7px 12px;border-radius:20px;font:600 13px system-ui,-apple-system,sans-serif;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.2);display:none;cursor:pointer;direction:rtl';
-      b.onclick = function () { if (OUT.length) alert('بانتظار المزامنة:\n\n' + OUT.map(function (x) { return '• ' + x.d; }).join('\n')); sync(); };
+      b.onclick = function (e) { if (e) e.stopPropagation(); if (OUT.length) alert('بانتظار المزامنة:\n\n' + OUT.map(function (x) { return '• ' + x.d; }).join('\n')); sync(); };
       document.body.appendChild(b);
+      placeBadge(b);
     }
     return b;
   }
@@ -209,13 +223,13 @@
   function badge() {
     var b = el(); if (!b || Date.now() < NOTE) return;
     var n = OUT.length;
-    if (SYNCING) { b.textContent = '⟳ جارٍ المزامنة…'; b.style.background = '#1565C0'; }
-    else if (n) { b.textContent = '📴 بانتظار المزامنة: ' + n; b.style.background = '#EF6C00'; }
-    else if (OFF || !navigator.onLine) { b.textContent = '📴 دون اتصال — تعرض آخر نسخة محفوظة'; b.style.background = '#546E7A'; }
+    if (SYNCING) { setB(b, '⟳ جارٍ المزامنة…', '⟳ مزامنة'); b.style.background = '#1565C0'; }
+    else if (n) { setB(b, '📴 بانتظار المزامنة: ' + n, '⏳ ' + n); b.style.background = '#EF6C00'; }
+    else if (OFF || !navigator.onLine) { setB(b, '📴 دون اتصال — تعرض آخر نسخة محفوظة', '📴 دون اتصال'); b.style.background = '#E65100'; }
     else { b.style.display = 'none'; return; }
-    b.style.display = 'block';
+    b.style.display = b.dataset.hd ? 'inline-block' : 'block';
   }
-  function note(t, c) { var b = el(); if (!b) return; b.textContent = t; b.style.background = c; b.style.display = 'block'; NOTE = Date.now() + 4000; setTimeout(function () { NOTE = 0; badge(); }, 4100); }
+  function note(t, c) { var b = el(); if (!b) return; setB(b, t); b.style.background = c; b.style.display = b.dataset.hd ? 'inline-block' : 'block'; NOTE = Date.now() + 4000; setTimeout(function () { NOTE = 0; badge(); }, 4100); }
 
   /* ---------- تنبيه بوجود بيانات جديدة من جهاز آخر ---------- */
   var OWNAT = 0, KNOWN = null, VERAT = 0;
