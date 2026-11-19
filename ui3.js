@@ -316,6 +316,18 @@
     });
   }
   setInterval(camWatch, 900);
+  /* يومية غدق: إخفاء «نسخة في حساب العام» عند اختيار حساب العام نفسه */
+  function genMir() {
+    if (!GH) return;
+    ['n', 'm'].forEach(function (p) {
+      var sel = document.getElementById(p + 'a'), cb = document.getElementById(p + 'm');
+      if (!sel || !cb || cb.type !== 'checkbox') return;
+      var box = cb.closest('.form > div') || cb.parentNode, gen = sel.value === 'العام';
+      if (gen && cb.checked) { cb.checked = false; }
+      box.style.display = gen ? 'none' : '';
+    });
+  }
+  if (GH) { setInterval(genMir, 300); document.addEventListener('change', function (e) { if (e.target && /^[nm]a$/.test(e.target.id)) genMir(); }, true); }
   /* إخفاء رابط نموذج Google Form في فاتورة الشراء */
   setInterval(function () {
     if (GH) return;
