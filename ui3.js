@@ -1087,4 +1087,25 @@
     }
     setInterval(function () { fix(); place(); }, 600);
   })();
+  /* ================= خانة الحساب: برتقالي بخط أبيض عريض (مثل بطاقة صافي الرصيد) ================= */
+  (function () {
+    var st = document.createElement('style');
+    st.textContent = '.u3-acc{background:#E16414!important;color:#fff!important;-webkit-text-fill-color:#fff!important;border:0!important;border-radius:16px!important;box-shadow:none!important;' +
+      'font-weight:700!important;font-size:17px!important;min-height:48px!important;padding:10px 16px!important;box-sizing:border-box}' +
+      'select.u3-acc{-webkit-appearance:none!important;appearance:none!important;background-image:url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'14\' height=\'14\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23fff\' stroke-width=\'3\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M6 9l6 6 6-6\'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:left 14px center!important;padding-left:36px!important}' +
+      '.u3-acc::placeholder{color:rgba(255,255,255,.8)!important;-webkit-text-fill-color:rgba(255,255,255,.8)!important}' +
+      '.u3-acc option{color:#14303a;background:#fff;-webkit-text-fill-color:#14303a;font-weight:400}';
+    document.head.appendChild(st);
+    function isAcc(x) {
+      if (x.type === 'hidden' || x.type === 'checkbox' || x.type === 'radio' || x.closest('.ui-sheet')) return false;
+      var t = (x.placeholder || '') + ' ' + (x.getAttribute('aria-label') || '') + ' ' + (x.name || '') + ' ' + (x.id || '');
+      if (x.id) { var l = document.querySelector('label[for="' + x.id + '"]'); if (l) t += ' ' + l.textContent; }
+      var p = x.previousElementSibling; if (p && !p.querySelector('input,select,textarea') && p.textContent.length < 30) t += ' ' + p.textContent;
+      var pr = x.parentNode; if (pr && pr !== document.body && pr.querySelectorAll('input,select,textarea').length === 1 && pr.textContent.length < 40) t += ' ' + pr.textContent;
+      return /(^|\s|[«(])(ال)?حساب(\s|$|[»)])/.test(t.replace(/[:：]/g, ' ')) && !/العام\s*$|نسخة|بحث/.test(t.trim());
+    }
+    setInterval(function () {
+      Array.prototype.forEach.call(document.querySelectorAll('select:not(.u3-acc),input:not(.u3-acc)'), function (x) { if (isAcc(x)) x.classList.add('u3-acc'); });
+    }, 700);
+  })();
 })();
