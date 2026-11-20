@@ -1,0 +1,97 @@
+{
+  "name": "مكتبة الصفاء",
+  "short_name": "مكتبة الصفاء",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1F4E79",
+  "theme_color": "#1F4E79",
+  "icons": [
+    {
+      "src": "icon-192.png?v=4",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png?v=4",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "إدخال فاتورة",
+      "short_name": "إدخال فاتورة",
+      "url": "./?go=inv",
+      "icons": [
+        {
+          "src": "icon-192.png?v=4",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "إدخال اليومية",
+      "short_name": "إدخال اليومية",
+      "url": "./?go=jentry",
+      "icons": [
+        {
+          "src": "icon-192.png?v=4",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "قيد مورد",
+      "short_name": "قيد مورد",
+      "url": "./?go=sentry",
+      "icons": [
+        {
+          "src": "icon-192.png?v=4",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "كشف حساب مورد",
+      "short_name": "كشف حساب مورد",
+      "url": "./?go=sstmt",
+      "icons": [
+        {
+          "src": "icon-192.png?v=4",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "./share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "files": [
+        {
+          "name": "file",
+          "accept": [
+            "application/pdf",
+            "image/*",
+            ".pdf",
+            ".jpg",
+            ".jpeg",
+            ".png"
+          ]
+        }
+      ]
+    }
+  }
+}
