@@ -1003,8 +1003,17 @@
     function fix() {
       var hits = Array.prototype.filter.call(document.querySelectorAll('input,select'), function (x) { return x.type !== 'hidden' && !x.closest('.ui-sheet,table') && KW.test(txt(x)); });
       if (hits.length < 3) return;
-      var P = hits[0].parentNode; while (P && !hits.every(function (x) { return P.contains(x); })) P = P.parentNode;
-      if (!P || P.dataset.u3pg3 || ctrls(P).length > 10) return;
+      var done = [];
+      hits.forEach(function (h) {
+        if (done.some(function (d) { return d.contains(h); })) return;
+        var P = h.parentNode;
+        while (P && P !== document.body && hits.filter(function (x) { return P.contains(x); }).length < 3) P = P.parentNode;
+        if (!P || P === document.body || ctrls(P).length > 10) return;
+        done.push(P); one(P);
+      });
+    }
+    function one(P) {
+      if (P.dataset.u3pg3 || P.closest('[data-u3pg3]')) return;
       P.dataset.u3pg3 = '1';
       if (P.tagName === 'DETAILS') {
         var inner = document.createElement('div'); inner.dataset.u3pg3 = '1';
