@@ -998,11 +998,30 @@
       if (!list.length) return null; var a = list[0].parentNode;
       while (a && !list.every(function (x) { return a.contains(x); })) a = a.parentNode; return a;
     }
+    var PKW = /غرام|مقاس|أطباق|اطباق|كيلو|الطن|طن\b/;
+    function ctlText(x) {
+      var t = (x.placeholder || '') + ' ' + (x.getAttribute('aria-label') || '') + ' ' + (x.name || '') + ' ' + (x.id || '');
+      if (x.id) { var l = document.querySelector('label[for="' + x.id + '"]'); if (l) t += ' ' + l.textContent; }
+      var pv = x.previousElementSibling; if (pv && !ctrls(pv).length) t += ' ' + pv.textContent;
+      var pr = x.parentNode; if (pr && ctrls(pr).length === 1) t += ' ' + pr.textContent;
+      return t;
+    }
+    function findPaperByFields() {
+      var hits = Array.prototype.filter.call(document.querySelectorAll('input,select'), function (x) {
+        return x.type !== 'hidden' && !x.closest('.ui-sheet,table,.u3-dd') && PKW.test(ctlText(x));
+      });
+      if (hits.length < 3) return null;
+      var P = lca(hits); if (!P || ctrls(P).length > 12) return null;
+      var sec = P;
+      while (sec.parentNode && sec.parentNode !== document.body && ctrls(sec.parentNode).length === ctrls(sec).length) sec = sec.parentNode;
+      return sec;
+    }
     function findPaper() {
+      var f = findPaperByFields(); if (f) return f;
       var best = null;
-      Array.prototype.forEach.call(document.querySelectorAll('h2,h3,h4,h5,b,strong,summary,legend,label,div,span,p'), function (h) {
-        if (h.children.length > 1) return;
-        var t = (h.textContent || '').trim(); if (!/^[\s📄🧻📜]*تفاصيل الورق/.test(t) || t.length > 40) return;
+      Array.prototype.forEach.call(document.querySelectorAll('h2,h3,h4,h5,b,strong,summary,legend,label,div,span,p,button,a'), function (h) {
+        if (h.children.length > 2) return;
+        var t = (h.textContent || '').trim(); if (t.indexOf('تفاصيل الورق') < 0 || t.length > 40) return;
         if (h.closest('.u3-pp,.ui-sheet,table')) return;
         var c = h.parentNode;
         while (c && c !== document.body && ctrls(c).length < 3) c = c.parentNode;
