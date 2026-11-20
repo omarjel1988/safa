@@ -987,51 +987,81 @@
     var c3 = document.createElement('style');
     c3.textContent = '.u3-pg3{margin-top:8px!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 8px!important}' +
       '.u3-pg3>*{min-width:0!important;margin:0!important;width:auto!important;max-width:none!important;flex:none!important}' +
-      '.u3-pg3 label,.u3-pg3 .lbl,.u3-pg3 small{font-size:12.5px!important;margin:0 0 3px!important;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+      '.u3-pg3 label,.u3-pg3 .lbl,.u3-pg3 small,.u3-pg3>div>span,.u3-pg3>div>div:not(:has(input,select)){font-size:12.5px!important;margin:0 0 3px!important;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
       '.u3-pg3 input,.u3-pg3 select{min-height:38px!important;height:38px!important;font-size:14px!important;padding:4px 6px!important;width:100%!important;box-sizing:border-box;border-radius:9px!important;margin:0!important}' +
       '.u3-pg3 input::placeholder{font-size:12.5px}';
     document.head.appendChild(c3);
-    var KW = /غرام|مقاس|طبق|كيلو|الطن/;
-    function ctrls(n) { return Array.prototype.filter.call(n.querySelectorAll('input,select,textarea'), function (x) { return x.type !== 'hidden'; }); }
+    var KW = /غرام|جرام|مقاس|طبق|كيلو|الطن/;
+    function ctrls(n) { return Array.prototype.filter.call(n.querySelectorAll ? n.querySelectorAll('input,select,textarea') : [], function (x) { return x.type !== 'hidden'; }).concat(n.matches && n.matches('input,select,textarea') && n.type !== 'hidden' ? [n] : []); }
+    function short(n) { return n && n.nodeType === 1 && !ctrls(n).length && n.textContent.trim().length > 0 && n.textContent.trim().length < 30; }
+    /* غلاف الخانة: أعلى عنصر يحتوي هذه الخانة وحدها */
+    function wrap(x) { var w = x; while (w.parentNode && w.parentNode !== document.body && ctrls(w.parentNode).length === 1) w = w.parentNode; return w; }
     function txt(x) {
-      var t = (x.placeholder || '') + ' ' + (x.getAttribute('aria-label') || '') + ' ' + (x.id || '');
+      var w = wrap(x), t = (x.placeholder || '') + ' ' + (x.getAttribute('aria-label') || '') + ' ' + (x.name || '') + ' ' + (x.id || '') + ' ' + (w !== x ? w.textContent : '');
       if (x.id) { var l = document.querySelector('label[for="' + x.id + '"]'); if (l) t += ' ' + l.textContent; }
-      var pv = x.previousElementSibling; if (pv && !ctrls(pv).length) t += ' ' + pv.textContent;
-      var pr = x.parentNode; if (pr && ctrls(pr).length === 1) t += ' ' + pr.textContent;
+      if (short(w.previousElementSibling)) t += ' ' + w.previousElementSibling.textContent;
       return t;
     }
     function fix() {
-      var hits = Array.prototype.filter.call(document.querySelectorAll('input,select'), function (x) { return x.type !== 'hidden' && !x.closest('.ui-sheet,table') && KW.test(txt(x)); });
+      var all = Array.prototype.filter.call(document.querySelectorAll('input,select'), function (x) { return x.type !== 'hidden' && x.type !== 'checkbox' && x.type !== 'radio' && !x.closest('.u3-pg3') && !x.closest('.ui-sheet'); });
+      var hits = all.filter(function (x) { return KW.test(txt(x)); });
       if (hits.length < 3) return;
-      var done = [];
+      /* نجمع الخانات المتجاورة في نفس الأب (قد تكون مجموعات في أكثر من نموذج) */
+      var groups = [];
       hits.forEach(function (h) {
-        if (done.some(function (d) { return d.contains(h); })) return;
-        var P = h.parentNode;
-        while (P && P !== document.body && hits.filter(function (x) { return P.contains(x); }).length < 3) P = P.parentNode;
-        if (!P || P === document.body || ctrls(P).length > 10) return;
-        done.push(P); one(P);
+        var w = wrap(h), par = w.parentNode, gr = null;
+        groups.forEach(function (G) { if (G.par === par) gr = G; });
+        if (!gr) { gr = { par: par, ws: [] }; groups.push(gr); }
+        if (gr.ws.indexOf(w) < 0) gr.ws.push(w);
       });
+      groups.forEach(function (G) {
+        if (G.ws.length < 3) {
+          /* الخانات في صفوف منفصلة: نصعد درجة إلى الأب المشترك */
+          return;
+        }
+        build(G.par, G.ws);
+      });
+      /* حالة الصفوف المنفصلة (2 في كل صف مثلًا): نجمع الأجداد */
+      var small = groups.filter(function (G) { return G.ws.length < 3 && G.par && G.par.isConnected && !G.par.closest('.u3-pg3'); });
+      if (small.length > 1) {
+        var gp = small[0].par.parentNode, same = small.every(function (G) { return G.par.parentNode === gp; });
+        if (same && gp) build(gp, [].concat.apply([], small.map(function (G) { return G.ws; })), small.map(function (G) { return G.par; }));
+      }
     }
-    function one(P) {
-      if (P.dataset.u3pg3 || P.closest('[data-u3pg3]')) return;
-      P.dataset.u3pg3 = '1';
-      if (P.tagName === 'DETAILS') {
-        var inner = document.createElement('div'); inner.dataset.u3pg3 = '1';
-        Array.prototype.slice.call(P.children).forEach(function (k) { if (k.tagName !== 'SUMMARY') inner.appendChild(k); });
-        P.appendChild(inner); P = inner;
+    function build(par, ws, rows) {
+      /* نضيف الخانات الأخرى الواقعة بين أول وآخر خانة (مثل النوع/العدد) */
+      var kids = Array.prototype.slice.call(par.children), idx = ws.map(function (w) { return kids.indexOf(rows ? w.parentNode : w); }).filter(function (i) { return i > -1; });
+      if (!idx.length) return;
+      var lo = Math.min.apply(null, idx), hi = Math.max.apply(null, idx), items = [];
+      var EX = /نوع|ورق|عدد|لون|كمية/;
+      var isF = function (k) { if (!k || !ctrls(k).length) return false; var c = ctrls(k); return c.length === 1 && EX.test(txt(c[0])); };
+      if (!rows) {
+        var pl = short(kids[lo - 1]) ? lo - 2 : lo - 1; if (isF(kids[pl])) lo = pl;
+        if (short(kids[lo - 1])) lo--;
+        var nh = short(kids[hi + 1]) ? hi + 2 : hi + 1; if (isF(kids[nh])) hi = nh;
       }
-      var cs = ctrls(P), kids = Array.prototype.slice.call(P.children);
-      /* إذا كانت التسميات والخانات أبناء مباشرين، نجمع كل تسمية مع خانتها */
-      if (kids.some(function (k) { return cs.indexOf(k) > -1; })) {
-        var cur = null;
-        kids.forEach(function (k) {
-          if (k.tagName === 'SUMMARY' || (!ctrls(k).length && cs.indexOf(k) < 0 && /تفاصيل/.test(k.textContent))) return;
-          if (!cur) { cur = document.createElement('div'); P.insertBefore(cur, k); }
-          cur.appendChild(k); if (cs.indexOf(k) > -1 || ctrls(k).length) cur = null;
-        });
+      for (var i = lo; i <= hi; i++) {
+        var k = kids[i];
+        if (rows) { if (rows.indexOf(k) > -1) Array.prototype.slice.call(k.children).forEach(function (c) { items.push(c); }); else if (ctrls(k).length) items.push(k); }
+        else items.push(k);
       }
-      P.classList.add('u3-pg3');
-      Array.prototype.forEach.call(P.children, function (k) { if (k.tagName === 'SUMMARY' || (!ctrls(k).length && /تفاصيل/.test(k.textContent))) k.style.gridColumn = '1 / -1'; });
+      var cells = [], pend = null;
+      items.forEach(function (k) {
+        if (!ctrls(k).length) { if (short(k)) pend = k; return; }
+        if (ctrls(k).length > 1) { cells = null; return; }
+        if (!cells) return;
+        cells.push({ lab: pend, f: k }); pend = null;
+      });
+      if (!cells || cells.length < 3 || cells.length > 9) return;
+      var grid = document.createElement('div'); grid.className = 'u3-pg3'; grid.dataset.u3pg3 = '1';
+      var first = rows ? kids[lo] : (cells[0].lab || cells[0].f);
+      par.insertBefore(grid, first);
+      cells.forEach(function (c) {
+        var cell = document.createElement('div');
+        if (c.lab) cell.appendChild(c.lab);
+        cell.appendChild(c.f); grid.appendChild(cell);
+      });
+      if (rows) rows.forEach(function (r) { if (!ctrls(r).length && !r.textContent.trim()) r.style.display = 'none'; });
     }
     setInterval(fix, 600);
   })();
