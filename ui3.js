@@ -1028,6 +1028,28 @@
         if (same && gp) build(gp, [].concat.apply([], small.map(function (G) { return G.ws; })), small.map(function (G) { return G.par; }));
       }
     }
+    /* نقل قسم تفاصيل الورق ليأتي مباشرة أسفل خانة البيان */
+    function place() {
+      Array.prototype.forEach.call(document.querySelectorAll('.u3-pg3:not([data-u3mv])'), function (grid) {
+        grid.dataset.u3mv = '1';
+        var A = grid.parentNode, by = null;
+        while (A && A !== document.documentElement && !by) {
+          by = ctrls(A).filter(function (x) { return !grid.contains(x) && /البيان/.test(txt(x)); })[0] || null;
+          if (!by) A = A.parentNode;
+        }
+        if (!by) return;
+        var S = grid; while (S.parentNode !== A) S = S.parentNode;
+        var B = wrap(by); while (B.parentNode !== A) B = B.parentNode;
+        if (B === S) return;
+        var mv = [S];
+        if (S === grid) { /* عنوان القسم قبل الخانات مباشرة */
+          var h = grid.previousElementSibling;
+          while (h && !ctrls(h).length && /تفاصيل|اختياري|تلقائي/.test(h.textContent)) { mv.unshift(h); h = h.previousElementSibling; }
+        }
+        var ref = B.nextSibling;
+        mv.forEach(function (n) { A.insertBefore(n, ref); });
+      });
+    }
     function build(par, ws, rows) {
       /* نضيف الخانات الأخرى الواقعة بين أول وآخر خانة (مثل النوع/العدد) */
       var kids = Array.prototype.slice.call(par.children), idx = ws.map(function (w) { return kids.indexOf(rows ? w.parentNode : w); }).filter(function (i) { return i > -1; });
@@ -1063,6 +1085,6 @@
       });
       if (rows) rows.forEach(function (r) { if (!ctrls(r).length && !r.textContent.trim()) r.style.display = 'none'; });
     }
-    setInterval(fix, 600);
+    setInterval(function () { fix(); place(); }, 600);
   })();
 })();
