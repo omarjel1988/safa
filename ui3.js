@@ -1087,4 +1087,48 @@
     }
     setInterval(function () { fix(); place(); }, 600);
   })();
+  /* ================= خانة الحساب: نفس تنسيق وألوان خانة «صافي الرصيد» في الرئيسية ================= */
+  (function () {
+    var KEY = 'u3_netsty_' + APP.id, MEM = ls(KEY), st = document.createElement('style');
+    document.head.appendChild(st);
+    function solid(c) { return c && c !== 'transparent' && !/rgba\([^)]*,\s*0\)$/.test(c); }
+    /* نقرأ تنسيق خانة صافي الرصيد من الصفحة الرئيسية ونحفظه */
+    function grab() {
+      var w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null), n, box = null;
+      while ((n = w.nextNode())) {
+        if (!/صافي\s*الرصيد/.test(n.nodeValue) || n.parentNode.closest('.ui-sheet,select,option,script,style')) continue;
+        var e = n.parentNode;
+        for (var k = 0; k < 6 && e && e !== document.body; k++, e = e.parentNode) {
+          var c = getComputedStyle(e);
+          if (solid(c.backgroundColor) || c.backgroundImage !== 'none' || parseFloat(c.borderTopWidth) > 0) { box = e; break; }
+        }
+        if (box) break;
+      }
+      if (!box) return;
+      var c = getComputedStyle(box), big = box, bs = 0;
+      Array.prototype.forEach.call(box.querySelectorAll('*'), function (x) { var f = parseFloat(getComputedStyle(x).fontSize); if (f > bs && x.textContent.trim()) { bs = f; big = x; } });
+      var o = { bg: c.backgroundColor, bi: c.backgroundImage, col: getComputedStyle(big).color || c.color, bw: c.borderTopWidth, bst: c.borderTopStyle, bc: c.borderTopColor, r: c.borderRadius, sh: c.boxShadow };
+      var j = JSON.stringify(o); if (MEM !== j) { MEM = j; ls(KEY, j); css(); }
+    }
+    function css() {
+      var o; try { o = JSON.parse(MEM || 'null'); } catch (e) { o = null; }
+      if (!o) { st.textContent = ''; return; }
+      st.textContent = '.u3-acc{background-color:' + o.bg + '!important;background-image:' + (o.bi === 'none' ? 'none' : o.bi) + '!important;color:' + o.col + '!important;' +
+        'border:' + (parseFloat(o.bw) > 0 ? o.bw + ' ' + o.bst + ' ' + o.bc : '0 none') + '!important;border-radius:' + o.r + '!important;box-shadow:' + o.sh + '!important;font-weight:700!important;-webkit-text-fill-color:' + o.col + '!important}' +
+        '.u3-acc option{color:#14303a;background:#fff;-webkit-text-fill-color:#14303a}';
+    }
+    function isAcc(x) {
+      if (x.type === 'hidden' || x.type === 'checkbox' || x.type === 'radio' || x.closest('.ui-sheet')) return false;
+      var t = (x.placeholder || '') + ' ' + (x.getAttribute('aria-label') || '') + ' ' + (x.name || '') + ' ' + (x.id || '');
+      if (x.id) { var l = document.querySelector('label[for="' + x.id + '"]'); if (l) t += ' ' + l.textContent; }
+      var p = x.previousElementSibling; if (p && !p.querySelector('input,select,textarea') && p.textContent.length < 30) t += ' ' + p.textContent;
+      var pr = x.parentNode; if (pr && pr !== document.body && pr.querySelectorAll('input,select,textarea').length === 1 && pr.textContent.length < 40) t += ' ' + pr.textContent;
+      return /(^|\s|[«(])(ال)?حساب(\s|$|[:»)])/.test(t.replace(/[:：]/g, ' ')) && !/العام\s*$|نسخة|بحث/.test(t.trim());
+    }
+    css();
+    setInterval(function () {
+      grab();
+      Array.prototype.forEach.call(document.querySelectorAll('select:not(.u3-acc),input:not(.u3-acc)'), function (x) { if (isAcc(x)) x.classList.add('u3-acc'); });
+    }, 700);
+  })();
 })();
