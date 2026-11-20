@@ -981,4 +981,71 @@
     W.addEventListener('scroll', place, true); W.addEventListener('resize', place);
     document.addEventListener('pointerdown', function (e) { if (dd && !dd.contains(e.target) && e.target !== ddFor && !(e.target.classList && e.target.classList.contains('u3-ar'))) closeDD(); }, true);
   })();
+
+  /* ================= غدق: تفاصيل الورق في إدخال قيد تحت البيان وبخانات صغيرة متجاورة ================= */
+  if (GH) (function () {
+    var css2 = document.createElement('style');
+    css2.textContent = '.u3-ppe{background:color-mix(in srgb,#E89B2D 9%,#fff)!important;border:1.5px solid color-mix(in srgb,#E89B2D 38%,transparent)!important;border-radius:14px!important;padding:8px 10px!important;margin:8px 0 12px!important;box-shadow:none!important}' +
+      '.u3-ppg{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 8px!important;margin:0!important}' +
+      '.u3-ppg>*{min-width:0!important;margin:0!important;width:auto!important;flex:none!important;max-width:none!important}' +
+      '.u3-ppg label,.u3-ppg .lbl,.u3-ppg small{font-size:12px!important;margin:0 0 2px!important;color:#9A5B00!important;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+      '.u3-ppg input,.u3-ppg select{min-height:38px!important;height:38px!important;font-size:14.5px!important;padding:4px 6px!important;width:100%!important;box-sizing:border-box;border-radius:9px!important;background:#fff!important;border:1px solid color-mix(in srgb,#E89B2D 40%,#ccc)!important}' +
+      '.u3-ppe>h3,.u3-ppe>h4,.u3-ppe>b,.u3-ppe>summary,.u3-ppe>legend,.u3-ppe>.t,.u3-ppe>div:first-child:not(.u3-ppg){color:#B66A00!important;font-size:14px!important}' +
+      'body.dark .u3-ppe,html.ui-dark .u3-ppe{background:#2a2216!important}body.dark .u3-ppg input,body.dark .u3-ppg select{background:#15242a!important;color:#e2edef!important}';
+    document.head.appendChild(css2);
+    function ctrls(n) { return Array.prototype.filter.call(n.querySelectorAll('input,select,textarea'), function (x) { return x.type !== 'hidden'; }); }
+    function lca(list) {
+      if (!list.length) return null; var a = list[0].parentNode;
+      while (a && !list.every(function (x) { return a.contains(x); })) a = a.parentNode; return a;
+    }
+    function findPaper() {
+      var best = null;
+      Array.prototype.forEach.call(document.querySelectorAll('h2,h3,h4,h5,b,strong,summary,legend,label,div,span,p'), function (h) {
+        if (h.children.length > 1) return;
+        var t = (h.textContent || '').trim(); if (!/^[\s📄🧻📜]*تفاصيل الورق/.test(t) || t.length > 40) return;
+        if (h.closest('.u3-pp,.ui-sheet,table')) return;
+        var c = h.parentNode;
+        while (c && c !== document.body && ctrls(c).length < 3) c = c.parentNode;
+        if (!c || c === document.body || ctrls(c).length > 12) return;
+        if (!best || best.contains(c)) best = c;
+      });
+      return best;
+    }
+    function findBayan(sec) {
+      var lb = Array.prototype.filter.call(document.querySelectorAll('label,b,span,div,small'), function (x) {
+        return x.children.length === 0 && /^البيان\s*\*?$/.test((x.textContent || '').trim()) && !sec.contains(x) && !x.closest('table,.ui-sheet');
+      })[0];
+      if (!lb) return null;
+      var w = lb.parentNode;
+      while (w && w !== document.body && !ctrls(w).length) w = w.parentNode;
+      if (!w || w === document.body || w.contains(sec)) return null;
+      /* أصغر غلاف يضم البيان فقط */
+      while (w.parentNode && w.parentNode !== document.body && ctrls(w.parentNode).length === ctrls(w).length && !w.parentNode.contains(sec)) w = w.parentNode;
+      return w;
+    }
+    function fix() {
+      var sec = findPaper(); if (!sec) return;
+      var bw = findBayan(sec);
+      if (bw && bw.nextElementSibling !== sec && bw.parentNode) bw.parentNode.insertBefore(sec, bw.nextSibling);
+      if (sec.dataset.u3ppe) return; sec.dataset.u3ppe = '1';
+      sec.classList.add('u3-ppe');
+      var cs = ctrls(sec), P = lca(cs); if (!P) return;
+      if (cs.length === 1) return;
+      /* إذا كانت التسميات والخانات أبناء مباشرين بلا غلاف، نجمع كل تسمية مع خانتها */
+      var kids = Array.prototype.slice.call(P.children);
+      if (kids.some(function (k) { return cs.indexOf(k) > -1; })) {
+        var cur = null;
+        kids.forEach(function (k) {
+          var isC = cs.indexOf(k) > -1 || ctrls(k).length;
+          if (!cur) { cur = document.createElement('div'); P.insertBefore(cur, k); }
+          if (/^(H\d|SUMMARY|LEGEND)$/.test(k.tagName) || /تفاصيل الورق/.test(k.textContent) && !ctrls(k).length) { P.insertBefore(k, cur); return; }
+          cur.appendChild(k); if (isC) cur = null;
+        });
+        if (cur && !cur.children.length) cur.remove();
+      }
+      P.classList.add('u3-ppg');
+      Array.prototype.forEach.call(P.children, function (k) { if (!ctrls(k).length && /تفاصيل الورق/.test(k.textContent)) { k.style.gridColumn = '1 / -1'; } });
+    }
+    setInterval(fix, 600);
+  })();
 })();
