@@ -981,4 +981,49 @@
     W.addEventListener('scroll', place, true); W.addEventListener('resize', place);
     document.addEventListener('pointerdown', function (e) { if (dd && !dd.contains(e.target) && e.target !== ddFor && !(e.target.classList && e.target.classList.contains('u3-ar'))) closeDD(); }, true);
   })();
+
+  /* ================= غدق: خانات تفاصيل الورق أصغر، 3 في كل صف ================= */
+  if (GH) (function () {
+    var c3 = document.createElement('style');
+    c3.textContent = '.u3-pg3{margin-top:8px!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 8px!important}' +
+      '.u3-pg3>*{min-width:0!important;margin:0!important;width:auto!important;max-width:none!important;flex:none!important}' +
+      '.u3-pg3 label,.u3-pg3 .lbl,.u3-pg3 small{font-size:12.5px!important;margin:0 0 3px!important;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+      '.u3-pg3 input,.u3-pg3 select{min-height:38px!important;height:38px!important;font-size:14px!important;padding:4px 6px!important;width:100%!important;box-sizing:border-box;border-radius:9px!important;margin:0!important}' +
+      '.u3-pg3 input::placeholder{font-size:12.5px}';
+    document.head.appendChild(c3);
+    var KW = /غرام|مقاس|طبق|كيلو|الطن/;
+    function ctrls(n) { return Array.prototype.filter.call(n.querySelectorAll('input,select,textarea'), function (x) { return x.type !== 'hidden'; }); }
+    function txt(x) {
+      var t = (x.placeholder || '') + ' ' + (x.getAttribute('aria-label') || '') + ' ' + (x.id || '');
+      if (x.id) { var l = document.querySelector('label[for="' + x.id + '"]'); if (l) t += ' ' + l.textContent; }
+      var pv = x.previousElementSibling; if (pv && !ctrls(pv).length) t += ' ' + pv.textContent;
+      var pr = x.parentNode; if (pr && ctrls(pr).length === 1) t += ' ' + pr.textContent;
+      return t;
+    }
+    function fix() {
+      var hits = Array.prototype.filter.call(document.querySelectorAll('input,select'), function (x) { return x.type !== 'hidden' && !x.closest('.ui-sheet,table') && KW.test(txt(x)); });
+      if (hits.length < 3) return;
+      var P = hits[0].parentNode; while (P && !hits.every(function (x) { return P.contains(x); })) P = P.parentNode;
+      if (!P || P.dataset.u3pg3 || ctrls(P).length > 10) return;
+      P.dataset.u3pg3 = '1';
+      if (P.tagName === 'DETAILS') {
+        var inner = document.createElement('div'); inner.dataset.u3pg3 = '1';
+        Array.prototype.slice.call(P.children).forEach(function (k) { if (k.tagName !== 'SUMMARY') inner.appendChild(k); });
+        P.appendChild(inner); P = inner;
+      }
+      var cs = ctrls(P), kids = Array.prototype.slice.call(P.children);
+      /* إذا كانت التسميات والخانات أبناء مباشرين، نجمع كل تسمية مع خانتها */
+      if (kids.some(function (k) { return cs.indexOf(k) > -1; })) {
+        var cur = null;
+        kids.forEach(function (k) {
+          if (k.tagName === 'SUMMARY' || (!ctrls(k).length && cs.indexOf(k) < 0 && /تفاصيل/.test(k.textContent))) return;
+          if (!cur) { cur = document.createElement('div'); P.insertBefore(cur, k); }
+          cur.appendChild(k); if (cs.indexOf(k) > -1 || ctrls(k).length) cur = null;
+        });
+      }
+      P.classList.add('u3-pg3');
+      Array.prototype.forEach.call(P.children, function (k) { if (k.tagName === 'SUMMARY' || (!ctrls(k).length && /تفاصيل/.test(k.textContent))) k.style.gridColumn = '1 / -1'; });
+    }
+    setInterval(fix, 600);
+  })();
 })();
