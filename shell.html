@@ -1281,14 +1281,13 @@ var DASH = null, GQ = '', GR = null;
 function dateLine() { try { return new Date().toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return B.today; } }
 function vHome() {
   $('#view').innerHTML =
-    '<div class="hero"><h2>مكتبة الصفاء</h2><p>' + esc(dateLine()) + '</p></div>' +
-    '<form class="srch" onsubmit="event.preventDefault();doGSearch()"><input id="hq" type="search" placeholder="ابحث في كل شيء: مورد، صنف، رقم فاتورة، بيان…" autocomplete="off"><button class="btn">بحث</button></form>' +
-    '<div id="kpis" class="kpis"><div class="muted" style="grid-column:1/-1"><span class="spin"></span>جارٍ تجهيز اللوحة…</div></div>' +
+    '<div class="hero"><h2>' + (new Date().getHours() >= 4 && new Date().getHours() < 12 ? 'صباح الخير ☀️' : 'مساء الخير 🌙') + '</h2><p>' + esc(dateLine()) + '</p></div>' +
     '<div class="tiles">' +
     tile('p', 'inv', 'فواتير الشراء', 'إدخال فاتورة، الفواتير، البحث، الأصناف، مقارنة الأسعار', B.items.length + ' صنف · ' + B.suppliers.length + ' مورد') +
     tile('j', 'jentry', 'اليومية', 'إدخال اليومية، الملخص اليومي، البحث والتقارير', 'الرصيد الحالي: ' + fmt(B.bal.cash)) +
     tile('s', 'sentry', 'قيود الموردين', 'إدخال قيد، كشف حساب، ملخص الأرصدة، السجل', SUP.homeStat()) +
     tile('r', 'rmon', 'التقارير', 'تقارير شهرية وسنوية للمشتريات واليومية والموردين', 'شهريًا وسنويًا') + '</div>' +
+    '<div id="kpis" class="kpis" style="margin-top:14px"><div class="muted" style="grid-column:1/-1"><span class="spin"></span>جارٍ تجهيز اللوحة…</div></div>' +
     '<div id="dash2"></div>';
   if (DASH) renderDash();
   call('webDash').then(function (d) { DASH = d; if (CUR === 'home') renderDash(); }).catch(function () { var k = $('#kpis'); if (k && CUR === 'home' && !DASH) k.innerHTML = ''; });
