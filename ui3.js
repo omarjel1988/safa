@@ -983,65 +983,6 @@
     document.addEventListener('pointerdown', function (e) { if (dd && !dd.contains(e.target) && e.target !== ddFor && !(e.target.classList && e.target.classList.contains('u3-ar'))) closeDD(); }, true);
   })();
 
-  /* ================= خانة الحساب: برتقالي بخط أبيض عريض (مثل بطاقة صافي الرصيد) ================= */
-  (function () {
-    var OR = 'background:#E16414!important;border:0!important;border-radius:16px!important;box-shadow:none!important;outline:0!important;';
-    var TX = 'color:#fff!important;-webkit-text-fill-color:#fff!important;font-weight:700!important;font-size:17px!important;';
-    var st = document.createElement('style');
-    st.textContent = '.u3-acc{' + OR + TX + 'min-height:48px!important;padding:10px 16px!important;box-sizing:border-box}' +
-      '.u3-accb{' + OR + '}.u3-accb input,.u3-accb select,.u3-accb span,.u3-accb div{' + TX + 'background:transparent!important;border:0!important;box-shadow:none!important}' +
-      'select.u3-acc{-webkit-appearance:none!important;appearance:none!important;background-image:url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'14\' height=\'14\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23fff\' stroke-width=\'3\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M6 9l6 6 6-6\'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:left 14px center!important;padding-left:36px!important}' +
-      '.u3-acc::placeholder,.u3-accb input::placeholder{color:rgba(255,255,255,.85)!important;-webkit-text-fill-color:rgba(255,255,255,.85)!important}' +
-      '.u3-acc option,.u3-accb option{color:#14303a!important;background:#fff!important;-webkit-text-fill-color:#14303a!important;font-weight:400!important}';
-    document.head.appendChild(st);
-    function cs(n) { return n.querySelectorAll('input,select,textarea').length; }
-    /* التسمية يجب أن تكون «الحساب» فقط (لا «تصفية داخل الحساب» ولا «نسخة في حساب العام») */
-    var LBL = /^(اختر\s*)?(ال)?حساب\s*[:：]?$/;
-    function isAcc(x) {
-      if (x.type === 'hidden' || x.type === 'checkbox' || x.type === 'radio' || x.closest('.ui-sheet')) return null;
-      var ts = [x.placeholder || '', x.getAttribute('aria-label') || ''], w = x;
-      if (x.id) { var l = document.querySelector('label[for="' + x.id + '"]'); if (l) ts.push(l.textContent); }
-      for (var k = 0; k < 3 && w.parentNode && w.parentNode !== document.body; k++) {
-        var p = w.previousElementSibling; while (p && /^(DATALIST|SCRIPT|STYLE)$/.test(p.tagName)) p = p.previousElementSibling; if (p && !vis(p)) ts.push(p.textContent);
-        if (vis(w.parentNode) > 1) break; w = w.parentNode;
-      }
-      return ts.some(function (t) { return LBL.test(t.replace(/[★⭐*]/g, '').trim()); }) ? x : null;
-    }
-    /* الإطار المرئي: الخانة نفسها أو غلاف بنفس حجمها تقريبًا (مثل قائمة الحسابات مع النجمة) */
-    function vis(n) { return Array.prototype.filter.call(n.querySelectorAll('input,select,textarea'), function (y) { return y.type !== 'hidden'; }).length; }
-    function painted(n) { var c = getComputedStyle(n); return parseFloat(c.borderTopWidth) > 0 || (c.backgroundColor !== 'rgba(0, 0, 0, 0)' && c.backgroundColor !== 'transparent'); }
-    function box(x) {
-      var h = x.getBoundingClientRect().height, best = painted(x) ? x : null, b = x;
-      for (var k = 0; k < 4; k++) {
-        var p = b.parentNode; if (!p || p === document.body || vis(p) > 1) break;
-        var r = p.getBoundingClientRect(); if (r.height > h + 40 || /الحساب/.test(Array.prototype.filter.call(p.childNodes, function (c) { return c.nodeType === 1 && !vis(c) && c.tagName === 'LABEL'; }).map(function (c) { return c.textContent; }).join(''))) break;
-        if (painted(p)) best = p;
-        b = p;
-      }
-      return best || x;
-    }
-    /* أنماط مضمّنة بـ important حتى تتغلّب على أي تنسيق في الصفحة */
-    function set(n, o) { for (var k in o) n.style.setProperty(k, o[k], 'important'); }
-    var BOX = { 'background': '#E16414', 'border': '0', 'border-radius': '16px', 'box-shadow': 'none', 'outline': '0' };
-    var TXT = { 'color': '#fff', '-webkit-text-fill-color': '#fff', 'font-weight': '700', 'font-size': '17px' };
-    function paint(x) {
-      var bx = box(x);
-      set(bx, BOX); set(x, TXT);
-      if (bx !== x) {
-        set(x, { 'background': 'transparent', 'border': '0', 'box-shadow': 'none', 'outline': '0' });
-        Array.prototype.forEach.call(bx.querySelectorAll('*'), function (k) { if (k !== x && k.tagName !== 'OPTION' && !/^(IMG|SVG|svg)$/.test(k.tagName)) set(k, { 'color': '#fff', '-webkit-text-fill-color': '#fff', 'background': 'transparent', 'border-color': 'transparent' }); });
-      } else { set(x, { 'padding-right': '16px', 'padding-left': x.tagName === 'SELECT' ? '36px' : '16px' }); if (x.tagName === 'SELECT') x.classList.add('u3-acc'); }
-    }
-    var accRun = function () {
-      Array.prototype.forEach.call(document.querySelectorAll('select,input'), function (x) {
-        if (x.dataset.u3acc === '0') return;
-        if (!x.dataset.u3acc) { x.dataset.u3acc = isAcc(x) ? '1' : '0'; if (x.dataset.u3acc === '0') return; }
-        paint(x);
-      });
-    };
-    new MutationObserver(function () { try { accRun(); } catch (e) { /* */ } }).observe(document.documentElement, { childList: true, subtree: true });
-    accRun(); setInterval(accRun, 1000);
-  })();
   /* ================= تصدير صفحة الواجهة (shell) لنقلها إلى المستودع ================= */
   function shellExport() {
     var R = W.RT; if (!R) { msg('تعذّر الوصول للواجهة', 1); return; }
