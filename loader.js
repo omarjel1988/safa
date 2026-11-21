@@ -18,11 +18,8 @@
     html = /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, function (m) { return m + inj; }) : inj + html;
     document.open(); document.write(html); document.close();
   }
-  var coreP = Promise.all([fetch((APP.root || './') + 'core.js', { cache: navigator.onLine ? 'no-cache' : 'default' }).then(function (r) { return r.text(); }),
-    fetch((APP.root || './') + 'ui.js', { cache: navigator.onLine ? 'no-cache' : 'default' }).then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; }),
-    fetch((APP.root || './') + 'ui2.js', { cache: navigator.onLine ? 'no-cache' : 'default' }).then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; }),
-    fetch((APP.root || './') + 'ui3.js', { cache: navigator.onLine ? 'no-cache' : 'default' }).then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; })])
-    .then(function (x) { return x[0] + '<\/script><script>' + x[1] + '<\/script><script>' + x[2] + '<\/script><script>' + x[3]; });
+  /* ملفات الواجهة كلها داخل shell.html؛ يُحقن هنا core.js فقط (الاتصال والمزامنة دون اتصال) */
+  var coreP = fetch((APP.root || './') + 'core.js', { cache: navigator.onLine ? 'no-cache' : 'default' }).then(function (r) { return r.text(); });
   /* صفحة الواجهة من المستودع (shell.html بجانب index.html)، والنسخة المحفوظة في الجهاز احتياطًا دون اتصال */
   var shellP = fetch('shell.html', { cache: navigator.onLine ? 'no-cache' : 'default' })
     .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
