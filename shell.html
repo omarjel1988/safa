@@ -97,6 +97,18 @@ tr.tot td,tfoot td{background:#FFF1DE!important;font-weight:800}
 @media (min-width:720px){.grid.l4{grid-template-columns:2fr 1fr 1fr 1fr}.grid.i5{grid-template-columns:2fr 1fr 1fr 1fr}}
 @media print{header,.noprint,#toast,.bar,.card:has(.grid){display:none!important}body{background:#fff}.tw,.stat,.st,.card{box-shadow:none}}
 </style>
+<style>
+/* اختيار الصنف في الفاتورة */
+.ipw{position:relative;display:block}.ipw .n{padding-left:40px}
+.iar{position:absolute;left:4px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;border-radius:9px;background:color-mix(in srgb,#E89B2D 16%,transparent);color:#B66A00;font-size:18px;line-height:1;padding:0;z-index:2}
+.idd{position:fixed;z-index:9980;background:#fff;color:#17212B;border:1px solid #d5dde5;border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.22);max-height:46vh;overflow:auto;font-family:Cairo,system-ui,sans-serif;direction:rtl;-webkit-overflow-scrolling:touch}
+.idd .o{display:flex;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid #EEF2F6;cursor:pointer}.idd .o:active,.idd .o.hl{background:#FFF4E2}
+.idd .o code{font:800 12.5px ui-monospace,Menlo,monospace;background:#E89B2D;color:#fff;border-radius:7px;padding:2px 7px;direction:ltr;white-space:nowrap}.idd .o b{flex:1;font-size:15px}.idd .o small{color:#8796A5;white-space:nowrap}
+.idd .e{padding:12px;color:#8796A5;text-align:center}
+.line .c{font-family:ui-monospace,Menlo,monospace;font-weight:800;text-transform:uppercase;direction:ltr;text-align:center}
+.cmsg{font-size:13px;font-weight:700;min-height:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cmsg:empty{display:none}.cmsg.ok{color:#2E7D32}.cmsg.bad{color:#C62828}
+html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-dark .idd .o{border-color:#243140}html.ui-dark .idd .o.hl{background:#2A2216}
+</style>
 </head>
 <body data-sec="">
 <header><div class="hb"><h1 onclick="go('home')"><i></i><span id="ttl">مكتبة الصفاء</span></h1>
@@ -806,14 +818,81 @@ function payNote() {
 }
 function cancelInvEdit() { var k = INVEDIT && INVEDIT.key; INVEDIT = null; if (k) openInv(k); else go('pinv'); }
 
+/* ---------- اختيار الصنف في سطر الفاتورة: قائمة منسدلة بالأكواد + إدخال بالكود ---------- */
+var IDD = null, IDDFOR = null;
+function itemList() { return (B.items || []).map(function (i) { return { n: String(i.name || ''), c: String(i.code || ''), u: String(i.unit || '') }; }).filter(function (r) { return r.n; }); }
+function itemByCode(code) {
+  code = String(code || '').trim().toUpperCase(); if (!code) return null;
+  var L = itemList(), dig = /^\d+$/.test(code) ? +code : null;
+  for (var i = 0; i < L.length; i++) {
+    var c = L[i].c.toUpperCase(); if (!c) continue;
+    if (c === code || (dig !== null && +(c.replace(/\D/g, '') || NaN) === dig)) return L[i];
+  }
+  return null;
+}
+function iddClose() { if (IDD) IDD.remove(); IDD = null; IDDFOR = null; }
+function iddPlace() {
+  if (!IDD || !IDDFOR) return;
+  var r = IDDFOR.getBoundingClientRect(); if (!r.width) { iddClose(); return; }
+  var below = innerHeight - r.bottom, up = below < 220 && r.top > below;
+  IDD.style.left = Math.max(8, r.left) + 'px'; IDD.style.width = Math.min(innerWidth - 16, Math.max(r.width, 260)) + 'px';
+  if (up) { IDD.style.top = ''; IDD.style.bottom = (innerHeight - r.top + 4) + 'px'; IDD.style.maxHeight = Math.min(r.top - 12, innerHeight * 0.46) + 'px'; }
+  else { IDD.style.bottom = ''; IDD.style.top = (r.bottom + 4) + 'px'; IDD.style.maxHeight = Math.max(160, Math.min(below - 12, innerHeight * 0.46)) + 'px'; }
+}
+function iddOpen(inp, all) {
+  var L = itemList(); if (!L.length) return;
+  if (!IDD) { IDD = document.createElement('div'); IDD.className = 'idd'; document.body.appendChild(IDD); IDD.addEventListener('pointerdown', function (e) { e.preventDefault(); }); }
+  IDDFOR = inp;
+  var cur = inp.value.trim(), words = all ? [] : cur.toLowerCase().split(/\s+/).filter(Boolean), max = all ? 400 : 80;
+  var res = L.filter(function (r) { var t = (r.n + ' ' + r.c).toLowerCase(); return words.every(function (w) { return t.indexOf(w) > -1; }); });
+  IDD.innerHTML = res.length ? res.slice(0, max).map(function (r) {
+    return '<div class="o' + (r.n === cur ? ' hl' : '') + '" data-i="' + L.indexOf(r) + '">' + (r.c ? '<code>' + esc(r.c) + '</code>' : '') + '<b>' + esc(r.n) + '</b>' + (r.u ? '<small>' + esc(r.u) + '</small>' : '') + '</div>';
+  }).join('') + (res.length > max ? '<div class="e">اكتب للتصفية… (' + res.length + ' صنف)</div>' : '') : '<div class="e">لا يوجد صنف مطابق — سيُسجَّل كصنف جديد</div>';
+  IDD.onclick = function (e) { var o = e.target.closest('.o'); if (!o) return; var r = L[+o.dataset.i]; iddClose(); inp._pick(r); };
+  iddPlace();
+  var h = IDD.querySelector('.o.hl'); IDD.scrollTop = h ? Math.max(0, h.offsetTop - 40) : 0;
+}
+window.addEventListener('scroll', iddPlace, true); window.addEventListener('resize', iddPlace);
+document.addEventListener('pointerdown', function (e) { if (IDD && !IDD.contains(e.target) && e.target !== IDDFOR && !(e.target.classList && e.target.classList.contains('iar'))) iddClose(); }, true);
+function pickInit(n, c) {
+  var line = n.closest('.line'), ar = n.parentNode.querySelector('.iar'), cm = c.parentNode.querySelector('.cmsg'), tm = 0;
+  var fire = function (el) { el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); };
+  var cmsg = function (r, bad) { cm.className = 'cmsg' + (r ? ' ok' : bad ? ' bad' : ''); cm.textContent = r ? '✓ ' + r.n : bad ? 'كود غير موجود' : ''; };
+  n._pick = function (r) {
+    n.value = r.n; fire(n);
+    if (r.c) { c.value = r.c; cmsg(r); }
+    var nx = $$('input:not([type=hidden]):not([type=checkbox])', line).filter(function (x) { return x !== n && x !== c && !x.readOnly; })[0];
+    if (nx && !nx.value) setTimeout(function () { try { nx.focus(); } catch (e) { } }, 60); else n.blur();
+  };
+  ar.addEventListener('pointerdown', function (e) { e.preventDefault(); });
+  ar.addEventListener('click', function () { if (IDDFOR === n) iddClose(); else iddOpen(n, true); });
+  n.addEventListener('focus', function () { iddOpen(n, true); });
+  n.addEventListener('click', function () { if (IDDFOR !== n) iddOpen(n, true); });
+  n.addEventListener('input', function () { if (document.activeElement === n) iddOpen(n); });
+  n.addEventListener('blur', function () { setTimeout(function () { if (IDDFOR === n && document.activeElement !== n) iddClose(); }, 150); });
+  var tryCode = function (final) {
+    if (c.readOnly) return;
+    var v = c.value.trim(); if (!v) { cmsg(); return; }
+    var r = itemByCode(v);
+    if (r) { cmsg(r); if (n.value.trim() !== r.n) { n.value = r.n; fire(n); } }
+    else cmsg(null, final || v.length >= 5);
+  };
+  c.addEventListener('input', function () { clearTimeout(tm); tm = setTimeout(function () { tryCode(false); }, 350); });
+  c.addEventListener('change', function () { tryCode(true); });
+  c.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter') return; e.preventDefault(); tryCode(true);
+    if (itemByCode(c.value)) { var nx = $$('input:not([type=hidden]):not([type=checkbox])', line).filter(function (x) { return x !== n && x !== c && !x.value; })[0]; if (nx) nx.focus(); }
+  });
+  n.addEventListener('change', function () { var v = n.value.trim(), r = itemList().filter(function (x) { return x.n === v; })[0]; cmsg(r || null); });
+}
 function addInvLine(v) {
   v = v || {};
   var d = document.createElement('div');
   d.className = 'card line';
   d.innerHTML =
     '<div class="grid l4">' +
-    '<div class="f wide"><label>الصنف</label><input class="n" list="dl-items" autocomplete="off" placeholder="اكتب أو اختر الصنف"></div>' +
-    '<div class="f"><label>الكود <small>(اختياري)</small></label><input class="c" autocomplete="off" placeholder="تلقائي"></div>' +
+    '<div class="f wide"><label>الصنف</label><span class="ipw"><input class="n" autocomplete="off" placeholder="اكتب أو اختر الصنف"><button type="button" class="iar" aria-label="عرض الأصناف">▾</button></span></div>' +
+    '<div class="f"><label>الكود <small>(اختياري)</small></label><input class="c" autocomplete="off" autocapitalize="characters" placeholder="P0001"><span class="cmsg"></span></div>' +
     '<div class="f"><label>سعر الشراء</label><input class="p" inputmode="decimal" autocomplete="off"></div>' +
     '<div class="f"><label>الكمية</label><input class="q" inputmode="decimal" autocomplete="off"></div>' +
     '<div class="f nw hide"><label>الوحدة <span class="badge">صنف جديد</span></label><input class="u" autocomplete="off"></div>' +
@@ -832,6 +911,7 @@ function addInvLine(v) {
     }
   }
   n.addEventListener('input', onName); n.addEventListener('change', onName);
+  pickInit(n, c);
   d.addEventListener('input', function () { calcInv(); });
   d.addEventListener('change', function () { calcInv(); });
   $('.x', d).onclick = function () { if ($$('.line').length > 1) { d.remove(); calcInv(); } else { toast('يجب أن تبقى فاتورة بسطر واحد على الأقل', 'err'); } };
