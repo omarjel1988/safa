@@ -745,42 +745,6 @@
     };
   }, 400);
 
-  /* تفاصيل الورق: قائمة مطوية تحت البيان */
-  if (GH) {
-    var ppCss = document.createElement('style');
-    ppCss.textContent = '.u3-pp{margin-top:4px}.u3-pp>summary{display:inline-flex;align-items:center;gap:4px;cursor:pointer;list-style:none;font-size:12.5px;font-weight:700;color:var(--p,#1b6b7a);background:color-mix(in srgb,currentColor 10%,transparent);border-radius:8px;padding:2px 10px;-webkit-tap-highlight-color:transparent}' +
-      '.u3-pp>summary::-webkit-details-marker{display:none}.u3-pp>summary::after{content:"▾";font-size:12px;transition:transform .15s}.u3-pp[open]>summary::after{transform:rotate(180deg)}' +
-      '.u3-pp>.ppr{display:block;margin-top:4px;padding:6px 8px;border-radius:8px;background:color-mix(in srgb,currentColor 5%,transparent)}' +
-      '.u3-pp>.ppr.u3-ch{display:flex!important;flex-wrap:wrap;gap:5px;background:none;padding:4px 0 0}.u3-ch>i{font-style:normal;font-weight:700;font-size:13px;color:#14303a;background:#fff;border:1.5px solid color-mix(in srgb,var(--p,#1b6b7a) 45%,transparent);border-radius:8px;padding:2px 8px;white-space:nowrap;direction:ltr;unicode-bidi:isolate}body.dark .u3-ch>i{background:#15242a;color:#e2edef}' +
-      '@media print{.u3-pp>summary{display:none}.u3-pp>.ppr{display:block!important}}';
-    document.head.appendChild(ppCss);
-    var ppWrap = function () {
-      Array.prototype.forEach.call(document.querySelectorAll('span.ppr:not([data-u3pp])'), function (sp) {
-        sp.setAttribute('data-u3pp', '1');
-        var d = document.createElement('details'); d.className = 'u3-pp';
-        var sm = document.createElement('summary'); sm.textContent = 'تفاصيل الورق';
-        d.appendChild(sm); sp.parentNode.insertBefore(d, sp); d.appendChild(sp);
-        d.addEventListener('click', function (e) { e.stopPropagation(); });
-      });
-    };
-    var ppTry = setInterval(function () {
-      var ot = W.table; if (typeof ot !== 'function' || ot._u3) return; clearInterval(ppTry);
-      var nt = function (rows) {
-        var h = ot.apply(this, arguments), esc = g('esc'), fmt = g('fmt'), k = 0;
-        var xs = (rows || []).map(function (r) { return r && r.x || []; }).filter(function (x) { return x[5] !== '' && x[5] != null; });
-        return String(h).replace(/<span class='ppr'>[\s\S]*?<\/span>/g, function (m) {
-          var x = xs[k++]; if (!x) return m;
-          var num = function (v) { var n = Number(v); return v === '' || v == null ? '' : isNaN(n) ? esc(v) : fmt(n); };
-          var cells = [esc(x[0] || ''), esc(x[1] || ''), esc(x[2] || ''), esc(x[3] == null ? '' : x[3]), num(x[4]), num(x[5])];
-          return "<span class='ppr u3-ch'>" + cells.filter(function (c) { return String(c).trim() !== ''; }).map(function (c) { return '<i>' + c + '</i>'; }).join('') + '</span>';
-        });
-      };
-      nt._u3 = 1; W.table = nt;
-    }, 300);
-    W.addEventListener('beforeprint', function () { Array.prototype.forEach.call(document.querySelectorAll('.u3-pp'), function (d) { d.open = true; }); });
-    new MutationObserver(function () { if (document.querySelector('span.ppr:not([data-u3pp])')) ppWrap(); }).observe(document.documentElement, { childList: true, subtree: true });
-    setTimeout(ppWrap, 500);
-  }
   /* مطابقة العام: تصحيح اسم الحساب الناقص أو المختلف في قيود «العام» */
   if (GH) {
     var mfTry = setInterval(function () {
