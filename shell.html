@@ -785,7 +785,6 @@ function vInv() {
     '<div id="ilines"></div>' +
     '<button class="btn sec" style="width:100%" onclick="addInvLine()">+ إضافة صنف</button>' +
     '<div class="card" style="margin-top:14px"><h2>صورة الفاتورة <small style="font-weight:400;color:var(--mut)">(اختياري)</small></h2><input type="file" id="iphoto" accept="image/*"><div class="note">تُرفع الصورة تلقائيًا بعد حفظ الفاتورة.</div></div>' +
-    (B.formUrl && !E ? '<div class="note" style="text-align:center"><a href="' + esc(B.formUrl) + '" target="_blank" rel="noopener">فتح نموذج Google Form لإدخال الأصناف</a></div>' : '') +
     '<div class="bar"><div class="tot">إجمالي الفاتورة<b id="itot">0.00</b><span id="ibase" style="font-size:12px"></span></div><button class="btn grn" id="isave" onclick="saveInv()">' + (E ? 'حفظ التعديل' : 'حفظ الفاتورة') + '</button></div>';
   $('#isup').value = E ? E.sup : '';
   $('#iinv').value = E ? E.inv : '';
