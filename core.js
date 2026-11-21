@@ -321,9 +321,23 @@
     SHELLAT = Date.now();
     fetch('shell.html', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (s) {
       if (!s || s.length < 1000) return;
-      return kget('shell').then(function (old) { if (old !== s) return kset('shell', s).then(function () { if (old) SHELLNEW = true; }); });
+      return kget('shell').then(function (old) { if (old !== s) return kset('shell', s).then(function () { if (old) { SHELLNEW = true; updBar(); } }); });
     }).catch(function () {});
   }
+  /* شريط «تحديث جديد متاح» — الضغط يحدّث فورًا (بعد إرسال أي إدخالات معلّقة) */
+  function updBar() {
+    if (document.getElementById('rt-upd') || !document.body) return;
+    var b = document.createElement('div'); b.id = 'rt-upd';
+    b.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));z-index:9996;background:#2E7D32;color:#fff;border-radius:22px;padding:10px 18px;font:800 14.5px Cairo,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.28);direction:rtl;cursor:pointer;white-space:nowrap';
+    b.textContent = '✨ تحديث جديد متاح — اضغط للتحديث';
+    b.onclick = function () {
+      b.textContent = '⟳ جارٍ التحديث…';
+      var go = function () { location.reload(); };
+      if (OUT.length) { try { Promise.resolve(sync()).then(go, go); } catch (e) { go(); } setTimeout(go, 8000); } else go();
+    };
+    document.body.appendChild(b);
+  }
+  setInterval(checkShell, 300000);
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) return;
     if (SHELLNEW && !OUT.length && !(document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))) { location.reload(); return; }
