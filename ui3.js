@@ -52,7 +52,7 @@
     'body.dark .u3-chip.r{background:#3a1c1f;color:#f5c2c2}body.dark .u3-chip.o{background:#382d14;color:#f3dca0}body.dark .u3-chip.g{background:#16301f;color:#b8e6c6}body.dark .u3-thumb{border-color:#34494f}',
     'body:not(.u3x) .tiles{grid-template-columns:1fr 1fr!important;gap:10px!important}body:not(.u3x) .tile{padding:14px 13px!important;min-height:150px!important;border-radius:18px!important}body:not(.u3x) .tile b{font-size:17px!important}body:not(.u3x) .tile small{font-size:12px!important;line-height:1.5}body:not(.u3x) .tile em{font-size:11.5px!important;padding:2px 9px!important}body:not(.u3x) .tile svg{width:28px!important;height:28px!important}',
     '@media (min-width:900px){body:not(.u3x) .tiles{grid-template-columns:repeat(4,1fr)!important}}',
-    '.u3-nosrch{display:none!important}.tiles + [data-u3mv]{margin-top:14px!important}',
+    
     '@media print{.u3-bar,.u3-cam,.u3-ban{display:none!important}}'
   ].join('');
   document.head.appendChild(css);
@@ -128,85 +128,6 @@
     };
     draw();
   }
-
-  /* ================= 2) قوالب القيود المتكررة ================= */
-  var TK = 'tpl_' + APP.id, TPL = null;
-  function tplLoad() {
-    try { TPL = JSON.parse(ls(TK) || 'null'); } catch (e) { TPL = null; }
-    return api(GH ? 'tplGet' : 'webTplGet').then(function (l) { TPL = Array.isArray(l) ? l : []; ls(TK, JSON.stringify(TPL)); return TPL; }, function () { return TPL || []; });
-  }
-  function tplSave(l) { TPL = l; ls(TK, JSON.stringify(l)); return api(GH ? 'tplSet' : 'webTplSet', [l]).catch(function (e) { msg('تعذّر حفظ القوالب: ' + (e && e.message || e), 1); }); }
-  function formKind() {
-    if (GH) return document.getElementById('nb') && document.getElementById('na') ? 'g' : '';
-    var c = g('CUR'); return c === 'jentry' && document.getElementById('jlines') ? 'j' : c === 'sentry' && document.getElementById('e-desc') ? 's' : '';
-  }
-  function readForm(k) {
-    var V = function (id) { var x = document.getElementById(id); return x ? x.value : ''; };
-    if (k === 'g') return { acc: V('na'), b: V('nb'), s: V('ns'), w: V('nw') };
-    if (k === 's') return { sup: V('e-sup'), desc: V('e-desc'), inc: V('e-inc'), out: V('e-out'), method: V('e-method') };
-    var ln = null, ls2 = document.querySelectorAll('#jlines .line');
-    for (var i = ls2.length - 1; i >= 0; i--) { var st = ls2[i].querySelector('.st'); if (st && st.value.trim()) { ln = ls2[i]; break; } }
-    if (!ln) return null;
-    var q = function (c) { var x = ln.querySelector(c); return x ? x.value : ''; };
-    return { st: q('.st'), d: q('.d'), o: q('.o'), i: q('.i'), sp: q('.sp') };
-  }
-  function fillForm(k, t) {
-    var S = function (id, v) { var x = document.getElementById(id); if (x && v != null && v !== '') setVal(x, v); };
-    if (k === 'g') { S('na', t.acc); setTimeout(function () { S('nb', t.b); S('ns', t.s); S('nw', t.w); var x = document.getElementById('nb'); if (x) x.focus(); }, 60); return; }
-    if (k === 's') { S('e-sup', t.sup); setTimeout(function () { S('e-desc', t.desc); S('e-inc', t.inc); S('e-out', t.out); S('e-method', t.method); }, 60); return; }
-    var lines = document.querySelectorAll('#jlines .line'), ln = null;
-    for (var i = 0; i < lines.length; i++) { var st = lines[i].querySelector('.st'); if (st && !st.value.trim()) { ln = lines[i]; break; } }
-    if (!ln) { var add = g('addJLine'); if (add) { add(); lines = document.querySelectorAll('#jlines .line'); ln = lines[lines.length - 1]; } }
-    if (!ln) return;
-    [['.st', t.st], ['.d', t.d], ['.o', t.o], ['.i', t.i], ['.sp', t.sp]].forEach(function (p) { var x = ln.querySelector(p[0]); if (x && p[1] != null && p[1] !== '') setVal(x, p[1]); });
-  }
-  function tplDesc(t) {
-    var a = t.f || {};
-    var amt = function (o, i) { return (num(o) ? 'صادر ' + fmt(num(o)) : '') + (num(o) && num(i) ? ' · ' : '') + (num(i) ? 'وارد ' + fmt(num(i)) : ''); };
-    if (t.k === 'g') return [a.acc, amt(a.s, a.w)].filter(Boolean).join(' — ');
-    if (t.k === 's') return [a.sup, amt(a.out, a.inc)].filter(Boolean).join(' — ');
-    return [a.sp, amt(a.o, a.i)].filter(Boolean).join(' — ');
-  }
-  function tplSheet() {
-    var k = formKind(); if (!k) return;
-    var draw = function (o, list) {
-      var mine = list.map(function (t, i) { return { t: t, i: i }; }).filter(function (x) { return x.t.k === k; });
-      o.querySelector('#u3-tl').innerHTML = mine.length ? mine.map(function (x) {
-        return '<div class="u3-row"><div class="t" data-use="' + x.i + '" style="cursor:pointer"><b>📌 ' + E(x.t.n) + '</b><small>' + E(tplDesc(x.t)) + '</small></div><button data-del="' + x.i + '" title="حذف">🗑</button></div>';
-      }).join('') : '<div style="color:#8796A5;padding:10px 0">لا توجد قوالب بعد. املأ النموذج ثم اضغط «حفظ الحالي كقالب».</div>';
-    };
-    var o = sheet('📌 القوالب', [], '<div id="u3-tl"><div style="color:#8796A5">جارٍ التحميل…</div></div>' +
-      '<div style="display:flex;gap:8px;margin-top:12px"><input class="u3-in" id="u3-tn" placeholder="اسم القالب (مثال: إيجار المحل)" style="margin:0"><button class="it" id="u3-ts" style="width:auto;margin:0;background:var(--ui);color:#fff;white-space:nowrap">حفظ الحالي كقالب</button></div>');
-    var list = TPL || [];
-    draw(o, list);
-    tplLoad().then(function (l) { list = l; if (document.body.contains(o)) draw(o, list); });
-    o.querySelector('#u3-tl').onclick = function (e) {
-      var u = e.target.closest('[data-use]'), d = e.target.closest('[data-del]');
-      if (u) { var t = list[+u.dataset.use]; o.remove(); fillForm(k, t.f || {}); msg('تمت تعبئة «' + t.n + '» — راجع ثم احفظ'); return; }
-      if (d) { var t2 = list[+d.dataset.del]; if (!confirm('حذف القالب «' + t2.n + '»؟')) return; list = list.filter(function (x, i) { return i !== +d.dataset.del; }); tplSave(list); draw(o, list); }
-    };
-    o.querySelector('#u3-ts').onclick = function () {
-      var n = o.querySelector('#u3-tn').value.trim(), f = readForm(k);
-      if (!n) { o.querySelector('#u3-tn').focus(); msg('اكتب اسمًا للقالب', 1); return; }
-      if (!f || !(f.b || f.desc || f.st)) { msg('املأ البيان أولًا في النموذج', 1); return; }
-      list = list.filter(function (x) { return !(x.k === k && x.n === n); }).concat([{ k: k, n: n, f: f }]);
-      tplSave(list); draw(o, list); o.querySelector('#u3-tn').value = ''; msg('حُفظ القالب «' + n + '»');
-    };
-  }
-  /* زر القوالب فوق نموذج الإدخال */
-  function barWatch() {
-    var k = formKind(); if (!k || document.getElementById('u3-tbar')) return;
-    var target = null;
-    if (k === 'g') { var nb = document.getElementById('nb'); target = nb && nb.closest('.form'); if (target && target.closest('#ov')) return; }
-    else if (k === 'j') target = document.getElementById('jlines');
-    else { var d = document.getElementById('e-desc'); target = d && d.closest('.card'); }
-    if (!target) return;
-    var b = el('<div class="u3-bar" id="u3-tbar"><button type="button">📌 القوالب المحفوظة</button></div>');
-    b.querySelector('button').onclick = tplSheet;
-    target.parentNode.insertBefore(b, target);
-    if (TPL === null) tplLoad();
-  }
-  /* زر القوالب أُلغي بطلب المستخدم */
 
   /* ================= 4) البحث الموحّد السريع ================= */
   var ICON_S = '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>';
@@ -328,30 +249,6 @@
     });
   }
   setInterval(camWatch, 900);
-  /* رفع أسرع في يومية غدق: تصغير صورة السند إلى 1280 بكسل */
-  if (GH) {
-    var fdTry = setInterval(function () {
-      if (!g('fileData') || W.__u3fd) return;
-      W.__u3fd = 1; clearInterval(fdTry);
-      W.fileData = function (f) {
-        if (!/^image/.test(f.type)) {
-          if (f.size > 8e6) return Promise.reject(new Error('حجم الملف أكبر من 8 ميغا'));
-          return new Promise(function (res, rej) { var r = new FileReader(); r.onload = function () { res(r.result); }; r.onerror = rej; r.readAsDataURL(f); });
-        }
-        return new Promise(function (res, rej) {
-          var url = URL.createObjectURL(f), img = new Image();
-          img.onload = function () {
-            var k = Math.min(1, 1280 / Math.max(img.width, img.height)), c = document.createElement('canvas');
-            c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-            c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
-            res(c.toDataURL('image/jpeg', 0.72));
-          };
-          img.onerror = rej; img.src = url;
-        });
-      };
-    }, 500);
-  }
-
   /* ================= 9) تنبيه ارتفاع السعر في فاتورة الشراء ================= */
   function riseTh() { return Number(ls('u3_rise') || 10); }
   function rises() {
@@ -405,29 +302,6 @@
     }
   }
   setInterval(homeExtras, 700);
-
-  /* رئيسية الصفاء: إخفاء مربع البحث، والمبالغ أسفل الأقسام الرئيسية */
-  function homeLayout() {
-    if (GH || g('CUR') !== 'home') return;
-    var v = document.getElementById('view'); if (!v) return;
-    var f = v.querySelector(':scope > form.srch'); if (f) f.classList.add('u3-nosrch');
-    var h2 = v.querySelector(':scope > .hero h2'); if (h2) { var hr = new Date().getHours(), gr = hr >= 4 && hr < 12 ? 'صباح الخير ☀️' : 'مساء الخير 🌙'; if (h2.textContent !== gr) h2.textContent = gr; }
-    var tiles = v.querySelector(':scope > .tiles'); if (!tiles) return;
-    var after = tiles;
-    Array.prototype.forEach.call(v.children, function (c) {
-      if (c === tiles || c.classList.contains('hero') || c.id === 'u3-jban' || c.classList.contains('u3-nosrch') || c.id === 'dash2') return;
-      if (c.compareDocumentPosition(tiles) & Node.DOCUMENT_POSITION_FOLLOWING) c.dataset.u3mv = '1';
-    });
-    Array.prototype.slice.call(v.querySelectorAll(':scope > [data-u3mv]')).forEach(function (c) { if (c.previousElementSibling !== after) after.insertAdjacentElement('afterend', c); after = c; });
-  }
-  (function () {
-    var ob = null;
-    setInterval(function () {
-      var v = document.getElementById('view'); if (!v || GH) return;
-      if (!ob || ob._v !== v) { if (ob) ob.disconnect(); ob = new MutationObserver(function () { homeLayout(); }); ob._v = v; ob.observe(v, { childList: true }); }
-      homeLayout();
-    }, 300);
-  })();
 
   /* ================= 12) كشف مورد مختصر للإرسال على واتساب ================= */
   function supShortText() {
@@ -618,14 +492,13 @@
       '<div class="rw"><b>⭐ المفضلة</b><button class="ui-hbtn" data-u3="fav" style="background:var(--ui)">تعديل</button></div>' +
       '<div class="rw"><b>🛠 حالة النظام</b><button class="ui-hbtn" data-u3="sys" style="background:var(--ui)">فتح</button></div>' +
       '<div class="rw"><b>📱 الأجهزة المتصلة</b><button class="ui-hbtn" data-u3="dev" style="background:var(--ui)">عرض</button></div>' +
-      '<div class="rw"><b>📤 تصدير الواجهة</b><button class="ui-hbtn" data-u3="shx" style="background:var(--ui)">تصدير</button></div>' +
       (GH ? '<div class="rw"><b>🔔 التذكير اليومي</b><button class="ui-hbtn" data-u3="rem" style="background:var(--ui)">إعداد</button></div>' :
         '<div class="rw"><b>تنبيه ارتفاع السعر</b><span class="ui-seg">' + [5, 10, 20].map(function (p) { return '<button data-rise="' + p + '" class="' + (riseTh() === p ? 'on' : '') + '">' + p + '%</button>'; }).join('') + '</span></div>') + '</div>';
     var r = el(h), rws = bx.querySelectorAll('.rw');
     bx.insertBefore(r, rws[rws.length - 1] || null);
     r.onclick = function (e) {
       var b = e.target.closest('[data-u3]'), p = e.target.closest('[data-rise]');
-      if (b) { closeSheets(); var k = b.dataset.u3; if (k === 'fav') favSheet(); else if (k === 'sys') sysSheet(); else if (k === 'dev') devSheet(); else if (k === 'shx') shellExport(); else remSheet(); }
+      if (b) { closeSheets(); var k = b.dataset.u3; if (k === 'fav') favSheet(); else if (k === 'sys') sysSheet(); else if (k === 'dev') devSheet(); else remSheet(); }
       if (p) { ls('u3_rise', p.dataset.rise); Array.prototype.forEach.call(r.querySelectorAll('[data-rise]'), function (x) { x.classList.toggle('on', x === p); }); }
     };
   }, 400);
@@ -832,22 +705,4 @@
     document.addEventListener('pointerdown', function (e) { if (dd && !dd.contains(e.target) && e.target !== ddFor && !(e.target.classList && e.target.classList.contains('u3-ar'))) closeDD(); }, true);
   })();
 
-  /* ================= تصدير صفحة الواجهة (shell) لنقلها إلى المستودع ================= */
-  function shellExport() {
-    var R = W.RT; if (!R) { msg('تعذّر الوصول للواجهة', 1); return; }
-    var name = 'shell-' + APP.id + '.html';
-    R.kget('shell').then(function (h) {
-      if (!h) { msg('لا توجد واجهة محفوظة على هذا الجهاز', 1); return; }
-      var f = new File([h], name, { type: 'text/html' });
-      if (navigator.canShare && navigator.canShare({ files: [f] })) {
-        return navigator.share({ files: [f], title: name }).then(function () { msg('✅ تم التصدير'); }).catch(function () { dl(f); });
-      }
-      dl(f);
-    }).catch(function (e) { msg('تعذّر التصدير: ' + (e && e.message || e), 1); });
-    function dl(f) {
-      var a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = name;
-      document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 3000);
-      msg('✅ حُفظ الملف ' + name + ' في التنزيلات');
-    }
-  }
 })();
