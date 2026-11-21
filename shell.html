@@ -127,12 +127,6 @@ function en(v) {
 }
 function num(v) { var n = parseFloat(en(v)); return isNaN(n) ? 0 : n; }
 function fmt(n) { return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-function call(fn) {
-  var a = Array.prototype.slice.call(arguments, 1);
-  return new Promise(function (res, rej) {
-    google.script.run.withSuccessHandler(res).withFailureHandler(rej).api(fn, a);
-  });
-}
 var tt;
 function toast(m, kind) {
   var t = $('#toast'); t.className = kind || ''; t.textContent = m; t.style.display = 'block';
@@ -142,25 +136,6 @@ function errMsg(e) { return (e && e.message) ? String(e.message).replace(/^Error
 function busy(btn, on) { if (btn) { btn.disabled = on; } }
 
 /* ---------- التنقل ---------- */
-function go(v) {
-  var prevSec = VIEW_SEC[CUR] || '';
-  CUR = v;
-  var sec = VIEW_SEC[v] || '';
-  document.body.setAttribute('data-sec', sec);
-  $('#ttl').textContent = sec ? SECTIONS[sec].title : 'مكتبة الصفاء';
-  $('#homeBtn').classList.toggle('hide', !sec);
-  var nav = $('#tabs');
-  if (sec) {
-    nav.classList.remove('hide');
-    nav.innerHTML = SECTIONS[sec].tabs.map(function (t) {
-      return '<button class="' + (t[0] === v ? 'on' : '') + '" onclick="go(\'' + t[0] + '\')">' + t[1] + '</button>';
-    }).join('');
-    var on = $('button.on', nav); if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', inline: 'center' });
-  } else { nav.classList.add('hide'); }
-  window.scrollTo(0, 0);
-  var V = { home: vHome, inv: vInv, psearch: vPSearch, plog: vPLog, items: vItems, jentry: vJEntry, daily: vDaily, jsearch: vJSearch, jlog: vJLog };
-  if (V[v]) V[v](); else { SUP.show(v); if (prevSec !== 's') SUP.quiet(); }
-}
 function refreshView() {
   if (VIEW_SEC[CUR] === 's' || CUR === 'sup') { SUP.reload(); return; }
   reboot(function () { go(CUR); toast('تم تحديث البيانات', 'ok'); }).catch(function (e) { toast(errMsg(e), 'err'); });
@@ -181,86 +156,10 @@ var ICON = {
 function tile(k, to, title, desc, stat) {
   return '<button class="tile ' + k + '" onclick="go(\'' + to + '\')">' + ICON[k] + '<b>' + title + '</b><small>' + desc + '</small><em' + (k === 's' ? ' id="supHome"' : '') + '>' + stat + '</em></button>';
 }
-function vHome() {
-  $('#view').innerHTML =
-    '<div class="hero"><h2>مكتبة الصفاء</h2><p>اختر القسم الذي تريد العمل عليه</p></div><div class="tiles">' +
-    tile('p', 'inv', 'فواتير الشراء', 'إدخال فاتورة، بحث وتقارير، الأصناف، الموردين', B.items.length + ' صنف · ' + B.suppliers.length + ' مورد') +
-    tile('j', 'jentry', 'اليومية', 'إدخال اليومية، الملخص اليومي، البحث والتقارير', 'الرصيد الحالي: ' + fmt(B.bal.cash)) +
-    tile('s', 'sentry', 'قيود الموردين', 'إدخال قيد، كشف حساب، ملخص الأرصدة، السجل', SUP.homeStat()) + '</div>';
-}
 /* ---------- إدخال فاتورة ---------- */
-function vInv() {
-  $('#view').innerHTML =
-    '<div class="card"><h2>بيانات الفاتورة</h2><div class="grid">' +
-    '<div class="f wide"><label>اسم المورد</label><input id="isup" list="dl-sup" autocomplete="off" placeholder="اختر أو اكتب اسم مورد جديد"></div>' +
-    '<div class="f"><label>رقم الفاتورة</label><input id="iinv" autocomplete="off"></div>' +
-    '<div class="f"><label>التاريخ</label><input id="idate" type="date" value="' + B.today + '"></div></div></div>' +
-    '<div id="ilines"></div>' +
-    '<button class="btn sec" style="width:100%" onclick="addInvLine()">+ إضافة صنف</button>' +
-    (B.formUrl ? '<div class="note" style="text-align:center"><a href="' + esc(B.formUrl) + '" target="_blank" rel="noopener">فتح نموذج Google Form لإدخال الأصناف (صنف في كل إرسال)</a></div>' : '') +
-    '<div class="bar"><div class="tot">إجمالي الفاتورة<b id="itot">0.00</b></div><button class="btn grn" id="isave" onclick="saveInv()">حفظ الفاتورة</button></div>';
-  addInvLine();
-}
 
-function addInvLine() {
-  var d = document.createElement('div');
-  d.className = 'card line';
-  d.innerHTML =
-    '<div class="grid l4">' +
-    '<div class="f wide"><label>الصنف</label><input class="n" list="dl-items" autocomplete="off" placeholder="اكتب أو اختر الصنف"></div>' +
-    '<div class="f"><label>الكود <small>(اختياري)</small></label><input class="c" autocomplete="off" placeholder="تلقائي"></div>' +
-    '<div class="f"><label>سعر الشراء</label><input class="p" inputmode="decimal" autocomplete="off"></div>' +
-    '<div class="f"><label>الكمية</label><input class="q" inputmode="decimal" autocomplete="off"></div>' +
-    '<div class="f nw hide"><label>الوحدة <span class="badge">صنف جديد</span></label><input class="u" autocomplete="off"></div>' +
-    '<div class="f nw hide"><label>التصنيف <span class="badge">صنف جديد</span></label><input class="g" autocomplete="off"></div></div>' +
-    '<div class="ltot"><span>الإجمالي: <b class="lt">0.00</b></span><button type="button" class="x">حذف السطر</button></div>';
-  $('#ilines').appendChild(d);
-  var n = $('.n', d), c = $('.c', d);
-  function onName() {
-    var nm = n.value.trim().toLowerCase();
-    var hit = B.items.filter(function (i) { return i.name.toLowerCase() === nm; })[0];
-    if (hit) { c.value = hit.code; c.readOnly = true; $$('.nw', d).forEach(function (e) { e.classList.add('hide'); }); }
-    else {
-      if (c.readOnly) { c.value = ''; c.readOnly = false; }
-      $$('.nw', d).forEach(function (e) { e.classList.toggle('hide', !nm); });
-    }
-  }
-  n.addEventListener('input', onName); n.addEventListener('change', onName);
-  d.addEventListener('input', calcInv);
-  $('.x', d).onclick = function () { if ($$('.line').length > 1) { d.remove(); calcInv(); } else { toast('يجب أن تبقى فاتورة بسطر واحد على الأقل', 'err'); } };
-}
 
-function calcInv() {
-  var t = 0;
-  $$('.line').forEach(function (d) {
-    var v = num($('.p', d).value) * num($('.q', d).value);
-    $('.lt', d).textContent = fmt(v); t += v;
-  });
-  $('#itot').textContent = fmt(t);
-}
 
-function saveInv(confirmDup) {
-  var btn = $('#isave');
-  var p = { supplier: $('#isup').value, invoice: $('#iinv').value, date: $('#idate').value, confirmDup: !!confirmDup,
-    lines: $$('.line').map(function (d) {
-      return { name: $('.n', d).value, code: $('.c', d).value, unit: $('.u', d).value, cat: $('.g', d).value, price: $('.p', d).value, qty: $('.q', d).value };
-    }) };
-  busy(btn, true);
-  call('webSaveInvoice', p).then(function (r) {
-    busy(btn, false);
-    if (r.dup) {
-      var old = $('#dupbox'); if (old) old.remove();
-      var bx = document.createElement('div'); bx.id = 'dupbox'; bx.className = 'card';
-      bx.innerHTML = '<b class="neg">' + esc(r.msg) + '</b><div class="row" style="margin-top:10px"><button class="btn grn" type="button">متابعة الحفظ</button><button class="btn sec" type="button">إلغاء</button></div>';
-      $('#view').insertBefore(bx, $('#view').firstChild);
-      var bs = $$('button', bx); bs[0].onclick = function () { bx.remove(); saveInv(true); }; bs[1].onclick = function () { bx.remove(); };
-      window.scrollTo(0, 0); return;
-    }
-    if (!r.ok) { toast(r.msg, 'err'); return; }
-    toast(r.msg, 'ok');
-    reboot(function () { vInv(); });
-  }).catch(function (e) { busy(btn, false); toast(errMsg(e), 'err'); });
-}
 
 /* ---------- أدوات الجداول ---------- */
 function td(v, cls) { return '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + v + '</td>'; }
@@ -289,9 +188,6 @@ function srcName(x) { return esc(x || ''); }
 /* ---------- تعديل / حذف سطر فاتورة شراء ---------- */
 var PR = {}, POFFX = 0;
 function regPRows(rows) { PR = {}; rows.forEach(function (r) { PR[r.row] = r; }); }
-function editPBtn(x) {
-  return '<td><button class="btn sec" style="min-height:34px;padding:4px 12px;font-size:14px" onclick="editP(' + x.row + ')">تعديل</button></td>';
-}
 function refreshP() { reboot(function () { if (CUR === 'psearch') doPSearch(POFFX); else if (CUR === 'plog') doPLog(POFFX); }); }
 function editP(row) {
   var x = PR[row]; if (!x) return;
@@ -347,56 +243,11 @@ function editP(row) {
 /* ---------- تعديل / حذف حركة يومية ---------- */
 var JR = {}, JOFF = 0;
 function regRows(rows) { JR = {}; rows.forEach(function (r) { JR[r.row] = r; }); }
-function editBtn(x) {
-  return '<td><button class="btn sec" style="min-height:34px;padding:4px 12px;font-size:14px" onclick="editJ(' + x.row + ')">تعديل</button></td>';
-}
 function refreshJ() {
   if (CUR === 'jsearch') doJSearch(JOFF); else if (CUR === 'jlog') doJLog(JOFF);
 }
-function editJ(row) {
-  var x = JR[row]; if (!x) return;
-  var L = B.labels, old = $('#jedit'); if (old) old.remove();
-  var bx = document.createElement('div'); bx.id = 'jedit'; bx.className = 'card';
-  bx.innerHTML = '<h2>تعديل حركة</h2><div class="grid">' +
-    '<div class="f"><label>التاريخ</label><input id="ed" type="date" value="' + esc(x.date) + '"></div>' +
-    '<div class="f wide"><label>البيان</label><input id="es" value="' + esc(x.st) + '" autocomplete="off"></div>' +
-    '<div class="f"><label>' + esc(L.due) + ' <small>(السداد بالسالب)</small></label><input id="edu" inputmode="decimal" value="' + (x.due ? x.due : '') + '"></div>' +
-    '<div class="f"><label>' + esc(L.out) + '</label><input id="eo" inputmode="decimal" value="' + (x.out ? x.out : '') + '"></div>' +
-    '<div class="f"><label>' + esc(L.inn) + '</label><input id="ei" inputmode="decimal" value="' + (x.inn ? x.inn : '') + '"></div></div><br>' +
-    '<div class="row"><button class="btn grn" id="esv">حفظ التعديل</button><button class="btn sec" id="ecn">إلغاء</button>' +
-    '<button class="btn" id="edl" style="background:var(--red)">حذف الحركة</button></div>';
-  $('#view').insertBefore(bx, $('#view').firstChild);
-  window.scrollTo(0, 0);
-  var orig = { date: x.date, st: x.st, due: x.due, out: x.out, inn: x.inn };
-  $('#ecn').onclick = function () { bx.remove(); };
-  $('#esv').onclick = function () {
-    var b = this; busy(b, true);
-    call('webJUpdate', { row: row, orig: orig, nw: { date: $('#ed').value, st: $('#es').value, due: $('#edu').value, out: $('#eo').value, inn: $('#ei').value } }).then(function (r) {
-      busy(b, false);
-      if (!r.ok) { toast(r.msg, 'err'); return; }
-      toast(r.msg, 'ok'); B.bal = r.bal; bx.remove(); refreshJ();
-    }).catch(function (e) { busy(b, false); toast(errMsg(e), 'err'); });
-  };
-  var armed = false;
-  $('#edl').onclick = function () {
-    var b = this;
-    if (!armed) { armed = true; b.textContent = 'تأكيد الحذف نهائيًا'; return; }
-    busy(b, true);
-    call('webJDelete', { row: row, orig: orig }).then(function (r) {
-      busy(b, false);
-      if (!r.ok) { toast(r.msg, 'err'); return; }
-      toast(r.msg, 'ok'); B.bal = r.bal; bx.remove(); refreshJ();
-    }).catch(function (e) { busy(b, false); toast(errMsg(e), 'err'); });
-  };
-}
 
 /* ---------- بحث المشتريات (نفس أعمدة صفحة البحث) ---------- */
-function vPSearch() {
-  $('#view').innerHTML =
-    '<div class="card"><div class="row"><div class="f" style="flex:3 1 220px"><label>ابحث (صنف / كود / فاتورة / مورد)</label><input id="pq" autocomplete="off" onkeydown="if(event.key===\'Enter\')doPSearch(0)"></div>' +
-    '<button class="btn" onclick="doPSearch(0)" style="align-self:flex-end">بحث</button></div></div><div id="pres"></div>';
-  doPSearch(0);
-}
 function doPSearch(off) {
   var q = $('#pq').value; POFFX = off || 0;
   $('#pres').innerHTML = '<div class="muted">جارٍ البحث…</div>';
@@ -414,13 +265,6 @@ function doPSearch(off) {
 }
 
 /* ---------- سجل المشتريات (كل الأعمدة) ---------- */
-function vPLog() {
-  $('#view').innerHTML =
-    '<div class="card"><div class="grid"><div class="f wide"><label>بحث (مورد / فاتورة / كود / صنف)</label><input id="lq" autocomplete="off" onkeydown="if(event.key===\'Enter\')doPLog(0)"></div>' +
-    '<div class="f"><label>من تاريخ</label><input id="lf" type="date"></div><div class="f"><label>إلى تاريخ</label><input id="lt" type="date"></div></div><br>' +
-    '<button class="btn" onclick="doPLog(0)">عرض</button></div><div id="lres"></div>';
-  doPLog(0);
-}
 function doPLog(off) {
   POFFX = off || 0;
   $('#lres').innerHTML = '<div class="muted">جارٍ التحميل…</div>';
@@ -505,79 +349,9 @@ function addSup() {
 }
 
 /* ---------- إدخال اليومية ---------- */
-function vJEntry() {
-  var L = B.labels;
-  $('#view').innerHTML =
-    '<div class="stats"><div class="stat hi"><span>الرصيد الحالي</span><b id="bcash">' + fmt(B.bal.cash) + '</b></div>' +
-    '<div class="stat hi"><span>رصيد ' + esc(L.due) + ' الحالي</span><b id="bdue">' + fmt(B.bal.due) + '</b></div>' +
-    '<div class="stat"><span>' + esc(L.inn) + ' هذا التاريخ</span><b id="dIn">—</b></div>' +
-    '<div class="stat"><span>' + esc(L.out) + ' هذا التاريخ</span><b id="dOut">—</b></div>' +
-    '<div class="stat"><span>صافي النقد لهذا التاريخ</span><b id="dNet">—</b></div>' +
-    '<div class="stat"><span>' + esc(L.due) + ' هذا التاريخ</span><b id="dDue">—</b></div></div>' +
-    '<div class="card"><div class="grid"><div class="f"><label>التاريخ</label><input id="jdate" type="date" value="' + B.today + '" onchange="loadDay()"></div></div></div>' +
-    '<div id="jlines"></div><button class="btn sec" style="width:100%" onclick="addJLine()">+ إضافة سطر</button>' +
-    '<div class="note">كل سطر حركة واحدة: ' + esc(L.out) + ' أو ' + esc(L.inn) + ' وليس الاثنين. ' + esc(L.due) + ' تُحسب منفصلة ولا تدخل في الرصيد، وتُكتب مع أحدهما أو وحدها، والسداد بالسالب (فعّل خانة سداد).</div>' +
-    '<div class="bar"><div class="tot" id="jtot">—</div><button class="btn grn" id="jsave" onclick="saveJ()">حفظ اليومية</button></div>';
-  addJLine();
-  loadDay();
-}
-function loadDay() {
-  call('webJDay', $('#jdate').value).then(function (r) {
-    $('#bcash').textContent = fmt(r.bal.cash); $('#bdue').textContent = fmt(r.bal.due);
-    $('#dIn').textContent = fmt(r.inn); $('#dOut').textContent = fmt(r.out); $('#dNet').textContent = fmt(r.net); $('#dDue').textContent = fmt(r.due);
-  }).catch(function (e) { toast(errMsg(e), 'err'); });
-}
-function addJLine() {
-  var L = B.labels, d = document.createElement('div');
-  d.className = 'card line';
-  d.innerHTML =
-    '<div class="grid i5"><div class="f wide"><label>البيان</label><input class="st" autocomplete="off"></div>' +
-    '<div class="f"><label>' + esc(L.due) + '</label><input class="d" inputmode="decimal" autocomplete="off">' +
-    '<label style="display:flex;gap:6px;align-items:center;font-weight:400"><input type="checkbox" class="ng" style="width:20px;min-height:20px"> سداد (يُحفظ بالسالب)</label></div>' +
-    '<div class="f"><label>' + esc(L.out) + '</label><input class="o" inputmode="decimal" autocomplete="off"></div>' +
-    '<div class="f"><label>' + esc(L.inn) + '</label><input class="i" inputmode="decimal" autocomplete="off"></div></div>' +
-    '<div class="ltot"><span></span><button type="button" class="x">حذف السطر</button></div>';
-  $('#jlines').appendChild(d);
-  d.addEventListener('input', calcJ);
-  $('.x', d).onclick = function () { if ($$('.line').length > 1) { d.remove(); calcJ(); } else { toast('يجب أن يبقى سطر واحد على الأقل', 'err'); } };
-  calcJ();
-}
 function jDue(d) { var v = num($('.d', d).value); return $('.ng', d).checked ? -Math.abs(v) : v; }
-function calcJ() {
-  var a = 0, o = 0, i = 0, L = B.labels;
-  $$('.line').forEach(function (d) { a += jDue(d); o += num($('.o', d).value); i += num($('.i', d).value); });
-  $('#jtot').innerHTML = esc(L.inn) + ': <b style="display:inline">' + fmt(i) + '</b> · ' + esc(L.out) + ': <b style="display:inline">' + fmt(o) + '</b> · ' + esc(L.due) + ': <b style="display:inline">' + fmt(a) + '</b>';
-}
-function saveJ() {
-  var b = $('#jsave');
-  var p = { date: $('#jdate').value, lines: $$('.line').map(function (d) {
-    var due = $('.d', d).value.trim();
-    return { st: $('.st', d).value, due: due === '' ? '' : String(jDue(d)), out: $('.o', d).value, inn: $('.i', d).value };
-  }) };
-  busy(b, true);
-  call('webSaveJournal', p).then(function (r) {
-    busy(b, false);
-    if (!r.ok) { toast(r.msg, 'err'); return; }
-    toast(r.msg, 'ok'); B.bal = r.bal; vJEntry();
-  }).catch(function (e) { busy(b, false); toast(errMsg(e), 'err'); });
-}
 
 /* ---------- الملخص اليومي ---------- */
-function vDaily() {
-  var L = B.labels;
-  $('#view').innerHTML = '<div class="muted">جارٍ التحميل…</div>';
-  call('webDaily').then(function (r) {
-    var t = r.totals, h =
-      '<div class="stats"><div class="stat hi"><span>الرصيد الحالي</span><b>' + fmt(r.bal.cash) + '</b></div><div class="stat"><span>رصيد ' + esc(L.due) + '</span><b>' + fmt(r.bal.due) + '</b></div>' +
-      '<div class="stat"><span>إجمالي ' + esc(L.inn) + '</span><b>' + fmt(t.inn) + '</b></div><div class="stat"><span>إجمالي ' + esc(L.out) + '</span><b>' + fmt(t.out) + '</b></div></div>';
-    if (!r.days.length) { $('#view').innerHTML = h + '<div class="muted">لا توجد حركات بعد</div>'; return; }
-    h += '<div class="tw"><table><tr><th>التاريخ</th><th>' + esc(L.due) + '</th><th>' + esc(L.out) + '</th><th>' + esc(L.inn) + '</th><th>صافي النقد</th><th>الرصيد</th><th>رصيد ' + esc(L.due) + '</th></tr>' +
-      r.days.map(function (d) {
-        return '<tr><td>' + esc(d.date) + '</td><td>' + fmt(d.due) + '</td><td>' + fmt(d.out) + '</td><td>' + fmt(d.inn) + '</td><td class="' + (d.net < 0 ? 'neg' : '') + '">' + fmt(d.net) + '</td><td>' + fmt(d.cash) + '</td><td>' + fmt(d.dueBal) + '</td></tr>';
-      }).join('') + '</table></div><div class="pdf"><button class="btn sec" onclick="runPdf(this,\'daily\',{})">تصدير PDF</button><div id="pdfo"></div></div>';
-    $('#view').innerHTML = h;
-  }).catch(function (e) { toast(errMsg(e), 'err'); });
-}
 
 
 /* ---------- بحث اليومية: جدول بنفس أعمدة الملف مع صف الإجمالي ---------- */
@@ -597,20 +371,6 @@ function jStats(t, count) {
     '<div class="stat hi"><span>صافي النقد</span><b>' + fmt(t.net) + '</b></div><div class="stat"><span>إجمالي ' + esc(L.due) + '</span><b>' + fmt(t.due) + '</b></div>' +
     '<div class="stat"><span>عدد الحركات</span><b>' + count + '</b></div></div>';
 }
-function doJSearch(off) {
-  var L = B.labels, p = jParams(); p.off = off || 0; JOFF = p.off;
-  $('#jres').innerHTML = '<div class="muted">جارٍ البحث…</div>';
-  call('webSearchJournal', p).then(function (r) {
-    var t = r.totals, h = jStats(t, r.count);
-    regRows(r.rows);
-    if (!r.rows.length) { $('#jres').innerHTML = h + '<div class="muted">لا توجد نتائج</div>'; return; }
-    h += tbl(['التاريخ', 'البيان', L.due, L.out, L.inn, 'تعديل'], r.rows.map(function (x) {
-      return '<tr>' + td(esc(x.date)) + td(esc(x.st), 'l') + td(x.due ? fmt(x.due) : '') + td(x.out ? fmt(x.out) : '') + td(x.inn ? fmt(x.inn) : '') + editBtn(x) + '</tr>';
-    }), '<tr class="tot"><td colspan="2">الإجمالي (' + r.count + ' حركة)</td>' + td(fmt(t.due)) + td(fmt(t.out)) + td(fmt(t.inn)) + '<td></td></tr>');
-    h += pager(r, 'doJSearch') + pdfBox('jsearch', 'jParams()');
-    $('#jres').innerHTML = h;
-  }).catch(function (e) { $('#jres').innerHTML = ''; toast(errMsg(e), 'err'); });
-}
 
 /* ---------- سجل اليومية (كل الأعمدة مع الرصيد ورصيد الذمم ووقت الإدخال) ---------- */
 function vJLog() {
@@ -621,19 +381,6 @@ function vJLog() {
     '<div class="f"><label>النوع</label><select id="gy"><option>الكل</option><option>' + esc(L.inn) + '</option><option>' + esc(L.out) + '</option><option>' + esc(L.due) + '</option></select></div></div><br>' +
     '<button class="btn" onclick="doJLog(0)">عرض</button></div><div id="gres"></div>';
   doJLog(0);
-}
-function doJLog(off) {
-  var L = B.labels; JOFF = off || 0;
-  $('#gres').innerHTML = '<div class="muted">جارٍ التحميل…</div>';
-  call('webJLog', { q: $('#gq').value, from: $('#gf').value, to: $('#gt').value, type: $('#gy').value, off: off || 0 }).then(function (r) {
-    var t = r.totals, h = jStats(t, r.count);
-    regRows(r.rows);
-    if (!r.rows.length) { $('#gres').innerHTML = h + '<div class="muted">لا توجد حركات</div>'; return; }
-    h += tbl(['التاريخ', 'البيان', L.due, L.out, L.inn, 'الرصيد', 'رصيد ' + L.due, 'وقت الإدخال', 'تعديل'], r.rows.map(function (x) {
-      return '<tr>' + td(esc(x.date)) + td(esc(x.st), 'l') + td(x.due ? fmt(x.due) : '') + td(x.out ? fmt(x.out) : '') + td(x.inn ? fmt(x.inn) : '') + td(fmt(x.bal)) + td(fmt(x.dueBal)) + td(esc(x.time)) + editBtn(x) + '</tr>';
-    }), '<tr class="tot"><td colspan="2">الإجمالي (' + r.count + ' حركة)</td>' + td(fmt(t.due)) + td(fmt(t.out)) + td(fmt(t.inn)) + '<td colspan="4"></td></tr>');
-    $('#gres').innerHTML = h + pager(r, 'doJLog') + '<div class="note">عمودا الرصيد ورصيد الذمم تراكميان بترتيب الإدخال.</div>';
-  }).catch(function (e) { $('#gres').innerHTML = ''; toast(errMsg(e), 'err'); });
 }
 
 
@@ -1455,7 +1202,6 @@ function curDefRate(c) {
   var x = B.set.curs.filter(function (z) { return z.code === c; })[0];
   return x && x.rate > 0 ? x.rate : '';
 }
-function curShow(sel, wrap) { if (wrap) wrap.classList.toggle('hide', !sel.value || sel.value === B.set.base); }
 function curFill(sel, inp, wrap, cb) {
   var v = sel.value, list = curList();
   sel.innerHTML = list.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('');
@@ -1899,18 +1645,6 @@ call = (function (orig) {
 })(call);
 refreshView = (function (orig) { return function () { qClear(); orig(); }; })(refreshView);
 /* تحميل مسبق هادئ لأكثر الصفحات استخدامًا، واحدة تلو الأخرى */
-function qPrefetch() {
-  var list = [['webDaily'], ['webInvList', { q: '', from: '', to: '' }], ['webListItems'], ['webJLog', { q: '', from: '', to: '', type: 'الكل', off: 0 }],
-    ['webPLog', { q: '', from: '', to: '', off: 0 }], ['webReport', { year: null }],
-    ['webSearchJournal', { q: '', from: '', to: '', type: 'الكل', off: 0 }], ['webSearchPurchases', '', 0]];
-  var i = 0;
-  (function next() {
-    if (i >= list.length) return;
-    var x = list[i++];
-    QPF = true; var pr = call.apply(null, x); QPF = false;
-    pr.then(function () { setTimeout(next, 300); }, function () { setTimeout(next, 300); });
-  })();
-}
 function loadDay() {
   var dt = $('#jdate'); if (!dt) return;
   call('webJDay', dt.value).then(function (r) {
