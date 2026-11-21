@@ -97,71 +97,19 @@ const fmt = n => typeof n === 'number' ? n.toLocaleString('en-US', { minimumFrac
 const money = n => `<span class='${n < 0 ? 'neg' : ''}'>${fmt(n)}</span>`;
 const num = x => typeof x === 'number' ? x : 0;
 
-function call(n, ...a) {
-  $('#load').style.display = 'block';
-  return new Promise((res, rej) => google.script.run
-    .withSuccessHandler(r => { $('#load').style.display = 'none'; res(JSON.parse(r)); })
-    .withFailureHandler(e => { $('#load').style.display = 'none'; toast(e.message || String(e), 1); rej(e); })
-    .api(n, a));
-}
 function toast(m, err) {
   const t = $('#toast'); t.textContent = m; t.className = err ? 'err' : ''; t.style.display = 'block';
   clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', err ? 5000 : 2600);
-}
-function accOpts(sel, all) {
-  return (all ? `<option value='الكل'>الكل</option>` : '') +
-    S.acc.map(a => `<option${a.name === sel ? ' selected' : ''}>${esc(a.name)}</option>`).join('');
 }
 function kpis(list) {
   return `<div class='kpis'>` + list.map(k => `<div class='kpi${k[2] ? ' o' : ''}'><span>${k[0]}</span><b>${
     typeof k[1] === 'number' && k[3] !== 'n' ? money(k[1]) : esc(k[1])}</b></div>`).join('') + '</div>';
 }
-function table(rows, o) {
-  S.rows = rows;
-  if (!rows.length && o.open == null) return `<div class='tw'><div class='empty'>لا توجد قيود</div></div>`;
-  let h = `<div class='tw'><table><tr>${o.acc ? '<th>الحساب</th>' : ''}<th>البيان</th><th>الصادر</th><th>الوارد</th><th>التاريخ</th>${o.bal ? '<th>الرصيد</th>' : ''}<th class='noprint'></th></tr>`;
-  if (o.open != null) h += `<tr class='op'><td class='t'>رصيد سابق (منقول)</td><td></td><td></td><td>${esc(o.openDate || '')}</td><td>${money(o.open)}</td><td class='noprint'></td></tr>`;
-  rows.forEach((r, i) => {
-    h += `<tr>${o.acc ? `<td>${esc(r.acc)}</td>` : ''}<td class='t'>${esc(r.b)}</td><td>${fmt(r.s)}</td><td>${fmt(r.w)}</td><td>${esc(r.d)}</td>${
-      o.bal ? `<td class='b'>${money(r.bal)}</td>` : ''}<td class='noprint'><button class='ic e' onclick='editM(${i})'>تعديل</button><button class='ic d' onclick='delM(${i})'>حذف</button></td></tr>`;
-  });
-  if (o.tot) h += `<tr class='tot'><td${o.acc ? ` colspan='2'` : ''} class='t'>الإجمالي</td><td>${fmt(o.tot[0])}</td><td>${fmt(o.tot[1])}</td><td></td>${o.bal ? `<td>${money(o.tot[2])}</td>` : ''}<td class='noprint'></td></tr>`;
-  return h + '</table></div>';
-}
 function v(id) { const e = document.getElementById(id); return e ? e.value : ''; }
 
-async function boot() {
-  const b = await call('bootstrap');
-  S.acc = b.accounts; S.today = b.today;
-  $('#sub').textContent = b.title + ' • ' + b.accounts.length + ' حساب';
-  if (!S.cur && S.acc.length) S.cur = S.acc[0].name;
-}
-function go(p) {
-  S.page = p; S.after = null;
-  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
-  window.scrollTo(0, 0);
-  ({ dash, entry, accts, search, stmt, month })[p]();
-}
 
-async function dash() {
-  await boot();
-  let s = 0, w = 0, n = 0;
-  S.acc.forEach(a => { s += a.s; w += a.w; n += a.n; });
-  $('#view').innerHTML = '<h2>ملخص الأرصدة</h2>' +
-    kpis([['إجمالي الصادر', s], ['إجمالي الوارد', w], ['صافي الرصيد', w - s, 1], ['عدد القيود', n.toLocaleString('en-US'), 0, 'n']]) +
-    `<div class='grid'>` + S.acc.map((a, i) => `<div class='acc' onclick='openAcc(${i})'><div class='n'>${esc(a.name)}</div><div class='bal'>${money(a.bal)}</div>
-      <div class='m'><span>صادر ${fmt(a.s)}</span><span>وارد ${fmt(a.w)}</span></div>
-      <div class='m' style='margin-top:4px'><span>${a.n} قيد</span><span>آخر حركة ${a.last || '—'}</span></div></div>`).join('') + '</div>';
-}
 function openAcc(i) { S.cur = S.acc[i].name; go('accts'); }
 
-function entryForm(id) {
-  return `<div class='form'><div><label>الحساب</label><select id='${id}a'>${accOpts(S.cur)}</select></div>
-    <div><label>التاريخ</label><input type='date' id='${id}d' value='${S.today}'></div>
-    <div class='wide'><label>البيان</label><input id='${id}b' placeholder='مثال: دفعة 1234'></div>
-    <div><label>الصادر</label><input id='${id}s' type='number' step='0.01' min='0' inputmode='decimal'></div>
-    <div><label>الوارد</label><input id='${id}w' type='number' step='0.01' min='0' inputmode='decimal'></div></div>`;
-}
 function entry() {
   $('#view').innerHTML = `<h2>إدخال قيد جديد</h2><div class='card'>${entryForm('n')}
     <div class='btns' style='margin-top:14px'><button class='btn' onclick='saveNew()'>حفظ القيد</button></div></div>
@@ -174,16 +122,6 @@ async function loadLast() {
   $('#curBal').innerHTML = 'الرصيد الحالي: <b>' + money(rows.length ? rows[rows.length - 1].bal : 0) + '</b>';
   $('#last').innerHTML = table(rows.slice(-10).reverse(), { bal: 1 });
   S.after = loadLast;
-}
-async function saveNew() {
-  const e = { acc: v('na'), d: v('nd'), b: v('nb'), s: v('ns'), w: v('nw') };
-  if (!e.b.trim()) return toast('أدخل البيان', 1);
-  if (!e.s && !e.w) return toast('أدخل مبلغ الصادر أو الوارد', 1);
-  await call('add', e);
-  toast('تم حفظ القيد في ' + e.acc);
-  ['nb', 'ns', 'nw'].forEach(i => document.getElementById(i).value = '');
-  $('#nb').focus();
-  boot(); loadLast();
 }
 
 async function accts() {
@@ -225,13 +163,6 @@ async function runSearch() {
   S.after = runSearch;
 }
 
-async function stmt() {
-  if (!S.acc.length) await boot();
-  $('#view').innerHTML = `<h2>كشف حساب</h2><div class='card noprint'><div class='form'>
-    <div><label>الحساب</label><select id='ka'>${accOpts(S.cur)}</select></div>
-    <div><label>من تاريخ</label><input type='date' id='kf'></div><div><label>إلى تاريخ</label><input type='date' id='kt'></div>
-    <div class='btns'><button class='btn' onclick='runStmt()'>عرض الكشف</button><button class='btn sec' onclick='window.print()'>طباعة / PDF</button></div></div></div><div id='kr'></div>`;
-}
 async function runStmt() {
   S.cur = v('ka');
   const p = { acc: v('ka'), from: v('kf'), to: v('kt') };
@@ -269,20 +200,6 @@ async function runMonth() {
 
 function openM(h) { $('#mbox').innerHTML = h; $('#ov').style.display = 'flex'; }
 function closeM() { $('#ov').style.display = 'none'; }
-function editM(i) {
-  const r = S.rows[i]; if (!r) return;
-  openM(`<h2>تعديل قيد — ${esc(r.acc)}</h2><div class='form'>
-    <div class='wide'><label>البيان</label><input id='eb' value='${esc(r.b)}'></div>
-    <div><label>الصادر</label><input id='es' type='number' step='0.01' min='0' value='${typeof r.s === 'number' ? r.s : ''}'></div>
-    <div><label>الوارد</label><input id='ew' type='number' step='0.01' min='0' value='${typeof r.w === 'number' ? r.w : ''}'></div>
-    <div><label>التاريخ</label><input type='date' id='ed' value='${esc(r.d)}'></div></div>
-    <div class='btns' style='margin-top:16px;justify-content:space-between'><div class='btns'><button class='btn' onclick='saveEdit(${i})'>حفظ التعديل</button><button class='btn sec' onclick='closeM()'>إلغاء</button></div><button class='btn red' onclick='delM(${i})'>حذف</button></div>`);
-}
-async function saveEdit(i) {
-  const r = S.rows[i];
-  await call('update', { acc: r.acc, row: r.row, sig: r.sig, b: v('eb'), s: v('es'), w: v('ew'), d: v('ed') });
-  closeM(); toast('تم حفظ التعديل'); after();
-}
 function delM(i) {
   const r = S.rows[i]; if (!r) return;
   openM(`<h2>حذف القيد؟</h2><p>${esc(r.b)}<br><span class='mut'>${esc(r.acc)} • ${esc(r.d)} • ${typeof r.s === 'number' ? 'صادر ' + fmt(r.s) : 'وارد ' + fmt(r.w)}</span></p>
@@ -296,15 +213,6 @@ async function doDel(i) {
 function after() { boot(); if (S.after) S.after(); }
 function newEntryM() {
   openM(`<h2>قيد جديد</h2>${entryForm('m')}<div class='btns' style='margin-top:16px'><button class='btn' onclick='saveM()'>حفظ</button><button class='btn sec' onclick='closeM()'>إلغاء</button></div>`);
-}
-async function saveM() {
-  const e = { acc: v('ma'), d: v('md'), b: v('mb'), s: v('ms'), w: v('mw') };
-  if (!e.b.trim()) return toast('أدخل البيان', 1);
-  if (!e.s && !e.w) return toast('أدخل مبلغ الصادر أو الوارد', 1);
-  await call('add', e);
-  closeM(); toast('تم حفظ القيد'); S.cur = e.acc;
-  if (S.page === 'accts') $('#aa').value = e.acc;
-  after();
 }
 function newAccM() {
   openM(`<h2>حساب جديد</h2><label>اسم الحساب (اسم التبويب)</label><input id='nn'><div class='btns' style='margin-top:16px'><button class='btn' onclick='saveAcc()'>إنشاء</button><button class='btn sec' onclick='closeM()'>إلغاء</button></div>`);
@@ -338,58 +246,16 @@ document.getElementById('nav').insertAdjacentHTML('beforeend',
 document.querySelectorAll('#nav button').forEach(b => b.onclick = () => go(b.dataset.p));
 S.alerts = []; S.base = 'دولار';
 
-function call(n, ...a) {
-  $('#load').style.display = 'block';
-  return new Promise((res, rej) => google.script.run
-    .withSuccessHandler(r => { $('#load').style.display = 'none'; res(JSON.parse(r)); })
-    .withFailureHandler(e => { $('#load').style.display = 'none'; const m = e.message || String(e); if (m.indexOf('DUP|') < 0) toast(m, 1); rej(e); })
-    .api(n, a));
-}
 async function boot() {
   const b = await call('bootstrap');
   S.acc = b.accounts; S.today = b.today; S.alerts = b.alerts || []; S.base = b.base || 'دولار';
   $('#sub').textContent = b.accounts.length + ' حساب';
   if (!S.cur && S.acc.length) S.cur = S.acc[0].name;
 }
-function go(p) {
-  S.page = p; S.after = null;
-  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
-  window.scrollTo(0, 0);
-  ({ dash, entry, accts, search, stmt, month, match, rcpt, price, sett })[p]();
-}
 const accOf = n => S.acc.find(a => a.name === n) || {};
 const curOf = n => accOf(n).cur || S.base;
 
-async function dash() {
-  await boot();
-  const by = {};
-  S.acc.forEach(a => { const g = by[a.cur] || (by[a.cur] = { s: 0, w: 0, n: 0 }); g.s += a.s; g.w += a.w; g.n += a.n; });
-  let conv = 0; S.acc.forEach(a => conv += a.bal / (a.rate || 1));
-  let h = '<h2>ملخص الأرصدة</h2>';
-  if (S.alerts.length) h += `<div class='alerts'><b>تنبيهات (${S.alerts.length})</b>` + S.alerts.map(a =>
-    `<div class='al' onclick='openAcc(${S.acc.findIndex(x => x.name === a.acc)})'>• <b>${esc(a.acc)}</b>: ${esc(a.msg)}</div>`).join('') + '</div>';
-  Object.keys(by).forEach(c => {
-    const g = by[c];
-    h += `<div class='sec2'>${esc(c)}</div>` + kpis([['إجمالي الصادر', g.s], ['إجمالي الوارد', g.w], ['صافي الرصيد', g.w - g.s, 1], ['عدد القيود', g.n.toLocaleString('en-US'), 0, 'n']]);
-  });
-  if (Object.keys(by).length > 1) h += kpis([['صافي كل الحسابات محوّل إلى ' + S.base, conv, 1]]);
-  h += `<div class='grid'>` + S.acc.map((a, i) => `<div class='acc' onclick='openAcc(${i})'><div class='n'>${esc(a.name)}<span class='cur'>${esc(a.cur)}</span></div><div class='bal'>${money(a.bal)}</div>
-      <div class='m'><span>صادر ${fmt(a.s)}</span><span>وارد ${fmt(a.w)}</span></div>
-      <div class='m' style='margin-top:4px'><span>${a.n} قيد</span><span>آخر دفعة ${a.lastPay || '—'}</span></div></div>`).join('') + '</div>';
-  $('#view').innerHTML = h;
-}
 
-function entryForm(id) {
-  return `<div class='form'><div><label>الحساب</label><select id='${id}a' onchange='autoMir(&#39;${id}&#39;)'>${accOpts(S.cur)}</select></div>
-    <div><label>التاريخ</label><input type='date' id='${id}d' value='${S.today}'></div>
-    <div class='wide'><label>البيان</label><input id='${id}b' placeholder='مثال: دفعة 1234' oninput='autoMir(&#39;${id}&#39;)'></div>
-    ${paperForm(id)}
-    <div><label>الصادر</label><input id='${id}s' type='number' step='0.01' min='0' inputmode='decimal'></div>
-    <div><label>الوارد</label><input id='${id}w' type='number' step='0.01' min='0' inputmode='decimal'></div>
-    <div><label>رقم السند (اختياري)</label><input id='${id}r' inputmode='numeric'></div>
-    <div><label>&nbsp;</label><label class='chk'><input type='checkbox' id='${id}m'> نسخة في حساب العام</label></div>
-    </div>`;
-}
 function paperForm(id, x) {
   x = x || ['', '', '', '', '', ''];
   const f = (k, l, t) => `<div><label>${l}</label><input id='${id}x${k}' ${t || ''} value='${esc(x[k])}' oninput='calcP(&#39;${id}&#39;)'></div>`;
@@ -398,23 +264,8 @@ function paperForm(id, x) {
     ${f(1, 'الغرام', `type='number'`)}${f(2, 'المقاس', `placeholder='70×100'`)}${f(3, 'عدد الطبق', `type='number'`)}${f(4, 'الكيلو', `type='number' step='0.01'`)}${f(5, 'سعر الطن', `type='number' step='0.01'`)}
     </div><datalist id='ptypes'><option>بطال</option><option>كلاسية</option><option>بريستول</option><option>دوبلكس</option><option>SBS</option><option>كرتون</option></datalist></details>`;
 }
-function autoMir(id) {
-  const m = document.getElementById(id + 'm'); if (!m || m.dataset.touched) return;
-  m.checked = v(id + 'a') !== 'العام' && /^(دفعة|دفعه|سند)/.test(v(id + 'b').trim());
-}
 document.addEventListener('change', e => { if (e.target && e.target.type === 'checkbox' && /m$/.test(e.target.id)) e.target.dataset.touched = 1; });
 function xOf(id) { return [0, 1, 2, 3, 4, 5].map(k => v(id + 'x' + k).trim()); }
-function calcP(id) {
-  const x = xOf(id), kg = parseFloat(x[4]), p = parseFloat(x[5]);
-  if (kg > 0 && p > 0) {
-    const w = document.getElementById(id + 'w'); if (w) w.value = (Math.round(kg * p / 10) / 100).toFixed(2);
-    const b = document.getElementById(id + 'b');
-    if (b && (!b.value.trim() || b.dataset.auto)) {
-      b.value = [x[0], x[1] ? x[1] + 'غ' : '', x[2], x[3] ? x[3] + 'طبق' : '', x[4] + 'كغ', '× ' + x[5]].filter(Boolean).join(' ');
-      b.dataset.auto = 1;
-    }
-  }
-}
 function entryData(id) {
   return { acc: v(id + 'a'), d: v(id + 'd'), b: v(id + 'b'), s: v(id + 's'), w: v(id + 'w'), rc: v(id + 'r'),
     mirror: !!(document.getElementById(id + 'm') || {}).checked, x: xOf(id) };
@@ -431,55 +282,6 @@ async function addSafe(e) {
   }
 }
 async function dupGo() { closeM(); try { S.dupRes(await call('add', Object.assign({}, S.dupE, { force: true }))); } catch (e) { S.dupRej(e); } }
-function clearEntry(id) {
-  ['b', 's', 'w', 'r', 'x0', 'x1', 'x2', 'x3', 'x4', 'x5'].forEach(k => { const el = document.getElementById(id + k); if (el) { el.value = ''; delete el.dataset.auto; } });
-  const m = document.getElementById(id + 'm'); if (m) { m.checked = false; delete m.dataset.touched; }
-}
-async function saveNew() {
-  const e = entryData('n');
-  if (!e.b.trim()) return toast('أدخل البيان', 1);
-  if (!e.s && !e.w) return toast('أدخل مبلغ الصادر أو الوارد', 1);
-  const r = await addSafe(e);
-  if (!r) return;
-  toast('تم حفظ القيد في ' + e.acc + (r.mirror ? ' + نسخة في العام' : ''));
-  clearEntry('n'); $('#nb').focus();
-  boot(); loadLast();
-}
-async function saveM() {
-  const e = entryData('m');
-  if (!e.b.trim()) return toast('أدخل البيان', 1);
-  if (!e.s && !e.w) return toast('أدخل مبلغ الصادر أو الوارد', 1);
-  const r = await addSafe(e);
-  if (!r) return;
-  closeM(); toast('تم حفظ القيد' + (r.mirror ? ' + نسخة في العام' : '')); S.cur = e.acc;
-  if (S.page === 'accts') $('#aa').value = e.acc;
-  after();
-}
-function table(rows, o) {
-  S.rows = rows;
-  if (!rows.length && o.open == null) return `<div class='tw'><div class='empty'>لا توجد قيود</div></div>`;
-  let h = `<div class='tw'><table><tr>${o.acc ? '<th>الحساب</th>' : ''}<th>البيان</th><th>الصادر</th><th>الوارد</th><th>التاريخ</th>${o.bal ? '<th>الرصيد</th>' : ''}<th class='noprint'></th></tr>`;
-  if (o.open != null) h += `<tr class='op'><td class='t'>رصيد سابق (منقول)</td><td></td><td></td><td>${esc(o.openDate || '')}</td><td>${money(o.open)}</td><td class='noprint'></td></tr>`;
-  rows.forEach((r, i) => {
-    const x = r.x || [], pp = x[5] !== '' && x[5] != null ? `<span class='ppr'>${esc(x[0])} ${x[1] ? esc(x[1]) + 'غ' : ''} ${esc(x[2] || '')} • ${fmt(Number(x[4]))} كغ × ${fmt(Number(x[5]))}</span>` : '';
-    h += `<tr>${o.acc ? `<td>${esc(r.acc)}</td>` : ''}<td class='t'>${esc(r.b)}${r.rc ? `<span class='rcn'>#${esc(r.rc)}</span>` : ''}${pp}</td><td>${fmt(r.s)}</td><td>${fmt(r.w)}</td><td>${esc(r.d)}</td>${
-      o.bal ? `<td class='b'>${money(r.bal)}</td>` : ''}<td class='noprint'><button class='ic e' onclick='editM(${i})'>تعديل</button><button class='ic d' onclick='delM(${i})'>حذف</button></td></tr>`;
-  });
-  if (o.tot) h += `<tr class='tot'><td${o.acc ? ` colspan='2'` : ''} class='t'>الإجمالي</td><td>${fmt(o.tot[0])}</td><td>${fmt(o.tot[1])}</td><td></td>${o.bal ? `<td>${money(o.tot[2])}</td>` : ''}<td class='noprint'></td></tr>`;
-  return h + '</table></div>';
-}
-function editM(i) {
-  const r = S.rows[i]; if (!r) return;
-  openM(`<h2>تعديل قيد — ${esc(r.acc)}</h2><div class='form'>
-    <div class='wide'><label>البيان</label><input id='eb' value='${esc(r.b)}'></div>
-    ${paperForm('e', r.x)}
-    <div><label>الصادر</label><input id='es' type='number' step='0.01' min='0' value='${typeof r.s === 'number' ? r.s : ''}'></div>
-    <div><label>الوارد</label><input id='ew' type='number' step='0.01' min='0' value='${typeof r.w === 'number' ? r.w : ''}'></div>
-    <div><label>التاريخ</label><input type='date' id='ed' value='${esc(r.d)}'></div>
-    <div><label>رقم السند</label><input id='er' value='${esc(r.rc || '')}'></div>
-    </div>
-    <div class='btns' style='margin-top:16px;justify-content:space-between'><div class='btns'><button class='btn' onclick='saveEdit(${i})'>حفظ التعديل</button><button class='btn sec' onclick='closeM()'>إلغاء</button></div><button class='btn red' onclick='delM(${i})'>حذف</button></div>`);
-}
 async function saveEdit(i) {
   const r = S.rows[i];
   await updSafe({ acc: r.acc, row: r.row, sig: r.sig, b: v('eb'), s: v('es'), w: v('ew'), d: v('ed'), rc: v('er'), x: xOf('e') });
@@ -502,18 +304,6 @@ async function stmt() {
     <div><label>من تاريخ</label><input type='date' id='kf'></div><div><label>إلى تاريخ</label><input type='date' id='kt'></div>
     <div class='btns'><button class='btn' onclick='runStmt()'>عرض الكشف</button><button class='btn sec' onclick='window.print()'>طباعة</button><button class='btn org' onclick='pdfM()'>PDF / واتساب</button></div></div></div><div id='kr'></div>`;
 }
-function pdfM() {
-  openM(`<h2>كشف حساب PDF</h2><p class='mut'>ينحفظ الملف في مجلد «كشوفات يومية غدق» في Google Drive.</p>
-    <label class='chk'><input type='checkbox' id='psh'> أتح الملف لأي شخص لديه الرابط (لإرساله عبر واتساب)</label>
-    <div class='btns' style='margin-top:14px'><button class='btn' onclick='doPdf()'>إنشاء الملف</button><button class='btn sec' onclick='closeM()'>إلغاء</button></div><div id='pres'></div>`);
-}
-async function doPdf() {
-  const p = { acc: v('ka'), from: v('kf'), to: v('kt'), share: $('#psh').checked };
-  $('#pres').innerHTML = `<p class='mut'>جاري إنشاء الملف…</p>`;
-  const r = await call('pdf', p);
-  $('#pres').innerHTML = `<div class='links'><a class='l1' href='${esc(r.url)}' target='_blank'>فتح ملف PDF</a><a class='l2' href='${esc(r.wa)}' target='_blank'>إرسال عبر واتساب</a></div>` +
-    (r.shared ? '' : `<p class='mut'>الملف خاص بك. لو أرسلت الرابط، المستلم ما يقدر يفتحه. حمّل الملف من Drive وأرسله كمرفق، أو فعّل خيار الإتاحة بالرابط.</p>`);
-}
 
 async function match() {
   $('#view').innerHTML = `<h2>مطابقة حساب العام مع الحسابات</h2><p class='mut'>يقارن دفعات «العام» بقيود كل حساب: نفس المبلغ، والتاريخ بفرق 3 أيام أو أقل، ورقم السند إن وجد.</p><div id='mr2'><div class='empty'>جاري المطابقة…</div></div>`;
@@ -534,40 +324,6 @@ async function rcpt() {
     (r.dups.length ? table(r.dups, { acc: 1 }) : `<div class='card empty'>لا توجد أرقام مكررة</div>`);
   S.after = rcpt;
 }
-async function price() {
-  $('#view').innerHTML = `<h2>أسعار الورق</h2><div class='card noprint'><div class='form'>
-    <div><label>النوع</label><input id='pt' list='ptypes2' placeholder='الكل'><datalist id='ptypes2'><option>بطال</option><option>كلاسية</option><option>بريستول</option><option>دوبلكس</option><option>SBS</option></datalist></div>
-    <div><label>الغرام</label><input id='pg' type='number' placeholder='الكل'></div>
-    <div class='btns'><button class='btn' onclick='runPrice()'>عرض</button><button class='btn sec' onclick='window.print()'>طباعة</button></div></div></div><div id='prr'></div>`;
-  runPrice();
-}
-async function runPrice() {
-  const r = await call('prices', { type: v('pt'), gram: v('pg') });
-  let h = `<div class='sec2'>ملخص حسب النوع والغرام والمقاس (سعر الطن)</div><div class='tw'><table><tr><th>النوع</th><th>الغرام</th><th>المقاس</th><th>عدد المشتريات</th><th>أقل</th><th>أعلى</th><th>المتوسط</th><th>آخر سعر</th><th>آخر مورد</th><th>التاريخ</th></tr>`;
-  r.groups.forEach(g => { h += `<tr><td>${esc(g.type || '—')}</td><td>${esc(g.gram)}</td><td>${esc(g.size)}</td><td>${g.n}</td><td>${fmt(g.min)}</td><td>${fmt(g.max)}</td><td>${fmt(g.avg)}</td><td><b>${fmt(g.last.p)}</b></td><td>${esc(g.last.acc)}</td><td>${esc(g.last.d)}</td></tr>`; });
-  h += `</table></div><details style='margin-top:14px'><summary class='sec2' style='cursor:pointer'>كل المشتريات (${r.rows.length}) — اضغط للعرض</summary>` + table(r.rows, { acc: 1 }) + '</details>';
-  $('#prr').innerHTML = h;
-  S.after = runPrice;
-}
-async function sett() {
-  await boot();
-  let h = `<h2>الإعدادات</h2><div class='card'><p class='mut'>العملة وسعر الصرف لكل حساب (كم وحدة من العملة = 1 ${esc(S.base)})، وحد التنبيه للرصيد، وعدد الأيام بدون دفعة قبل التنبيه (0 = بدون تنبيه).</p><div class='tw'><table><tr><th>الحساب</th><th>العملة</th><th>سعر الصرف</th><th>حد التنبيه</th><th>أيام بدون دفعة</th></tr>`;
-  S.acc.forEach((a, i) => {
-    h += `<tr><td class='t'>${esc(a.name)}</td><td><input id='sc${i}' value='${esc(a.cur)}' list='curs'></td><td><input id='sr${i}' type='number' step='any' value='${a.rate}'></td><td><input id='sl${i}' type='number' value='${a.limit == null ? '' : a.limit}' placeholder='بدون'></td><td><input id='sd${i}' type='number' value='${a.days}'></td></tr>`;
-  });
-  h += `</table></div><datalist id='curs'><option>دولار</option><option>ليرة سورية</option><option>ليرة تركية</option><option>ريال سعودي</option></datalist>
-    <div class='btns' style='margin-top:12px'><button class='btn' onclick='saveSett()'>حفظ الإعدادات</button></div></div>
-    <div class='card'><h2>الأرشيف السنوي</h2><p class='mut'>ينسخ الملف كاملاً كأرشيف في Google Drive، ثم يحذف من كل حساب قيود السنة المختارة وما قبلها، ويضع مكانها سطر «رصيد مدوّر» بنفس الرصيد. الأرصدة الحالية ما تتغير.</p>
-    <div class='form'><div><label>أرشفة حتى نهاية سنة</label><input id='ay' type='number' value='${+S.today.slice(0, 4) - 1}'></div>
-    <div class='wide'><label>للتأكيد اكتب: أرشفة ثم السنة (مثال: أرشفة 2025)</label><input id='ac'></div>
-    <div><button class='btn red' onclick='doArchive()'>تنفيذ الأرشفة</button></div></div><div id='ares'></div></div>`;
-  $('#view').innerHTML = h;
-}
-async function saveSett() {
-  const list = S.acc.map((a, i) => ({ name: a.name, cur: v('sc' + i), rate: v('sr' + i), limit: v('sl' + i), days: v('sd' + i) }));
-  await call('saveSettings', list);
-  toast('تم حفظ الإعدادات'); sett();
-}
 async function doArchive() {
   const r = await call('archive', { year: v('ay'), confirm: v('ac') });
   $('#ares').innerHTML = `<div class='card' style='margin-top:12px'><b>تمت الأرشفة ✔</b><p><a href='${esc(r.archive)}' target='_blank'>${esc(r.name)}</a></p>` +
@@ -577,25 +333,6 @@ async function doArchive() {
 /* ===== الإصدار 3: تفريغ تفاصيل الورق من البيان أثناء الكتابة ===== */
 const PT3 = [['كلاسي', 'كلاسية'], ['كلاسب', 'كلاسية'], ['اس بي اس', 'SBS'], ['sbs', 'SBS'], ['اس بي سي', 'SBS'], ['بطال', 'بطال'], ['بريستول', 'بريستول'],
   ['دوبلكس', 'دوبلكس'], ['كرتون', 'كرتون'], ['مكربن', 'مكربن'], ['لاصق', 'لاصق'], ['لازق', 'لاصق'], ['ماعون', 'ماعون']];
-function paperParse(s) {
-  s = String(s || '').trim().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/([0-9]),([0-9]{3})/g, '$1$2');
-  if (!s) return null;
-  const N = '([0-9]+(?:[.][0-9]+)?)';
-  let t = '', g = '', z = '', n = '', kg = '', p = '', m;
-  const l = s.toLowerCase();
-  for (const x of PT3) if (l.indexOf(x[0]) > -1) { t = x[1]; break; }
-  const cut = mm => { s = s.slice(0, mm.index) + ' ' + s.slice(mm.index + mm[0].length); };
-  const rz = new RegExp(N + '[ ]*[/×xX*][ ]*' + N, 'g');
-  while ((m = rz.exec(s))) { const a = +m[1], b = +m[2]; if (a >= 40 && a <= 120 && b >= 40 && b <= 120) { z = Math.min(a, b) + '×' + Math.max(a, b); cut(m); break; } }
-  if ((m = s.match(new RegExp(N + '[ ]*(ألف|الف)?[ ]*طبق'))) || (m = s.match(new RegExp('طبق[ ]*' + N + '()')))) { n = +m[1] * (m[2] ? 1000 : 1); cut(m); if (n > 200000) n = ''; }
-  if ((m = s.match(/([0-9]+)[ ]*(?:غرام|جرام|غ(?!ي))/))) { g = +m[1]; cut(m); }
-  if ((m = s.match(new RegExp(N + '[ ]*(?:كغم|كغ|كيلو|كجم)'))) || (m = s.match(new RegExp('(?:كغم|كغ|كيلو|كجم)[ ]*' + N)))) { kg = +m[1]; cut(m); }
-  const rp = new RegExp('(?:[×xX*]|بسعر|سعر|الطن)[ ]*' + N, 'g');
-  while ((m = rp.exec(s))) if (+m[1] >= 100) p = +m[1];
-  if (p === '' && kg !== '') { const all = (s.match(/[0-9]+(?:[.][0-9]+)?/g) || []).map(Number).filter(v => v >= 200); if (all.length) p = all[all.length - 1]; }
-  if ([g, z, n, kg, p].every(v => v === '')) return null;
-  return [t, g, z, n, kg, p];
-}
 function fillX(id) {
   const b = document.getElementById(id + 'b');
   if (!b || document.activeElement !== b) return;
@@ -664,12 +401,6 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 document.body.insertAdjacentHTML('beforeend', `<div id='tip'></div>`);
 document.getElementById('nav').querySelector(`[data-p='price']`).insertAdjacentHTML('afterend', `<button data-p='cmp'>مقارنة الموردين</button>`);
 document.querySelectorAll('#nav button').forEach(b => b.onclick = () => go(b.dataset.p));
-function go(p) {
-  S.page = p; S.after = null;
-  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
-  window.scrollTo(0, 0);
-  ({ dash, entry, accts, search, stmt, month, match, rcpt, price, cmp, sett })[p]();
-}
 const AR_MS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 const mLabel = k => AR_MS[+k.slice(5, 7) - 1] + ' ' + k.slice(0, 4);
 const fmt0 = n => Math.round(n).toLocaleString('en-US');
@@ -704,23 +435,6 @@ document.addEventListener('input', e => {
 document.addEventListener('click', e => { const t = e.target; if (t && t.id === 'nsave') S.pidx = null; });
 
 /* ---------- مقارنة الموردين ---------- */
-async function cmp() {
-  $('#view').innerHTML = `<h2>مقارنة الموردين</h2><div class='card noprint'><div class='form'>
-    <div><label>النوع</label><input id='ct' list='ptypes3' placeholder='الكل'><datalist id='ptypes3'><option>بطال</option><option>كلاسية</option><option>بريستول</option><option>دوبلكس</option><option>SBS</option></datalist></div>
-    <div><label>الغرام</label><input id='cgm' type='number' placeholder='الكل'></div>
-    <div class='btns'><button class='btn' onclick='runCmp()'>عرض</button><button class='btn sec' onclick='window.print()'>طباعة</button></div></div>
-    <p class='mut' style='margin:10px 0 0'>لكل نوع وغرام: آخر سعر طن عند كل مورد وتاريخه، مرتبة من الأرخص. الأخضر هو صاحب أرخص آخر سعر.</p></div><div id='cr'></div>`;
-  S.pidx = null; runCmp();
-}
-async function runCmp() {
-  const all = await pidx(), t = canonType(v('ct')), g = v('cgm').trim();
-  const list = all.filter(o => (!t || o.type === t) && (!g || String(o.gram) === g));
-  if (!list.length) { $('#cr').innerHTML = `<div class='card empty'>لا توجد بيانات</div>`; return; }
-  $('#cr').innerHTML = list.map(o => `<div class='card cg'><h3>${esc(o.type)} ${o.gram !== '' ? esc(o.gram) + 'غ' : ''} <span class='mut' style='font-size:12px;font-weight:400'>• ${o.n} عملية شراء • المتوسط ${fmt(o.avg)}</span></h3>
-    <div class='tw'><table><tr><th>المورد</th><th>آخر سعر</th><th>تاريخه</th><th>المتوسط</th><th>أقل سعر</th><th>عدد المشتريات</th></tr>` +
-    o.sups.map((s, i) => `<tr class='${i === 0 && o.sups.length > 1 ? 'best' : ''}'><td class='t'>${esc(s.acc)}${i === 0 && o.sups.length > 1 ? `<span class='bdg'>الأرخص</span>` : ''}</td><td>${fmt(s.last)}</td><td>${s.d}</td><td>${fmt(s.avg)}</td><td>${fmt(s.min)}</td><td>${s.n}</td></tr>`).join('') +
-    '</table></div></div>').join('');
-}
 
 /* ---------- الرسوم البيانية ---------- */
 function tipShow(e, h) { const t = $('#tip'); t.innerHTML = h; t.style.display = 'block'; const w = t.offsetWidth; let x = e.clientX + 14; if (x + w > innerWidth - 8) x = e.clientX - w - 14; t.style.left = x + 'px'; t.style.top = (e.clientY + 14) + 'px'; }
@@ -832,26 +546,9 @@ tr.off td{opacity:.55}.lgt td{font-size:12.5px;vertical-align:top}.lgt td.x{max-
 </style>`);
 document.getElementById('nav').insertAdjacentHTML('beforeend', `<button data-p='logp'>سجل التعديلات</button>`);
 document.querySelectorAll('#nav button').forEach(b => b.onclick = () => go(b.dataset.p));
-function go(p) {
-  S.page = p; S.after = null;
-  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
-  window.scrollTo(0, 0);
-  ({ dash, entry, accts, search, stmt, month, match, rcpt, price, cmp, sett, logp })[p]();
-}
 
 /* ---------- ترتيب وبحث البطاقات ---------- */
 function pref(k, v) { try { if (v === undefined) return localStorage.getItem('gh_' + k); localStorage.setItem('gh_' + k, v); } catch (e) { return null; } }
-function renderCards() {
-  const box = document.getElementById('cards'); if (!box) return;
-  const q = (v('qs') || '').trim(), so = v('so') || 'bal';
-  let list = S.acc.map((a, i) => ({ a: a, i: i })).filter(o => !q || o.a.name.indexOf(q) > -1);
-  if (so === 'bal') list.sort((x, y) => y.a.bal - x.a.bal);
-  else if (so === 'last') list.sort((x, y) => (y.a.last || '').localeCompare(x.a.last || ''));
-  else if (so === 'name') list.sort((x, y) => x.a.name.localeCompare(y.a.name, 'ar'));
-  box.innerHTML = list.length ? list.map(o => { const a = o.a; return `<div class='acc' onclick='openAcc(${o.i})'><div class='n'>${esc(a.name)}<span class='cur'>${esc(a.cur)}</span></div><div class='bal'>${money(a.bal)}</div>
-      <div class='m'><span>صادر ${fmt(a.s)}</span><span>وارد ${fmt(a.w)}</span></div>
-      <div class='m' style='margin-top:4px'><span>${a.n} قيد</span><span>آخر دفعة ${a.lastPay || '—'}</span></div></div>`; }).join('') : `<div class='card empty'>لا يوجد حساب بهذا الاسم</div>`;
-}
 
 /* ---------- صورة السند ---------- */
 async function fileData(f) {
@@ -926,20 +623,6 @@ async function upEdit(i) {
   try { const u = await uploadFor(r.acc, r.row, r.sig, el.files[0]); r.img = u.url; toast('تم رفع صورة السند'); el.insertAdjacentHTML('afterend', `<div class='mut' style='margin-top:4px'>✔ <a href='${esc(u.url)}' target='_blank'>تم الرفع — عرض</a></div>`); }
   catch (x) { el.value = ''; }
 }
-function table(rows, o) {
-  S.rows = rows;
-  if (!rows.length && o.open == null) return `<div class='tw'><div class='empty'>لا توجد قيود</div></div>`;
-  let h = `<div class='tw'><table><tr>${o.acc ? '<th>الحساب</th>' : ''}<th>البيان</th><th>الصادر</th><th>الوارد</th><th>التاريخ</th>${o.bal ? '<th>الرصيد</th>' : ''}<th class='noprint'></th></tr>`;
-  if (o.open != null) h += `<tr class='op'><td class='t'>رصيد سابق (منقول)</td><td></td><td></td><td>${esc(o.openDate || '')}</td><td>${money(o.open)}</td><td class='noprint'></td></tr>`;
-  rows.forEach((r, i) => {
-    const x = r.x || [], pp = x[5] !== '' && x[5] != null ? `<span class='ppr'>${esc(x[0])} ${x[1] ? esc(x[1]) + 'غ' : ''} ${esc(x[2] || '')} • ${fmt(Number(x[4]))} كغ × ${fmt(Number(x[5]))}</span>` : '';
-    const im = r.img ? `<a class='clip noprint' href='${esc(r.img)}' target='_blank' title='صورة السند' onclick='event.stopPropagation()'>📎</a>` : '';
-    h += `<tr>${o.acc ? `<td>${esc(r.acc)}</td>` : ''}<td class='t'>${esc(r.b)}${r.rc ? `<span class='rcn'>#${esc(r.rc)}</span>` : ''}${im}${pp}</td><td>${fmt(r.s)}</td><td>${fmt(r.w)}</td><td>${esc(r.d)}</td>${
-      o.bal ? `<td class='b'>${money(r.bal)}</td>` : ''}<td class='noprint'><button class='ic e' onclick='editM(${i})'>تعديل</button><button class='ic d' onclick='delM(${i})'>حذف</button></td></tr>`;
-  });
-  if (o.tot) h += `<tr class='tot'><td${o.acc ? ` colspan='2'` : ''} class='t'>الإجمالي</td><td>${fmt(o.tot[0])}</td><td>${fmt(o.tot[1])}</td><td></td>${o.bal ? `<td>${money(o.tot[2])}</td>` : ''}<td class='noprint'></td></tr>`;
-  return h + '</table></div>';
-}
 
 /* ---------- الإعدادات: الإظهار + النسخ الاحتياطي + الملخص الأسبوعي ---------- */
 async function sett() {
@@ -986,14 +669,6 @@ async function logp() {
   S.log = await call('log'); renderLog();
   S.after = logp;
 }
-function renderLog() {
-  const q = (v('lq') || '').trim(), op = v('lo');
-  const L = (S.log || []).filter(x => (!op || String(x.op).indexOf(op) === 0) && (!q || [x.acc, x.a, x.b, x.op].join(' ').indexOf(q) > -1)).slice(0, 300);
-  const cls = o => /^حذف/.test(o) ? 'd' : /^إضافة/.test(o) ? 'a' : /^تعديل/.test(o) ? 'u' : '';
-  $('#lr').innerHTML = L.length ? `<div class='tw'><table class='lgt'><tr><th>الوقت</th><th>العملية</th><th>الحساب</th><th>الصف</th><th>قبل</th><th>بعد</th><th>المصدر</th></tr>` +
-    L.map(x => `<tr><td>${esc(x.t)}</td><td><span class='op1 ${cls(x.op)}'>${esc(x.op)}</span></td><td>${esc(x.acc)}</td><td>${esc(x.row)}</td><td class='x'>${/^https:/.test(x.a) ? `<a href='${esc(x.a)}' target='_blank'>📎 ملف</a>` : esc(x.a)}</td><td class='x'>${/^https:/.test(x.b) ? `<a href='${esc(x.b)}' target='_blank'>📎 ملف</a>` : esc(x.b)}</td><td class='mut'>${esc(x.src)}${x.who ? '<br>' + esc(x.who) : ''}</td></tr>`).join('') + '</table></div>'
-    : `<div class='card empty'>لا توجد عمليات مسجلة${S.log && S.log.length ? ' بهذا البحث' : ' بعد — يبدأ التسجيل من الآن'}</div>`;
-}
 /* ===== الإصدار 7: تكرار قيد + التراجع من السجل + التقرير السنوي ===== */
 document.head.insertAdjacentHTML('beforeend', `<style>
 .ic.c{color:#1b6b7a}.ic.u{color:#9a3412;border:1px solid #f5c9a8;border-radius:6px;padding:2px 8px;background:#fff4ec}
@@ -1003,28 +678,8 @@ table.yr td,table.yr th{white-space:nowrap}table.yr tr.tot td{font-weight:700}
 </style>`);
 document.getElementById('nav').querySelector(`[data-p='month']`).insertAdjacentHTML('afterend', `<button data-p='year'>التقرير السنوي</button>`);
 document.querySelectorAll('#nav button').forEach(b => b.onclick = () => go(b.dataset.p));
-function go(p) {
-  S.page = p; S.after = null;
-  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
-  window.scrollTo(0, 0);
-  ({ dash, entry, accts, search, stmt, month, year, match, rcpt, price, cmp, sett, logp })[p]();
-}
 
 /* ---------- تكرار قيد ---------- */
-function table(rows, o) {
-  S.rows = rows;
-  if (!rows.length && o.open == null) return `<div class='tw'><div class='empty'>لا توجد قيود</div></div>`;
-  let h = `<div class='tw'><table><tr>${o.acc ? '<th>الحساب</th>' : ''}<th>البيان</th><th>الصادر</th><th>الوارد</th><th>التاريخ</th>${o.bal ? '<th>الرصيد</th>' : ''}<th class='noprint'></th></tr>`;
-  if (o.open != null) h += `<tr class='op'><td class='t'>رصيد سابق (منقول)</td><td></td><td></td><td>${esc(o.openDate || '')}</td><td>${money(o.open)}</td><td class='noprint'></td></tr>`;
-  rows.forEach((r, i) => {
-    const x = r.x || [], pp = x[5] !== '' && x[5] != null ? `<span class='ppr'>${esc(x[0])} ${x[1] ? esc(x[1]) + 'غ' : ''} ${esc(x[2] || '')} • ${fmt(Number(x[4]))} كغ × ${fmt(Number(x[5]))}</span>` : '';
-    const im = r.img ? `<a class='clip noprint' href='${esc(r.img)}' target='_blank' title='صورة السند' onclick='event.stopPropagation()'>📎</a>` : '';
-    h += `<tr>${o.acc ? `<td>${esc(r.acc)}</td>` : ''}<td class='t'>${esc(r.b)}${r.rc ? `<span class='rcn'>#${esc(r.rc)}</span>` : ''}${im}${pp}</td><td>${fmt(r.s)}</td><td>${fmt(r.w)}</td><td>${esc(r.d)}</td>${
-      o.bal ? `<td class='b'>${money(r.bal)}</td>` : ''}<td class='noprint'><button class='ic e' onclick='editM(${i})'>تعديل</button><button class='ic c' onclick='dupM(${i})' title='قيد جديد بنفس البيانات وتاريخ اليوم'>تكرار</button><button class='ic d' onclick='delM(${i})'>حذف</button></td></tr>`;
-  });
-  if (o.tot) h += `<tr class='tot'><td${o.acc ? ` colspan='2'` : ''} class='t'>الإجمالي</td><td>${fmt(o.tot[0])}</td><td>${fmt(o.tot[1])}</td><td></td>${o.bal ? `<td>${money(o.tot[2])}</td>` : ''}<td class='noprint'></td></tr>`;
-  return h + '</table></div>';
-}
 function dupM(i) {
   const r = S.rows[i]; if (!r) return;
   S.cur = r.acc;
@@ -1217,20 +872,6 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 const READS10 = ['bootstrap', 'account', 'statement', 'search', 'monthly', 'yearly', 'charts', 'prices', 'priceIdx', 'receipts', 'match', 'allSettings', 'log', 'backupInfo', 'archInfo'];
 const WRITES10 = ['add', 'update', 'remove', 'newAccount', 'archive', 'unarchive', 'saveSettings', 'upload', 'undo', 'flush'];
 S.cache = {};
-function call(n, ...a) {
-  const k = n + '|' + JSON.stringify(a), rd = READS10.indexOf(n) > -1;
-  if (rd) { const c = S.cache[k]; if (c && Date.now() - c.t < 300000) return Promise.resolve(JSON.parse(c.v)); }
-  $('#load').style.display = 'block';
-  return new Promise((res, rej) => google.script.run
-    .withSuccessHandler(r => {
-      $('#load').style.display = 'none';
-      if (rd) S.cache[k] = { t: Date.now(), v: r };
-      if (WRITES10.indexOf(n) > -1) { S.cache = {}; S.pidx = null; }
-      res(JSON.parse(r));
-    })
-    .withFailureHandler(e => { $('#load').style.display = 'none'; const m = e.message || String(e); if (m.indexOf('DUP|') < 0) toast(m, 1); rej(e); })
-    .api(n, a));
-}
 async function refreshAll() {
   S.cache = {}; S.pidx = null;
   try { await call('flush'); } catch (e) {}
