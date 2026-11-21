@@ -1089,23 +1089,46 @@
   })();
   /* ================= خانة الحساب: برتقالي بخط أبيض عريض (مثل بطاقة صافي الرصيد) ================= */
   (function () {
+    var OR = 'background:#E16414!important;border:0!important;border-radius:16px!important;box-shadow:none!important;outline:0!important;';
+    var TX = 'color:#fff!important;-webkit-text-fill-color:#fff!important;font-weight:700!important;font-size:17px!important;';
     var st = document.createElement('style');
-    st.textContent = '.u3-acc{background:#E16414!important;color:#fff!important;-webkit-text-fill-color:#fff!important;border:0!important;border-radius:16px!important;box-shadow:none!important;' +
-      'font-weight:700!important;font-size:17px!important;min-height:48px!important;padding:10px 16px!important;box-sizing:border-box}' +
+    st.textContent = '.u3-acc{' + OR + TX + 'min-height:48px!important;padding:10px 16px!important;box-sizing:border-box}' +
+      '.u3-accb{' + OR + '}.u3-accb input,.u3-accb select,.u3-accb span,.u3-accb div{' + TX + 'background:transparent!important;border:0!important;box-shadow:none!important}' +
       'select.u3-acc{-webkit-appearance:none!important;appearance:none!important;background-image:url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'14\' height=\'14\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23fff\' stroke-width=\'3\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M6 9l6 6 6-6\'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:left 14px center!important;padding-left:36px!important}' +
-      '.u3-acc::placeholder{color:rgba(255,255,255,.8)!important;-webkit-text-fill-color:rgba(255,255,255,.8)!important}' +
-      '.u3-acc option{color:#14303a;background:#fff;-webkit-text-fill-color:#14303a;font-weight:400}';
+      '.u3-acc::placeholder,.u3-accb input::placeholder{color:rgba(255,255,255,.85)!important;-webkit-text-fill-color:rgba(255,255,255,.85)!important}' +
+      '.u3-acc option,.u3-accb option{color:#14303a!important;background:#fff!important;-webkit-text-fill-color:#14303a!important;font-weight:400!important}';
     document.head.appendChild(st);
+    function cs(n) { return n.querySelectorAll('input,select,textarea').length; }
+    /* التسمية يجب أن تكون «الحساب» فقط (لا «تصفية داخل الحساب» ولا «نسخة في حساب العام») */
+    var LBL = /^(اختر\s*)?(ال)?حساب\s*[:：]?$/;
     function isAcc(x) {
-      if (x.type === 'hidden' || x.type === 'checkbox' || x.type === 'radio' || x.closest('.ui-sheet')) return false;
-      var t = (x.placeholder || '') + ' ' + (x.getAttribute('aria-label') || '') + ' ' + (x.name || '') + ' ' + (x.id || '');
-      if (x.id) { var l = document.querySelector('label[for="' + x.id + '"]'); if (l) t += ' ' + l.textContent; }
-      var p = x.previousElementSibling; if (p && !p.querySelector('input,select,textarea') && p.textContent.length < 30) t += ' ' + p.textContent;
-      var pr = x.parentNode; if (pr && pr !== document.body && pr.querySelectorAll('input,select,textarea').length === 1 && pr.textContent.length < 40) t += ' ' + pr.textContent;
-      return /(^|\s|[«(])(ال)?حساب(\s|$|[»)])/.test(t.replace(/[:：]/g, ' ')) && !/العام\s*$|نسخة|بحث/.test(t.trim());
+      if (x.type === 'hidden' || x.type === 'checkbox' || x.type === 'radio' || x.closest('.ui-sheet')) return null;
+      var ts = [x.placeholder || '', x.getAttribute('aria-label') || ''], w = x;
+      if (x.id) { var l = document.querySelector('label[for="' + x.id + '"]'); if (l) ts.push(l.textContent); }
+      for (var k = 0; k < 3 && w.parentNode && w.parentNode !== document.body; k++) {
+        var p = w.previousElementSibling; if (p && !cs(p)) ts.push(p.textContent);
+        if (cs(w.parentNode) > 1) break; w = w.parentNode;
+      }
+      return ts.some(function (t) { return LBL.test(t.replace(/[★⭐*]/g, '').trim()); }) ? x : null;
+    }
+    /* إذا كان الإطار المرئي عنصرًا يغلّف الخانة (مثل قائمة الحسابات مع النجمة) نلوّن الإطار */
+    function box(x) {
+      var b = x;
+      for (var k = 0; k < 3; k++) {
+        var p = b.parentNode; if (!p || p === document.body || cs(p) > 1) break;
+        var c = getComputedStyle(p); if (parseFloat(c.borderTopWidth) > 0 || (c.backgroundColor !== 'rgba(0, 0, 0, 0)' && c.backgroundColor !== 'transparent')) return p;
+        b = p;
+      }
+      return null;
     }
     setInterval(function () {
-      Array.prototype.forEach.call(document.querySelectorAll('select:not(.u3-acc),input:not(.u3-acc)'), function (x) { if (isAcc(x)) x.classList.add('u3-acc'); });
+      Array.prototype.forEach.call(document.querySelectorAll('select,input'), function (x) {
+        if (x.dataset.u3acc) return;
+        if (!isAcc(x)) return;
+        x.dataset.u3acc = '1';
+        var bx = box(x);
+        if (bx) bx.classList.add('u3-accb'); else x.classList.add('u3-acc');
+      });
     }, 700);
   })();
 })();
