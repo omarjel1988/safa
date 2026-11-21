@@ -229,6 +229,11 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .alerts b{color:#9a3412}.alerts div{padding:3px 0;font-size:14px}.al{cursor:pointer}.al:hover{text-decoration:underline}
 .cur{display:inline-block;font-size:11px;background:var(--soft);color:var(--h);padding:1px 7px;border-radius:10px;margin-right:6px;font-weight:500}
 .rcn{color:var(--mut);font-size:12px;margin-right:6px}.ppr{display:block;color:#1b6b7a;font-size:12px}
+details.pp{margin-top:4px}details.pp>summary{display:inline-flex;align-items:center;gap:4px;cursor:pointer;list-style:none;font-size:12.5px;font-weight:700;color:var(--p);background:color-mix(in srgb,currentColor 10%,transparent);border-radius:8px;padding:2px 10px;-webkit-tap-highlight-color:transparent}
+details.pp>summary::-webkit-details-marker{display:none}details.pp>summary::after{content:"▾";font-size:12px;transition:transform .15s}details.pp[open]>summary::after{transform:rotate(180deg)}
+details.pp>.ppr.ppc{display:flex;flex-wrap:wrap;gap:5px;padding:4px 0 0;margin-top:4px}.ppc>i{font-style:normal;font-weight:700;font-size:13px;color:#14303a;background:#fff;border:1.5px solid color-mix(in srgb,var(--h) 45%,transparent);border-radius:8px;padding:2px 8px;white-space:nowrap;direction:ltr;unicode-bidi:isolate}
+body.dark .ppc>i{background:#15242a;color:#e2edef}
+@media print{details.pp>summary{display:none}}
 details.pd{grid-column:1/-1;border:1px dashed #c9d6d9;border-radius:10px;padding:8px 12px;background:#fbfdfd}
 details.pd summary{cursor:pointer;color:var(--h);font-weight:700}
 details.pd .form{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px 8px!important}
@@ -885,6 +890,7 @@ function go(p) {
   ({ dash, entry, accts, search, stmt, month, year, match, rcpt, price, cmp, sett, logp, arch })[p]();
 }
 
+window.addEventListener('beforeprint', () => document.querySelectorAll('details.pp').forEach(d => d.open = true));
 /* ---------- القيود المؤرشفة: للقراءة فقط ---------- */
 function table(rows, o) {
   S.rows = rows;
@@ -892,7 +898,10 @@ function table(rows, o) {
   let h = `<div class='tw'><table><tr>${o.acc ? '<th>الحساب</th>' : ''}<th>البيان</th><th>الصادر</th><th>الوارد</th><th>التاريخ</th>${o.bal ? '<th>الرصيد</th>' : ''}<th class='noprint'></th></tr>`;
   if (o.open != null) h += `<tr class='op'><td class='t'>رصيد سابق (منقول)</td><td></td><td></td><td>${esc(o.openDate || '')}</td><td>${money(o.open)}</td><td class='noprint'></td></tr>`;
   rows.forEach((r, i) => {
-    const x = r.x || [], pp = x[5] !== '' && x[5] != null ? `<span class='ppr'>${esc(x[0])} ${x[1] ? esc(x[1]) + 'غ' : ''} ${esc(x[2] || '')} • ${fmt(Number(x[4]))} كغ × ${fmt(Number(x[5]))}</span>` : '';
+    const x = r.x || [], pn = v => v === '' || v == null ? '' : isNaN(Number(v)) ? esc(v) : fmt(Number(v));
+    /* تفاصيل الورق: قائمة مطوية فيها مربعات (النوع، الغرام، المقاس، الطبق، الكيلو، سعر الطن) */
+    const pp = x[5] !== '' && x[5] != null ? `<details class='pp' onclick='event.stopPropagation()'><summary>تفاصيل الورق</summary><span class='ppr ppc'>${
+      [esc(x[0] || ''), esc(x[1] || ''), esc(x[2] || ''), esc(x[3] == null ? '' : x[3]), pn(x[4]), pn(x[5])].filter(c => String(c).trim() !== '').map(c => `<i>${c}</i>`).join('')}</span></details>` : '';
     const im = r.img ? `<a class='clip noprint' href='${esc(r.img)}' target='_blank' title='صورة السند' onclick='event.stopPropagation()'>📎</a>` : '';
     const btn = r.ar ? `<span class='arb'>مؤرشف</span><button class='ic c' onclick='dupM(${i})' title='قيد جديد بنفس البيانات وتاريخ اليوم'>تكرار</button>`
       : `<button class='ic e' onclick='editM(${i})'>تعديل</button><button class='ic c' onclick='dupM(${i})' title='قيد جديد بنفس البيانات وتاريخ اليوم'>تكرار</button><button class='ic d' onclick='delM(${i})'>حذف</button>`;
