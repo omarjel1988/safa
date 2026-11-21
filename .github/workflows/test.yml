@@ -1,0 +1,33 @@
+# اختبار تلقائي مع كل تحديث: إن فشل، يُتراجع عن التحديث تلقائيًا حتى لا يبقى على الجوال
+name: اختبار التطبيقين
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: test-main
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { path: safa, fetch-depth: 30 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: تجهيز
+        run: |
+          npm init -y >/dev/null
+          npm i --no-save playwright@1 typescript@5 >/dev/null
+          npx playwright install --with-deps chromium >/dev/null
+      - name: الاختبار
+        id: t
+        run: node safa/tests/smoke.js "$GITHUB_WORKSPACE"
+      - name: تراجع تلقائي عند الفشل
+        if: failure() && github.event_name == 'push' && github.actor != 'github-actions[bot]' && !startsWith(github.event.head_commit.message, 'تراجع تلقائي')
+        working-directory: safa
+        run: |
+          git config user.name "github-actions[bot]"; git config user.email "github-actions[bot]@users.noreply.github.com"
+          git revert --no-edit ${{ github.event.before }}..${{ github.sha }}
+          git commit --amend -m "تراجع تلقائي: فشل الاختبار بعد ${{ github.sha }}" -m "$(git log -1 --format=%b)"
+          git push
