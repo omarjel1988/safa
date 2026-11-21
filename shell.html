@@ -1043,11 +1043,10 @@ function doPInv() {
     INVROWS = r.rows;
     var h = '<div class="stats"><div class="stat hi"><span>إجمالي الفواتير</span><b>' + fmt(r.total) + '</b></div><div class="stat"><span>عدد الفواتير</span><b>' + r.count + '</b></div></div>';
     if (!r.rows.length) { $('#vres').innerHTML = h + '<div class="muted">لا توجد فواتير</div>'; return; }
-    h += tbl(['التاريخ', 'المورد', 'رقم الفاتورة', 'الأصناف', 'الإجمالي', 'الدفع', '', ''], r.rows.map(function (x, i) {
-      return '<tr>' + td(esc(x.date)) + td(esc(x.sup), 'l') + td(esc(x.inv)) + td(x.n) + td(fmt(x.total)) +
-        td(esc(x.pay || '—') + (x.cur ? ' <span class="badge">' + esc(x.cur) + '</span>' : '')) + td(x.photo ? '📎' : '') +
-        '<td><button class="btn sec sm" onclick="openInvIdx(' + i + ')">فتح</button></td></tr>';
-    }), '<tr class="tot"><td colspan="4">الإجمالي (' + r.count + ' فاتورة)</td>' + td(fmt(r.total)) + '<td colspan="3"></td></tr>');
+    h += tbl(['التاريخ', 'المورد', 'رقم الفاتورة', 'الأصناف', 'الإجمالي', 'الدفع', ''], r.rows.map(function (x, i) {
+      return '<tr class="dclk" title="فتح الفاتورة" onclick="openInvIdx(' + i + ')">' + td(esc(x.date)) + td(esc(x.sup), 'l') + td(esc(x.inv)) + td(x.n) + td(fmt(x.total)) +
+        td(esc(x.pay || '—') + (x.cur ? ' <span class="badge">' + esc(x.cur) + '</span>' : '')) + td(x.photo ? '📎' : '') + '</tr>';
+    }), '<tr class="tot"><td colspan="4">الإجمالي (' + r.count + ' فاتورة)</td>' + td(fmt(r.total)) + '<td colspan="2"></td></tr>');
     if (r.count > r.rows.length) h += '<div class="note">يُعرض أحدث ' + r.rows.length + ' فاتورة. ضيّق البحث لرؤية الباقي.</div>';
     $('#vres').innerHTML = h;
   }).catch(function (e) { $('#vres').innerHTML = ''; toast(errMsg(e), 'err'); });
@@ -1456,8 +1455,8 @@ function vGSearch() {
     var sec = function (t, n, body) { return n ? '<div class="card"><h2>' + t + ' <small>(' + n + ')</small></h2>' + body + '</div>' : ''; };
     var h = sec('الموردون', r.sup.length, '<div class="chips2">' + r.sup.map(function (s, i) { return '<button onclick="SUP.openStmt(GR.sup[' + i + '])">' + esc(s) + '</button>'; }).join('') + '</div>') +
       sec('الأصناف', r.items.length, '<div class="chips2">' + r.items.map(function (s, i) { return '<button onclick="PQ=GR.items[' + i + '].name;go(\'pprice\')">' + esc(s.name) + (s.code ? ' · ' + esc(s.code) : '') + '</button>'; }).join('') + '</div>') +
-      sec('فواتير الشراء', r.inv.length, tbl(['التاريخ', 'المورد', 'رقم الفاتورة', 'أصناف مطابقة', 'الإجمالي', ''], r.inv.map(function (x, i) {
-        return '<tr>' + td(esc(x.date)) + td(esc(x.sup), 'l') + td(esc(x.inv)) + td(esc(x.items.join('، ')), 'l') + td(fmt(x.total)) + '<td><button class="btn sec sm" onclick="openInv(GR.inv[' + i + '].key)">فتح</button></td></tr>';
+      sec('فواتير الشراء', r.inv.length, tbl(['التاريخ', 'المورد', 'رقم الفاتورة', 'أصناف مطابقة', 'الإجمالي'], r.inv.map(function (x, i) {
+        return '<tr class="dclk" title="فتح الفاتورة" onclick="openInv(GR.inv[' + i + '].key)">' + td(esc(x.date)) + td(esc(x.sup), 'l') + td(esc(x.inv)) + td(esc(x.items.join('، ')), 'l') + td(fmt(x.total)) + '</tr>';
       }))) +
       sec('اليومية', r.j.length, tbl(['التاريخ', 'البيان', B.labels.due, B.labels.out, B.labels.inn], r.j.map(function (x) {
         return '<tr>' + td(esc(x.date)) + td(esc(x.st) + jNote(x), 'l') + td(x.due ? fmt(x.due) : '') + td(x.out ? fmt(x.out) : '') + td(x.inn ? fmt(x.inn) : '') + '</tr>';
