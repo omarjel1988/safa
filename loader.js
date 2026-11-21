@@ -23,7 +23,12 @@
     fetch((APP.root || './') + 'ui2.js', { cache: navigator.onLine ? 'no-cache' : 'default' }).then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; }),
     fetch((APP.root || './') + 'ui3.js', { cache: navigator.onLine ? 'no-cache' : 'default' }).then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; })])
     .then(function (x) { return x[0] + '<\/script><script>' + x[1] + '<\/script><script>' + x[2] + '<\/script><script>' + x[3]; });
-  Promise.all([RT.kget('shell'), coreP]).then(function (x) {
+  /* صفحة الواجهة من المستودع (shell.html بجانب index.html)، والنسخة المحفوظة في الجهاز احتياطًا دون اتصال */
+  var shellP = fetch('shell.html', { cache: navigator.onLine ? 'no-cache' : 'default' })
+    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+    .then(function (s) { if (!s || s.length < 1000) throw new Error('short'); RT.kset('shell', s); return s; })
+    .catch(function () { return RT.kget('shell'); });
+  Promise.all([shellP, coreP]).then(function (x) {
     var shell = x[0], core = x[1];
     if (shell) { render(shell, core); return; }
     if (!navigator.onLine) { msg('📴 لا يوجد اتصال.<br>افتح التطبيق مرة واحدة مع الإنترنت ليُحفظ على هذا الجهاز.', true); return; }

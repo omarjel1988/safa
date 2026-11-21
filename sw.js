@@ -1,7 +1,7 @@
 /* يحفظ ملفات التطبيق في الجهاز ليفتح دون اتصال */
-var V = 'safa-v87';
-var FILES = ['./', './index.html', './core.js', './loader.js', './ui.js', './ui2.js', './ui3.js', './icon-180.png', './icon-192.png', './icon-512.png', './manifest.json',
-  './ghadaq/', './ghadaq/index.html', './ghadaq/manifest.json', './ghadaq/icon-180.png', './ghadaq/icon-192.png', './ghadaq/icon-512.png'];
+var V = 'safa-v88';
+var FILES = ['./', './index.html', './shell.html', './core.js', './loader.js', './ui.js', './ui2.js', './ui3.js', './icon-180.png', './icon-192.png', './icon-512.png', './manifest.json',
+  './ghadaq/', './ghadaq/index.html', './ghadaq/shell.html', './ghadaq/manifest.json', './ghadaq/icon-180.png', './ghadaq/icon-192.png', './ghadaq/icon-512.png'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(V).then(function (c) { return Promise.all(FILES.map(function (f) { return c.add(f).catch(function () {}); })); }).then(function () { return self.skipWaiting(); }));
 });
