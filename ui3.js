@@ -733,13 +733,14 @@
       '<div class="rw"><b>⭐ المفضلة</b><button class="ui-hbtn" data-u3="fav" style="background:var(--ui)">تعديل</button></div>' +
       '<div class="rw"><b>🛠 حالة النظام</b><button class="ui-hbtn" data-u3="sys" style="background:var(--ui)">فتح</button></div>' +
       '<div class="rw"><b>📱 الأجهزة المتصلة</b><button class="ui-hbtn" data-u3="dev" style="background:var(--ui)">عرض</button></div>' +
+      '<div class="rw"><b>📤 تصدير الواجهة</b><button class="ui-hbtn" data-u3="shx" style="background:var(--ui)">تصدير</button></div>' +
       (GH ? '<div class="rw"><b>🔔 التذكير اليومي</b><button class="ui-hbtn" data-u3="rem" style="background:var(--ui)">إعداد</button></div>' :
         '<div class="rw"><b>تنبيه ارتفاع السعر</b><span class="ui-seg">' + [5, 10, 20].map(function (p) { return '<button data-rise="' + p + '" class="' + (riseTh() === p ? 'on' : '') + '">' + p + '%</button>'; }).join('') + '</span></div>') + '</div>';
     var r = el(h), rws = bx.querySelectorAll('.rw');
     bx.insertBefore(r, rws[rws.length - 1] || null);
     r.onclick = function (e) {
       var b = e.target.closest('[data-u3]'), p = e.target.closest('[data-rise]');
-      if (b) { closeSheets(); var k = b.dataset.u3; if (k === 'fav') favSheet(); else if (k === 'sys') sysSheet(); else if (k === 'dev') devSheet(); else remSheet(); }
+      if (b) { closeSheets(); var k = b.dataset.u3; if (k === 'fav') favSheet(); else if (k === 'sys') sysSheet(); else if (k === 'dev') devSheet(); else if (k === 'shx') shellExport(); else remSheet(); }
       if (p) { ls('u3_rise', p.dataset.rise); Array.prototype.forEach.call(r.querySelectorAll('[data-rise]'), function (x) { x.classList.toggle('on', x === p); }); }
     };
   }, 400);
@@ -1149,4 +1150,22 @@
     new MutationObserver(function () { try { accRun(); } catch (e) { /* */ } }).observe(document.documentElement, { childList: true, subtree: true });
     accRun(); setInterval(accRun, 1000);
   })();
+  /* ================= تصدير صفحة الواجهة (shell) لنقلها إلى المستودع ================= */
+  function shellExport() {
+    var R = W.RT; if (!R) { msg('تعذّر الوصول للواجهة', 1); return; }
+    var name = 'shell-' + APP.id + '.html';
+    R.kget('shell').then(function (h) {
+      if (!h) { msg('لا توجد واجهة محفوظة على هذا الجهاز', 1); return; }
+      var f = new File([h], name, { type: 'text/html' });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) {
+        return navigator.share({ files: [f], title: name }).then(function () { msg('✅ تم التصدير'); }).catch(function () { dl(f); });
+      }
+      dl(f);
+    }).catch(function (e) { msg('تعذّر التصدير: ' + (e && e.message || e), 1); });
+    function dl(f) {
+      var a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = name;
+      document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 3000);
+      msg('✅ حُفظ الملف ' + name + ' في التنزيلات');
+    }
+  }
 })();
