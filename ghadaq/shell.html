@@ -236,6 +236,8 @@ body.dark .ppc>i{background:#15242a;color:#e2edef}
 @media print{details.pp>summary{display:none}}
 details.pd{grid-column:1/-1;border:1px dashed #c9d6d9;border-radius:10px;padding:8px 12px;background:#fbfdfd}
 details.pd summary{cursor:pointer;color:var(--h);font-weight:700}
+.age td.t{text-align:right}.agc{display:inline-block;border-radius:10px;padding:2px 9px;font-weight:800;font-size:12.5px}.agc.r{background:#fdecec;color:#9b1c1c}.agc.o{background:#fff1e0;color:#9a4d00}.agc.g{background:#e9f6ee;color:#1d5b33}
+body.dark .agc.r{background:#3a1c1f;color:#f5c2c2}body.dark .agc.o{background:#382d14;color:#f3dca0}body.dark .agc.g{background:#16301f;color:#b8e6c6}
 details.pd .form{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px 8px!important}
 details.pd .form>div{min-width:0}
 details.pd .form label{font-size:12.5px;margin:0 0 3px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -313,6 +315,28 @@ async function stmt() {
     <div class='btns'><button class='btn' onclick='runStmt()'>عرض الكشف</button><button class='btn sec' onclick='window.print()'>طباعة</button><button class='btn org' onclick='pdfM()'>PDF / واتساب</button></div></div></div><div id='kr'></div>`;
 }
 
+/* ---------- أعمار الأرصدة: كم مضى على آخر دفعة لكل حساب ---------- */
+async function aging() {
+  const hz = localStorage.getItem('u3_age_z') !== '0', gen = localStorage.getItem('u3_age_g') === '1';
+  $('#view').innerHTML = `<h2>أعمار الأرصدة</h2><div class='card noprint'><div class='mut' style='margin-bottom:8px'>كم مضى على آخر دفعة (صادر) لكل حساب، مرتّبة من الأقدم. اضغط أي حساب لفتحه.</div>` +
+    `<label class='chk'><input type='checkbox' id='agz'${hz ? ' checked' : ''} onchange='localStorage.setItem("u3_age_z", this.checked ? "1" : "0"); aging()'> إخفاء الحسابات ذات الرصيد صفر</label>` +
+    `<label class='chk' style='margin-top:6px'><input type='checkbox' id='agg'${gen ? ' checked' : ''} onchange='localStorage.setItem("u3_age_g", this.checked ? "1" : "0"); aging()'> إظهار حساب «العام»</label></div><div id='agr'><div class='empty'>جارٍ التحميل…</div></div>`;
+  const draw = () => {
+    const box = $('#agr'); if (!box || S.page !== 'aging') return;
+    const today = new Date(String(S.today || '').replace(/-/g, '/'));
+    const list = S.acc.map((a, i) => ({ a, i, days: a.lastPay ? Math.round((today - new Date(String(a.lastPay).replace(/-/g, '/'))) / 864e5) : null }))
+      .filter(x => (!hz || Math.abs(x.a.bal) >= 0.005) && (gen || x.a.name !== 'العام'))
+      .sort((x, y) => (y.days == null ? 1e9 : y.days) - (x.days == null ? 1e9 : x.days));
+    if (!list.length) { box.innerHTML = `<div class='card empty'>لا توجد حسابات</div>`; return; }
+    const chip = d => d == null ? `<span class='agc r'>لا توجد دفعات</span>` : `<span class='agc ${d > 60 ? 'r' : d > 30 ? 'o' : 'g'}'>${d} يوم</span>`;
+    const c60 = list.filter(x => x.days == null || x.days > 60).length, c30 = list.filter(x => x.days != null && x.days > 30 && x.days <= 60).length;
+    box.innerHTML = kpis([['أكثر من 60 يومًا', c60, 0, 'n'], ['من 31 إلى 60 يومًا', c30, 0, 'n'], ['30 يومًا أو أقل', list.length - c60 - c30, 0, 'n']]) +
+      `<div class='tw'><table class='age'><tr><th>الحساب</th><th>منذ آخر دفعة</th><th>آخر دفعة</th><th>الرصيد</th><th>آخر حركة</th></tr>` +
+      list.map(x => `<tr style='cursor:pointer' onclick='openAcc(${x.i})'><td class='t'><b>${esc(x.a.name)}</b></td><td>${chip(x.days)}</td><td>${esc(x.a.lastPay || '—')}</td><td><b class='${x.a.bal < 0 ? 'neg' : ''}'>${fmt(x.a.bal)}</b> ${esc(x.a.cur || '')}</td><td>${esc(x.a.last || '—')}</td></tr>`).join('') + '</table></div>';
+  };
+  if (S.acc.length) draw();
+  try { await boot(); draw(); } catch (e) { }
+}
 /* مطابقة حساب العام: حسب السنة، مع اختلاف رقم السند، وتصحيح أسماء الحسابات الناقصة في «العام» */
 async function match() {
   const cy = String(new Date().getFullYear());
@@ -715,6 +739,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 table.yr td,table.yr th{white-space:nowrap}table.yr tr.tot td{font-weight:700}
 </style>`);
 document.getElementById('nav').querySelector(`[data-p='month']`).insertAdjacentHTML('afterend', `<button data-p='year'>التقرير السنوي</button>`);
+document.getElementById('nav').querySelector(`[data-p='year']`).insertAdjacentHTML('afterend', `<button data-p='aging'>أعمار الأرصدة</button>`);
 document.querySelectorAll('#nav button').forEach(b => b.onclick = () => go(b.dataset.p));
 
 /* ---------- تكرار قيد ---------- */
@@ -916,10 +941,12 @@ async function refreshAll() {
   go(S.page || 'dash');
 }
 function go(p) {
+  /* إدخال قيد جديد يبدأ بحساب «العام» */
+  if (p === 'entry' && S.acc.some(a => a.name === 'العام')) S.cur = 'العام';
   S.page = p; S.after = null;
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
   window.scrollTo(0, 0);
-  ({ dash, entry, accts, search, stmt, month, year, match, rcpt, price, cmp, sett, logp, arch })[p]();
+  ({ dash, entry, accts, search, stmt, month, year, aging, match, rcpt, price, cmp, sett, logp, arch })[p]();
 }
 
 window.addEventListener('beforeprint', () => document.querySelectorAll('details.pp').forEach(d => d.open = true));
