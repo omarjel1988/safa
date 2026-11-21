@@ -1513,6 +1513,14 @@ go('dash');
 </script>
 <script>
 /* ===== ui.js (مدمج في الصفحة) ===== */
+/* مراقب واحد للصفحة: يشغّل دوال التحديث فور تغيّر محتوى الصفحة (قبل الرسم) بدل الفحص الدوري */
+window.onDom = (function () {
+    var fns = [], q = 0, n = 0;
+    function run() { q = 0; if (++n > 30) return; fns.forEach(function (f) { try { f(); } catch (e) { } }); }
+    requestAnimationFrame(function reset() { n = 0; requestAnimationFrame(reset); });
+    new MutationObserver(function () { if (!q) { q = 1; Promise.resolve().then(run); } }).observe(document.documentElement, { childList: true, subtree: true });
+    return function (f) { fns.push(f); try { f(); } catch (e) { } };
+})();
 /* واجهة موحّدة للتطبيقين: شريط تنقل سفلي/جانبي، زر إضافة سريع، المظهر (داكن + حجم الخط)،
    حركات انتقال، سحب السطر لإظهار أزراره، قفل تلقائي، تنزيل نسخة احتياطية */
 (function () {
@@ -1980,15 +1988,11 @@ go('dash');
         buildNav();
         headerBtn();
         animView();
-        if (typeof W.go === 'function' && !W.go.__ui) {
-            var og = W.go, ng = function () { var r = og.apply(this, arguments); setTimeout(function () { sync(); headerBtn(); }, 0); return r; };
-            ng.__ui = 1;
-            W.go = ng;
-        }
-        setInterval(function () { sync(); headerBtn(); fixVp(); if (nav && !document.documentElement.contains(nav)) {
+        onDom(function () { sync(); headerBtn(); fixVp(); if (nav && !document.documentElement.contains(nav)) {
             nav = null;
             buildNav();
-        } }, 1500);
+        } });
+        window.addEventListener('resize', fixVp);
         if (false) {
             try {
                 W.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { if (ls('safa_dark') === null)
@@ -2137,7 +2141,7 @@ go('dash');
         };
         box.appendChild(btn);
     }
-    setInterval(lockWatch, 600);
+    onDom(lockWatch);
     /* ================= 1-ب) القفل التلقائي بالبصمة بعد مدة عدم الاستخدام ================= */
     var LKM = 'biolockm_' + APP.id, LKT = 'bioact_' + APP.id, locked = false, lastAct = Date.now();
     function lockMins() { var v = parseInt(ls(LKM), 10); return isNaN(v) ? 5 : v; }
@@ -2279,9 +2283,9 @@ go('dash');
         b.onclick = shareSheet;
         h.insertBefore(b, aa);
     }
-    setInterval(headerBtns, 700);
+    onDom(headerBtns);
     /* زر تفعيل البصمة داخل نافذة المظهر */
-    setInterval(function () {
+    onDom(function () {
         var bx = document.querySelector('.ui-sheet .bx');
         if (!bx || bx.querySelector('.bio-row') || !/المظهر والإعدادات/.test(bx.textContent))
             return;
@@ -2307,7 +2311,7 @@ go('dash');
                 bx.insertBefore(r2, r.nextSibling);
             }
         });
-    }, 400);
+    });
 })();
 </script>
 <script>
@@ -2468,7 +2472,7 @@ go('dash');
             }
         }
     }
-    setInterval(applyFavs, 800);
+    onDom(applyFavs);
     function favSheet() {
         var F = favs(), names = allNames();
         if (!names.length) {
@@ -2519,7 +2523,7 @@ go('dash');
         b.onclick = quickSearch;
         h.insertBefore(b, anchor);
     }
-    setInterval(searchBtn, 700);
+    onDom(searchBtn);
     function quickSearch() {
         var o = sheet('🔍 بحث سريع في كل شيء', [], '<input class="u3-in" id="u3-sq" type="search" enterkeyhint="search" autocomplete="off" placeholder="' + ('اسم حساب، كلمة من البيان، مبلغ، رقم سند…') + '"><div class="u3-res" id="u3-sr"></div>');
         var inp = o.querySelector('#u3-sq'), res = o.querySelector('#u3-sr'), tm = 0, seq = 0;
@@ -2596,7 +2600,7 @@ go('dash');
             });
         });
     }
-    setInterval(camWatch, 900);
+    onDom(camWatch);
     function riseTh() { return Number(ls('u3_rise') || 10); }
     /* ================= 1) التذكير اليومي على الإيميل (من يومية غدق) ================= */
     function remSheet() {
@@ -2696,17 +2700,7 @@ go('dash');
     var OTHER = { url: '../', icon: '../icon-192.png?v=4', name: 'مكتبة الصفاء' };
     W.__u3noSw = 1; /* زر التنقل بين التطبيقين أُلغي بطلب المستخدم */
     function goOther() { location.href = new URL(OTHER.url, location.href).href; }
-    setInterval(function () {
-        var h = document.querySelector('header .top .ui-hgrp');
-        if (W.__u3noSw || !h || h.querySelector('.u3-sw'))
-            return;
-        var anchor = h.querySelector('.u3-sbtn');
-        if (!anchor)
-            return;
-        var b = el('<button class="ui-hbtn u3-sw" title="الانتقال إلى ' + OTHER.name + '" aria-label="الانتقال إلى ' + OTHER.name + '"><img src="' + OTHER.icon + '" alt="" style="width:22px;height:22px;border-radius:6px;display:block"></button>');
-        b.onclick = goOther;
-        h.insertBefore(b, anchor);
-    }, 700);
+    /* زر التنقل بين التطبيقين أُلغي بطلب المستخدم */
     /* ================= 10) الأجهزة المتصلة ================= */
     function devId() { var k = 'rt_dev_' + APP.id, v = ls(k); if (!v) {
         v = (Date.now().toString(36) + Math.random().toString(36).slice(2, 10));
@@ -2804,7 +2798,7 @@ go('dash');
         });
     }
     /* صفوف إضافية في نافذة «المظهر والإعدادات» */
-    setInterval(function () {
+    onDom(function () {
         var bx = document.querySelector('.ui-sheet .bx');
         if (!bx || bx.querySelector('.u3-rows') || !/المظهر والإعدادات/.test(bx.textContent))
             return;
@@ -2834,7 +2828,7 @@ go('dash');
                 Array.prototype.forEach.call(r.querySelectorAll('[data-rise]'), function (x) { x.classList.toggle('on', x === p); });
             }
         };
-    }, 400);
+    });
 })();
 </script>
 <style id="ui-css">
