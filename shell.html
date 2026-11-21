@@ -2796,7 +2796,7 @@ window.onDom = (function () {
     } }
     function unlockNow(o) { locked = false; o.remove(); touch(); }
     function showIdleLock() {
-        if (locked || !bioInfo() || document.getElementById('bio-idle'))
+        if (!document.body || locked || !bioInfo() || document.getElementById('bio-idle'))
             return;
         locked = true;
         var o = el('<div id="bio-idle" style="position:fixed;inset:0;z-index:2147483000;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;font-family:Cairo,system-ui,sans-serif;direction:rtl">' +
