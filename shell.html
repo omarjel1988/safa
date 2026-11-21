@@ -1,0 +1,2298 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مكتبة الصفاء</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap">
+<style>
+:root{--p:#1F4E79;--p2:#2E6DA4;--j:#00695C;--j2:#13907F;--s:#6D2E5B;--s2:#9B4A85;--org:#EF6C00;--bd:#DCE3EB;--bg:#F1F4F8;--tx:#17212B;--mut:#637082;--red:#C62828;--grn:#2E7D32;
+--c:#2B3A4A;--c2:#4A6480;--cl:#EDF1F6;--r:14px;--sh:0 1px 2px rgba(16,24,40,.04),0 6px 18px rgba(16,24,40,.06)}
+body[data-sec="p"]{--c:var(--p);--c2:var(--p2);--cl:#E6EFF8}
+body[data-sec="j"]{--c:var(--j);--c2:var(--j2);--cl:#DFF2EF}
+body[data-sec="s"]{--c:var(--s);--c2:var(--s2);--cl:#F4E8F1}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:Cairo,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;font-size:15.5px;line-height:1.55;-webkit-text-size-adjust:100%}
+button{font:inherit;cursor:pointer}
+header{background:var(--c);color:#fff;padding:calc(8px + env(safe-area-inset-top)) 14px 0;position:sticky;top:0;z-index:20;box-shadow:0 4px 16px rgba(0,0,0,.14)}
+.hb{display:flex;align-items:center;gap:8px;max-width:1100px;margin:0 auto;padding-bottom:8px;min-height:48px}
+.hb h1{font-size:19px;margin:0;flex:1;font-weight:800;display:flex;align-items:center;gap:9px;cursor:pointer;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hb h1 i{flex:0 0 7px;height:24px;border-radius:4px;background:#FFB74D}
+.hb button{background:rgba(255,255,255,.17);color:#fff;border:0;border-radius:10px;padding:6px 12px;font-size:14px;font-weight:700;min-height:38px}
+nav{display:flex;gap:6px;overflow-x:auto;max-width:1100px;margin:0 auto;padding:2px 0 10px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+nav::-webkit-scrollbar{display:none}
+nav button{flex:0 0 auto;border:0;background:rgba(255,255,255,.13);color:#fff;border-radius:10px;padding:7px 15px;font-size:14.5px;font-weight:700;min-height:40px}
+nav button.on{background:#fff;color:var(--c);box-shadow:0 2px 6px rgba(0,0,0,.12)}
+main{max-width:1100px;margin:0 auto;padding:16px 12px 120px}
+main>*{animation:fi .2s ease-out}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){main>*{animation:none}}
+main h1{font-size:21px;margin:2px 0;font-weight:800;color:var(--c)}
+.sub{color:var(--mut);margin:0 0 14px;font-size:14px}
+.card{background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:14px;box-shadow:var(--sh)}
+.card h2{margin:0 0 12px;font-size:16.5px;color:var(--c);font-weight:800}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.f.wide{grid-column:1/-1}
+label,.f>span{font-size:13px;color:var(--mut);font-weight:700}
+label small{font-weight:400}
+input,select,textarea{font:inherit;font-size:16px;padding:10px 12px;border:1px solid var(--bd);border-radius:11px;min-height:46px;width:100%;background:#F8FAFC;color:var(--tx)}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--c);background:#fff;box-shadow:0 0 0 3px var(--cl)}
+input[readonly]{background:var(--cl);color:var(--mut)}
+.btn{background:var(--c);color:#fff;border:1.5px solid var(--c);border-radius:12px;padding:10px 18px;font-size:15.5px;font-weight:800;min-height:46px}
+.btn:active{transform:scale(.98)}
+.btn.sec,.btn.ghost{background:#fff;color:var(--c)}
+.btn.grn{background:var(--grn);border-color:var(--grn)}
+.btn.sm{min-height:34px;padding:3px 11px;font-size:13.5px;font-weight:700;border-radius:9px}
+.btn.warn{background:#fff;color:var(--red);border-color:var(--red)}
+.btn.warn.arm{background:var(--red);color:#fff}
+.btn:disabled{opacity:.55}
+.x{background:none;border:0;color:var(--red);font-size:14px;padding:6px;font-weight:700}
+.hide{display:none!important}
+.hero{margin:4px 2px 16px}.hero h2{margin:0;font-size:24px;font-weight:800}.hero p{margin:2px 0 0;color:var(--mut)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.tile{position:relative;overflow:hidden;border:0;border-radius:20px;padding:20px;color:#fff;text-align:right;min-height:175px;display:flex;flex-direction:column;gap:3px;box-shadow:0 8px 24px rgba(16,24,40,.15)}
+.tile:active{transform:scale(.985)}
+.tile.p{background:linear-gradient(135deg,var(--p),var(--p2))}.tile.j{background:linear-gradient(135deg,var(--j),var(--j2))}.tile.s{background:linear-gradient(135deg,var(--s),var(--s2))}
+.tile svg{width:36px;height:36px;margin-bottom:6px}
+.tile b{font-size:21px;font-weight:800}
+.tile small{font-size:13.5px;opacity:.9}
+.tile em{margin-top:auto;font-style:normal;font-weight:700;font-size:14px;background:rgba(255,255,255,.17);align-self:flex-start;padding:3px 12px;border-radius:99px}
+.tile::after{content:"";position:absolute;left:-46px;bottom:-46px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.08)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:0 0 14px}
+.stat,.st{background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:10px 14px;box-shadow:var(--sh)}
+.stat span,.st small{display:block;font-size:12.5px;color:var(--mut);font-weight:600}
+.stat b,.st b{font-size:20px;font-variant-numeric:tabular-nums}
+.stat.hi{background:linear-gradient(135deg,var(--c),var(--c2));color:#fff;border-color:transparent}.stat.hi span{color:rgba(255,255,255,.85)}
+.neg{color:var(--red)}.pos{color:var(--grn)}
+.bar{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.96);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-top:1px solid var(--bd);padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;gap:12px;align-items:center;justify-content:space-between;z-index:30}
+.bar .tot{font-size:14px;color:var(--mut)}.bar .tot b{display:block;font-size:20px;color:var(--tx)}
+.bar .btn{flex:0 0 auto;min-width:150px}
+.ltot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:14px;color:var(--mut)}
+.ltot b{color:var(--tx)}
+.badge{display:inline-block;background:#FFF3E0;color:#B26A00;border-radius:8px;padding:1px 8px;font-size:12px;font-weight:700}
+.tw{overflow-x:auto;background:#fff;border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+th{background:var(--cl);color:var(--c);padding:10px 8px;white-space:nowrap;font-weight:800}
+td{padding:9px 8px;border-top:1px solid var(--bd);text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums}
+tbody tr:nth-child(even) td{background:#FAFBFD}
+td.l,th.l{text-align:right}td.num,th.num{text-align:left}td.wrapc{white-space:normal;min-width:180px;text-align:right}
+tr.tot td,tfoot td{background:#FFF1DE!important;font-weight:800}
+.detail td{background:var(--cl)!important}
+#toast{position:fixed;top:calc(70px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:12px 18px;border-radius:12px;z-index:50;max-width:92%;display:none;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+#toast.ok{background:var(--grn)}#toast.err{background:var(--red)}
+.pdf a,.lnk{display:inline-block;margin-top:10px;color:var(--c);font-weight:800}
+.muted,.empty{color:var(--mut);text-align:center;padding:24px 12px}
+.note{font-size:13px;color:var(--mut);margin-top:8px}
+.msg{padding:8px 12px;border-radius:10px;margin-top:10px;background:#FDECEA;color:var(--red);font-weight:700}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row>.f{flex:1 1 150px}
+.pg{display:flex;gap:10px;justify-content:center;align-items:center;margin:10px 0}
+.bars{display:grid;grid-template-columns:minmax(80px,170px) 1fr auto;gap:8px 12px;align-items:center}.bl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bt{background:var(--cl);border-radius:6px;height:18px;overflow:hidden}.bb{background:linear-gradient(90deg,var(--c2),var(--c));height:100%;border-radius:6px}.bb.n{background:var(--red)}.bv{font-variant-numeric:tabular-nums;font-weight:800;min-width:90px;text-align:left}
+.big{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;padding:3px 0}
+.spin{display:inline-block;width:22px;height:22px;border:3px solid var(--cl);border-top-color:var(--c);border-radius:50%;animation:sp .8s linear infinite;vertical-align:middle;margin-left:8px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (min-width:720px){.grid.l4{grid-template-columns:2fr 1fr 1fr 1fr}.grid.i5{grid-template-columns:2fr 1fr 1fr 1fr}}
+@media print{header,.noprint,#toast,.bar,.card:has(.grid){display:none!important}body{background:#fff}.tw,.stat,.st,.card{box-shadow:none}}
+</style>
+</head>
+<body data-sec="">
+<header><div class="hb"><h1 onclick="go('home')"><i></i><span id="ttl">مكتبة الصفاء</span></h1>
+<button onclick="refreshView()" title="تحديث البيانات">⟳ تحديث</button><button id="homeBtn" class="hide" onclick="go('home')">⌂ الرئيسية</button></div>
+<nav id="tabs" class="hide"></nav></header>
+<div id="toast"></div>
+<main id="view"><div class="muted"><span class="spin"></span>جارٍ التحميل…</div></main>
+<datalist id="dl-items"></datalist>
+<datalist id="dl-sup"></datalist>
+
+<script>
+var B = null;                       // بيانات التشغيل من الملف
+var CUR = 'home';
+var SECTIONS = {
+  p: { title: 'فواتير الشراء', tabs: [['inv', 'إدخال فاتورة'], ['psearch', 'بحث وتقارير'], ['plog', 'سجل المشتريات'], ['items', 'الأصناف'], ['sup', 'الموردين']] },
+  j: { title: 'اليومية', tabs: [['jentry', 'إدخال اليومية'], ['daily', 'ملخص يومي'], ['jsearch', 'بحث وتقارير'], ['jlog', 'سجل اليومية']] },
+  s: { title: 'قيود الموردين', tabs: [['sentry', 'إدخال قيد'], ['sstmt', 'كشف مورد'], ['ssum', 'ملخص الأرصدة'], ['slog', 'السجل'], ['ssup', 'الموردون'], ['saudit', 'سجل التعديلات']] }
+};
+var VIEW_SEC = { inv: 'p', psearch: 'p', plog: 'p', items: 'p', sup: 'p', jentry: 'j', daily: 'j', jsearch: 'j', jlog: 'j',
+  sentry: 's', sstmt: 's', ssum: 's', slog: 's', ssup: 's', saudit: 's' };
+
+function $(s, r) { return (r || document).querySelector(s); }
+function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function en(v) {
+  return String(v == null ? '' : v).replace(/[٠-٩]/g, function (d) { return d.charCodeAt(0) - 1632; })
+    .replace(/[۰-۹]/g, function (d) { return d.charCodeAt(0) - 1776; }).replace(/٫/g, '.').replace(/٬/g, '').trim();
+}
+function num(v) { var n = parseFloat(en(v)); return isNaN(n) ? 0 : n; }
+function fmt(n) { return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function call(fn) {
+  var a = Array.prototype.slice.call(arguments, 1);
+  return new Promise(function (res, rej) {
+    google.script.run.withSuccessHandler(res).withFailureHandler(rej).api(fn, a);
+  });
+}
+var tt;
+function toast(m, kind) {
+  var t = $('#toast'); t.className = kind || ''; t.textContent = m; t.style.display = 'block';
+  clearTimeout(tt); tt = setTimeout(function () { t.style.display = 'none'; }, 4200);
+}
+function errMsg(e) { return (e && e.message) ? String(e.message).replace(/^Error:\s*/, '') : String(e); }
+function busy(btn, on) { if (btn) { btn.disabled = on; } }
+
+/* ---------- التنقل ---------- */
+function go(v) {
+  var prevSec = VIEW_SEC[CUR] || '';
+  CUR = v;
+  var sec = VIEW_SEC[v] || '';
+  document.body.setAttribute('data-sec', sec);
+  $('#ttl').textContent = sec ? SECTIONS[sec].title : 'مكتبة الصفاء';
+  $('#homeBtn').classList.toggle('hide', !sec);
+  var nav = $('#tabs');
+  if (sec) {
+    nav.classList.remove('hide');
+    nav.innerHTML = SECTIONS[sec].tabs.map(function (t) {
+      return '<button class="' + (t[0] === v ? 'on' : '') + '" onclick="go(\'' + t[0] + '\')">' + t[1] + '</button>';
+    }).join('');
+    var on = $('button.on', nav); if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', inline: 'center' });
+  } else { nav.classList.add('hide'); }
+  window.scrollTo(0, 0);
+  var V = { home: vHome, inv: vInv, psearch: vPSearch, plog: vPLog, items: vItems, jentry: vJEntry, daily: vDaily, jsearch: vJSearch, jlog: vJLog };
+  if (V[v]) V[v](); else { SUP.show(v); if (prevSec !== 's') SUP.quiet(); }
+}
+function refreshView() {
+  if (VIEW_SEC[CUR] === 's' || CUR === 'sup') { SUP.reload(); return; }
+  reboot(function () { go(CUR); toast('تم تحديث البيانات', 'ok'); }).catch(function (e) { toast(errMsg(e), 'err'); });
+}
+
+function fillLists() {
+  $('#dl-items').innerHTML = B.items.map(function (i) { return '<option value="' + esc(i.name) + '">'; }).join('');
+  $('#dl-sup').innerHTML = B.suppliers.map(function (s) { return '<option value="' + esc(s) + '">'; }).join('');
+}
+function reboot(cb) { return call('webBoot').then(function (b) { B = b; fillLists(); if (cb) cb(); }); }
+
+/* ---------- الرئيسية ---------- */
+var ICON = {
+  p: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>',
+  j: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M8 8h6M8 12h6M18 20a2 2 0 0 0 2-2V6"/></svg>',
+  s: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.5a3 3 0 0 1 0 6M18 14c2 .8 3 3 3 6"/></svg>'
+};
+function tile(k, to, title, desc, stat) {
+  return '<button class="tile ' + k + '" onclick="go(\'' + to + '\')">' + ICON[k] + '<b>' + title + '</b><small>' + desc + '</small><em' + (k === 's' ? ' id="supHome"' : '') + '>' + stat + '</em></button>';
+}
+function vHome() {
+  $('#view').innerHTML =
+    '<div class="hero"><h2>مكتبة الصفاء</h2><p>اختر القسم الذي تريد العمل عليه</p></div><div class="tiles">' +
+    tile('p', 'inv', 'فواتير الشراء', 'إدخال فاتورة، بحث وتقارير، الأصناف، الموردين', B.items.length + ' صنف · ' + B.suppliers.length + ' مورد') +
+    tile('j', 'jentry', 'اليومية', 'إدخال اليومية، الملخص اليومي، البحث والتقارير', 'الرصيد الحالي: ' + fmt(B.bal.cash)) +
+    tile('s', 'sentry', 'قيود الموردين', 'إدخال قيد، كشف حساب، ملخص الأرصدة، السجل', SUP.homeStat()) + '</div>';
+}
+/* ---------- إدخال فاتورة ---------- */
+function vInv() {
+  $('#view').innerHTML =
+    '<div class="card"><h2>بيانات الفاتورة</h2><div class="grid">' +
+    '<div class="f wide"><label>اسم المورد</label><input id="isup" list="dl-sup" autocomplete="off" placeholder="اختر أو اكتب اسم مورد جديد"></div>' +
+    '<div class="f"><label>رقم الفاتورة</label><input id="iinv" autocomplete="off"></div>' +
+    '<div class="f"><label>التاريخ</label><input id="idate" type="date" value="' + B.today + '"></div></div></div>' +
+    '<div id="ilines"></div>' +
+    '<button class="btn sec" style="width:100%" onclick="addInvLine()">+ إضافة صنف</button>' +
+    (B.formUrl ? '<div class="note" style="text-align:center"><a href="' + esc(B.formUrl) + '" target="_blank" rel="noopener">فتح نموذج Google Form لإدخال الأصناف (صنف في كل إرسال)</a></div>' : '') +
+    '<div class="bar"><div class="tot">إجمالي الفاتورة<b id="itot">0.00</b></div><button class="btn grn" id="isave" onclick="saveInv()">حفظ الفاتورة</button></div>';
+  addInvLine();
+}
+
+function addInvLine() {
+  var d = document.createElement('div');
+  d.className = 'card line';
+  d.innerHTML =
+    '<div class="grid l4">' +
+    '<div class="f wide"><label>الصنف</label><input class="n" list="dl-items" autocomplete="off" placeholder="اكتب أو اختر الصنف"></div>' +
+    '<div class="f"><label>الكود <small>(اختياري)</small></label><input class="c" autocomplete="off" placeholder="تلقائي"></div>' +
+    '<div class="f"><label>سعر الشراء</label><input class="p" inputmode="decimal" autocomplete="off"></div>' +
+    '<div class="f"><label>الكمية</label><input class="q" inputmode="decimal" autocomplete="off"></div>' +
+    '<div class="f nw hide"><label>الوحدة <span class="badge">صنف جديد</span></label><input class="u" autocomplete="off"></div>' +
+    '<div class="f nw hide"><label>التصنيف <span class="badge">صنف جديد</span></label><input class="g" autocomplete="off"></div></div>' +
+    '<div class="ltot"><span>الإجمالي: <b class="lt">0.00</b></span><button type="button" class="x">حذف السطر</button></div>';
+  $('#ilines').appendChild(d);
+  var n = $('.n', d), c = $('.c', d);
+  function onName() {
+    var nm = n.value.trim().toLowerCase();
+    var hit = B.items.filter(function (i) { return i.name.toLowerCase() === nm; })[0];
+    if (hit) { c.value = hit.code; c.readOnly = true; $$('.nw', d).forEach(function (e) { e.classList.add('hide'); }); }
+    else {
+      if (c.readOnly) { c.value = ''; c.readOnly = false; }
+      $$('.nw', d).forEach(function (e) { e.classList.toggle('hide', !nm); });
+    }
+  }
+  n.addEventListener('input', onName); n.addEventListener('change', onName);
+  d.addEventListener('input', calcInv);
+  $('.x', d).onclick = function () { if ($$('.line').length > 1) { d.remove(); calcInv(); } else { toast('يجب أن تبقى فاتورة بسطر واحد على الأقل', 'err'); } };
+}
+
+function calcInv() {
+  var t = 0;
+  $$('.line').forEach(function (d) {
+    var v = num($('.p', d).value) * num($('.q', d).value);
+    $('.lt', d).textContent = fmt(v); t += v;
+  });
+  $('#itot').textContent = fmt(t);
+}
+
+function saveInv(confirmDup) {
+  var btn = $('#isave');
+  var p = { supplier: $('#isup').value, invoice: $('#iinv').value, date: $('#idate').value, confirmDup: !!confirmDup,
+    lines: $$('.line').map(function (d) {
+      return { name: $('.n', d).value, code: $('.c', d).value, unit: $('.u', d).value, cat: $('.g', d).value, price: $('.p', d).value, qty: $('.q', d).value };
+    }) };
+  busy(btn, true);
+  call('webSaveInvoice', p).then(function (r) {
+    busy(btn, false);
+    if (r.dup) {
+      var old = $('#dupbox'); if (old) old.remove();
+      var bx = document.createElement('div'); bx.id = 'dupbox'; bx.className = 'card';
+      bx.innerHTML = '<b class="neg">' + esc(r.msg) + '</b><div class="row" style="margin-top:10px"><button class="btn grn" type="button">متابعة الحفظ</button><button class="btn sec" type="button">إلغاء</button></div>';
+      $('#view').insertBefore(bx, $('#view').firstChild);
+      var bs = $$('button', bx); bs[0].onclick = function () { bx.remove(); saveInv(true); }; bs[1].onclick = function () { bx.remove(); };
+      window.scrollTo(0, 0); return;
+    }
+    if (!r.ok) { toast(r.msg, 'err'); return; }
+    toast(r.msg, 'ok');
+    reboot(function () { vInv(); });
+  }).catch(function (e) { busy(btn, false); toast(errMsg(e), 'err'); });
+}
+
+/* ---------- أدوات الجداول ---------- */
+function td(v, cls) { return '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + v + '</td>'; }
+function tbl(heads, rows, foot) {
+  return '<div class="tw"><table><tr>' + heads.map(function (h) { return '<th>' + h + '</th>'; }).join('') + '</tr>' + rows.join('') + (foot || '') + '</table></div>';
+}
+function pager(r, fn) {
+  if (!r.off && !r.next) return '';
+  return '<div class="pg"><button class="btn sec" ' + (r.off > 0 ? '' : 'disabled') + ' onclick="' + fn + '(' + Math.max(0, r.off - 100) + ')">السابق</button>' +
+    '<span class="note">' + (r.off + 1) + ' – ' + (r.off + r.rows.length) + ' من ' + r.count + '</span>' +
+    '<button class="btn sec" ' + (r.next ? '' : 'disabled') + ' onclick="' + fn + '(' + (r.off + 100) + ')">التالي</button></div>';
+}
+function runPdf(btn, kind, p) {
+  busy(btn, true); $('#pdfo').innerHTML = '<span class="muted">جارٍ إنشاء الملف…</span>';
+  call('webPdf', kind, p).then(function (r) {
+    busy(btn, false);
+    $('#pdfo').innerHTML = r.ok ? '<a href="' + esc(r.url) + '" target="_blank" rel="noopener">فتح التقرير PDF ومشاركته ←</a>' : '';
+    if (!r.ok) toast(r.msg, 'err');
+  }).catch(function (e) { busy(btn, false); $('#pdfo').innerHTML = ''; toast(errMsg(e), 'err'); });
+}
+function pdfBox(kind, paramsFn) {
+  return '<div class="pdf"><button class="btn sec" onclick="runPdf(this,\'' + kind + '\',' + paramsFn + ')">تصدير PDF</button><div id="pdfo"></div></div>';
+}
+function srcName(x) { return esc(x || ''); }
+
+/* ---------- تعديل / حذف سطر فاتورة شراء ---------- */
+var PR = {}, POFFX = 0;
+function regPRows(rows) { PR = {}; rows.forEach(function (r) { PR[r.row] = r; }); }
+function editPBtn(x) {
+  return '<td><button class="btn sec" style="min-height:34px;padding:4px 12px;font-size:14px" onclick="editP(' + x.row + ')">تعديل</button></td>';
+}
+function refreshP() { reboot(function () { if (CUR === 'psearch') doPSearch(POFFX); else if (CUR === 'plog') doPLog(POFFX); }); }
+function editP(row) {
+  var x = PR[row]; if (!x) return;
+  var old = $('#pedit'); if (old) old.remove();
+  var bx = document.createElement('div'); bx.id = 'pedit'; bx.className = 'card';
+  bx.innerHTML = '<h2>تعديل سطر فاتورة</h2><div class="grid">' +
+    '<div class="f wide"><label>اسم المورد</label><input id="pes" list="dl-sup" value="' + esc(x.sup) + '" autocomplete="off"></div>' +
+    '<div class="f"><label>رقم الفاتورة</label><input id="pei" value="' + esc(x.inv) + '" autocomplete="off"></div>' +
+    '<div class="f"><label>التاريخ</label><input id="ped" type="date" value="' + esc(x.date) + '"></div>' +
+    '<div class="f wide"><label>الصنف</label><input id="pen" list="dl-items" value="' + esc(x.item) + '" autocomplete="off"></div>' +
+    '<div class="f"><label>كود الصنف</label><input id="pec" value="' + esc(x.code) + '" autocomplete="off"></div>' +
+    '<div class="f"><label>سعر الشراء</label><input id="pep" inputmode="decimal" value="' + x.price + '"></div>' +
+    '<div class="f"><label>الكمية</label><input id="peq" inputmode="decimal" value="' + x.qty + '"></div>' +
+    '<div class="f pnw hide"><label>الوحدة <span class="badge">صنف جديد</span></label><input id="peu" autocomplete="off"></div>' +
+    '<div class="f pnw hide"><label>التصنيف <span class="badge">صنف جديد</span></label><input id="peg" autocomplete="off"></div></div>' +
+    '<div class="note">الإجمالي = السعر × الكمية ويُحسب تلقائيًا. إن غيّرت الصنف إلى صنف مسجّل يظهر كوده، وإن كتبت صنفًا جديدًا يُسجَّل بكود تلقائي أو بالكود الذي تكتبه.</div><br>' +
+    '<div class="row"><button class="btn grn" id="psv">حفظ التعديل</button><button class="btn sec" id="pcn">إلغاء</button>' +
+    '<button class="btn" id="pdl" style="background:var(--red)">حذف السطر</button></div>';
+  $('#view').insertBefore(bx, $('#view').firstChild);
+  window.scrollTo(0, 0);
+  var n = $('#pen', bx), c = $('#pec', bx);
+  function onName() {
+    var nm = n.value.trim().toLowerCase();
+    var hit = B.items.filter(function (i) { return i.name.toLowerCase() === nm; })[0];
+    if (hit) { c.value = hit.code; c.readOnly = true; $$('.pnw', bx).forEach(function (e) { e.classList.add('hide'); }); }
+    else { if (c.readOnly) { c.value = ''; c.readOnly = false; } $$('.pnw', bx).forEach(function (e) { e.classList.toggle('hide', !nm); }); }
+  }
+  n.addEventListener('input', onName); n.addEventListener('change', onName);
+  var orig = { sup: x.sup, inv: x.inv, date: x.date, item: x.item, price: x.price, qty: x.qty };
+  $('#pcn').onclick = function () { bx.remove(); };
+  $('#psv').onclick = function () {
+    var b = this; busy(b, true);
+    call('webPUpdate', { row: row, orig: orig, nw: { sup: $('#pes').value, inv: $('#pei').value, date: $('#ped').value, item: $('#pen').value, code: $('#pec').value,
+      price: $('#pep').value, qty: $('#peq').value, unit: $('#peu').value, cat: $('#peg').value } }).then(function (r) {
+      busy(b, false);
+      if (!r.ok) { toast(r.msg, 'err'); return; }
+      toast(r.msg, 'ok'); bx.remove(); refreshP();
+    }).catch(function (e) { busy(b, false); toast(errMsg(e), 'err'); });
+  };
+  var armed = false;
+  $('#pdl').onclick = function () {
+    var b = this;
+    if (!armed) { armed = true; b.textContent = 'تأكيد الحذف نهائيًا'; return; }
+    busy(b, true);
+    call('webPDelete', { row: row, orig: orig }).then(function (r) {
+      busy(b, false);
+      if (!r.ok) { toast(r.msg, 'err'); return; }
+      toast(r.msg, 'ok'); bx.remove(); refreshP();
+    }).catch(function (e) { busy(b, false); toast(errMsg(e), 'err'); });
+  };
+}
+
+/* ---------- تعديل / حذف حركة يومية ---------- */
+var JR = {}, JOFF = 0;
+function regRows(rows) { JR = {}; rows.forEach(function (r) { JR[r.row] = r; }); }
+function editBtn(x) {
+  return '<td><button class="btn sec" style="min-height:34px;padding:4px 12px;font-size:14px" onclick="editJ(' + x.row + ')">تعديل</button></td>';
+}
+function refreshJ() {
+  if (CUR === 'jsearch') doJSearch(JOFF); else if (CUR === 'jlog') doJLog(JOFF);
+}
+function editJ(row) {
+  var x = JR[row]; if (!x) return;
+  var L = B.labels, old = $('#jedit'); if (old) old.remove();
+  var bx = document.createElement('div'); bx.id = 'jedit'; bx.className = 'card';
+  bx.innerHTML = '<h2>تعديل حركة</h2><div class="grid">' +
+    '<div class="f"><label>التاريخ</label><input id="ed" type="date" value="' + esc(x.date) + '"></div>' +
+    '<div class="f wide"><label>البيان</label><input id="es" value="' + esc(x.st) + '" autocomplete="off"></div>' +
+    '<div class="f"><label>' + esc(L.due) + ' <small>(السداد بالسالب)</small></label><input id="edu" inputmode="decimal" value="' + (x.due ? x.due : '') + '"></div>' +
+    '<div class="f"><label>' + esc(L.out) + '</label><input id="eo" inputmode="decimal" value="' + (x.out ? x.out : '') + '"></div>' +
+    '<div class="f"><label>' + esc(L.inn) + '</label><input id="ei" inputmode="decimal" value="' + (x.inn ? x.inn : '') + '"></div></div><br>' +
+    '<div class="row"><button class="btn grn" id="esv">حفظ التعديل</button><button class="btn sec" id="ecn">إلغاء</button>' +
+    '<button class="btn" id="edl" style="background:var(--red)">حذف الحركة</button></div>';
+  $('#view').insertBefore(bx, $('#view').firstChild);
+  window.scrollTo(0, 0);
+  var orig = { date: x.date, st: x.st, due: x.due, out: x.out, inn: x.inn };
+  $('#ecn').onclick = function () { bx.remove(); };
+  $('#esv').onclick = function () {
+    var b = this; busy(b, true);
+    call('webJUpdate', { row: row, orig: orig, nw: { date: $('#ed').value, st: $('#es').value, due: $('#edu').value, out: $('#eo').value, inn: $('#ei').value } }).then(function (r) {
+      busy(b, false);
+      if (!r.ok) { toast(r.msg, 'err'); return; }
+      toast(r.msg, 'ok'); B.bal = r.bal; bx.remove(); refreshJ();
+    }).catch(function (e) { busy(b, false); toast(errMsg(e), 'err'); });
+  };
+  var armed = false;
+  $('#edl').onclick = function () {
+    var b = this;
+    if (!armed) { armed = true; b.textContent = 'تأكيد الحذف نهائيًا'; return; }
+    busy(b, true);
+    call('webJDelete', { row: row, orig: orig }).then(function (r) {
+      busy(b, false);
+      if (!r.ok) { toast(r.msg, 'err'); return; }
+      toast(r.msg, 'ok'); B.bal = r.bal; bx.remove(); refreshJ();
+    }).catch(function (e) { busy(b, false); toast(errMsg(e), 'err'); });
+  };
+}
+
+/* ---------- بحث المشتريات (نفس أعمدة صفحة البحث) ---------- */
+function vPSearch() {
+  $('#view').innerHTML =
+    '<div class="card"><div class="row"><div class="f" style="flex:3 1 220px"><label>ابحث (صنف / كود / فاتورة / مورد)</label><input id="pq" autocomplete="off" onkeydown="if(event.key===\'Enter\')doPSearch(0)"></div>' +
+    '<button class="btn" onclick="doPSearch(0)" style="align-self:flex-end">بحث</button></div></div><div id="pres"></div>';
+  doPSearch(0);
+}
+function doPSearch(off) {
+  var q = $('#pq').value; POFFX = off || 0;
+  $('#pres').innerHTML = '<div class="muted">جارٍ البحث…</div>';
+  call('webSearchPurchases', q, off || 0).then(function (r) {
+    var h = '<div class="stats"><div class="stat hi"><span>إجمالي النتائج</span><b>' + fmt(r.total) + '</b></div><div class="stat"><span>عدد الأسطر</span><b>' + r.count + '</b></div></div>';
+    regPRows(r.rows);
+    if (!r.rows.length) { $('#pres').innerHTML = h + '<div class="muted">لا توجد نتائج</div>'; return; }
+    h += tbl(['المورد', 'رقم الفاتورة', 'التاريخ', 'كود الصنف', 'الصنف', 'سعر الشراء', 'الكمية', 'الإجمالي', 'تعديل'],
+      r.rows.map(function (x) {
+        return '<tr>' + td(esc(x.sup)) + td(esc(x.inv)) + td(esc(x.date)) + td(esc(x.code)) + td(esc(x.item), 'l') + td(fmt(x.price)) + td(esc(x.qty)) + td(fmt(x.total)) + editPBtn(x) + '</tr>';
+      }), '<tr class="tot"><td colspan="7">الإجمالي (' + r.count + ' سطر)</td>' + td(fmt(r.total)) + '<td></td></tr>');
+    h += pager(r, 'doPSearch') + pdfBox('purchases', '{q:$(\'#pq\').value}');
+    $('#pres').innerHTML = h;
+  }).catch(function (e) { $('#pres').innerHTML = ''; toast(errMsg(e), 'err'); });
+}
+
+/* ---------- سجل المشتريات (كل الأعمدة) ---------- */
+function vPLog() {
+  $('#view').innerHTML =
+    '<div class="card"><div class="grid"><div class="f wide"><label>بحث (مورد / فاتورة / كود / صنف)</label><input id="lq" autocomplete="off" onkeydown="if(event.key===\'Enter\')doPLog(0)"></div>' +
+    '<div class="f"><label>من تاريخ</label><input id="lf" type="date"></div><div class="f"><label>إلى تاريخ</label><input id="lt" type="date"></div></div><br>' +
+    '<button class="btn" onclick="doPLog(0)">عرض</button></div><div id="lres"></div>';
+  doPLog(0);
+}
+function doPLog(off) {
+  POFFX = off || 0;
+  $('#lres').innerHTML = '<div class="muted">جارٍ التحميل…</div>';
+  call('webPLog', { q: $('#lq').value, from: $('#lf').value, to: $('#lt').value, off: off || 0 }).then(function (r) {
+    var h = '<div class="stats"><div class="stat hi"><span>إجمالي المعروض</span><b>' + fmt(r.total) + '</b></div><div class="stat"><span>عدد الأسطر</span><b>' + r.count + '</b></div></div>';
+    regPRows(r.rows);
+    if (!r.rows.length) { $('#lres').innerHTML = h + '<div class="muted">لا توجد سجلات</div>'; return; }
+    h += tbl(['المورد', 'رقم الفاتورة', 'التاريخ', 'كود الصنف', 'الصنف', 'سعر الشراء', 'الكمية', 'الإجمالي', 'المصدر', 'وقت الإدخال', 'تعديل'],
+      r.rows.map(function (x) {
+        return '<tr>' + td(esc(x.sup)) + td(esc(x.inv)) + td(esc(x.date)) + td(esc(x.code)) + td(esc(x.item), 'l') + td(fmt(x.price)) + td(esc(x.qty)) + td(fmt(x.total)) + td(srcName(x.src)) + td(esc(x.time)) + editPBtn(x) + '</tr>';
+      }), '<tr class="tot"><td colspan="7">الإجمالي (' + r.count + ' سطر)</td>' + td(fmt(r.total)) + '<td colspan="3"></td></tr>');
+    $('#lres').innerHTML = h + pager(r, 'doPLog');
+  }).catch(function (e) { $('#lres').innerHTML = ''; toast(errMsg(e), 'err'); });
+}
+
+/* ---------- الأصناف: كل أعمدة الصفحة + إضافة صنف ---------- */
+function vItems() {
+  $('#view').innerHTML =
+    '<div class="card"><h2>إضافة صنف</h2><div class="grid">' +
+    '<div class="f wide"><label>اسم الصنف</label><input id="an" autocomplete="off"></div>' +
+    '<div class="f"><label>كود الصنف <small>(اختياري)</small></label><input id="ac" autocomplete="off" placeholder="تلقائي"></div>' +
+    '<div class="f"><label>الوحدة</label><input id="au" autocomplete="off"></div>' +
+    '<div class="f"><label>التصنيف</label><input id="ag" autocomplete="off"></div>' +
+    '<div class="f wide"><label>ملاحظات</label><input id="ano" autocomplete="off"></div></div><br>' +
+    '<div class="row"><button class="btn grn" id="aadd" onclick="addItem()">حفظ الصنف</button>' +
+    '<button class="btn sec" id="afill" onclick="fillCodes()">ترقيم الأصناف التي بلا كود</button></div>' +
+    '<div class="note">اترك الكود فارغًا لينشأ تلقائيًا (P0001…)، أو اكتب كودك الخاص. أعمدة الأسعار تُحسب تلقائيًا من السجل.</div></div>' +
+    '<div class="card"><label>بحث في الأصناف</label><input id="iq" autocomplete="off" oninput="renderItems()"></div><div id="itl"><div class="muted">جارٍ التحميل…</div></div>';
+  loadItems();
+}
+function loadItems() {
+  call('webListItems').then(function (a) { window.ITEMS = a; renderItems(); }).catch(function (e) { toast(errMsg(e), 'err'); });
+}
+function renderItems() {
+  var q = $('#iq').value.trim().toLowerCase();
+  var a = (window.ITEMS || []).filter(function (i) { return !q || (i.name + ' ' + i.code + ' ' + i.cat + ' ' + i.notes).toLowerCase().indexOf(q) > -1; });
+  if (!a.length) { $('#itl').innerHTML = '<div class="muted">لا توجد أصناف</div>'; return; }
+  function pr(v) { return (v === '' || v == null) ? '' : fmt(v); }
+  $('#itl').innerHTML = tbl(['كود الصنف', 'اسم الصنف', 'الوحدة', 'التصنيف', 'ملاحظات', 'آخر سعر شراء', 'أقل سعر', 'أعلى سعر', 'متوسط السعر', 'تاريخ آخر شراء', 'آخر مورد'],
+    a.map(function (i) {
+      return '<tr>' + td(esc(i.code)) + td(esc(i.name), 'l') + td(esc(i.unit)) + td(esc(i.cat)) + td(esc(i.notes), 'l') + td(pr(i.last)) + td(pr(i.min)) + td(pr(i.max)) + td(pr(i.avg)) + td(esc(i.date)) + td(esc(i.sup)) + '</tr>';
+    })) + '<div class="note">' + a.length + ' صنف</div>';
+}
+function addItem() {
+  var b = $('#aadd'); busy(b, true);
+  call('webAddItem', { name: $('#an').value, code: $('#ac').value, unit: $('#au').value, cat: $('#ag').value, notes: $('#ano').value }).then(function (r) {
+    busy(b, false);
+    if (!r.ok) { toast(r.msg, 'err'); return; }
+    toast(r.msg, 'ok');
+    reboot(function () { vItems(); });
+  }).catch(function (e) { busy(b, false); toast(errMsg(e), 'err'); });
+}
+function fillCodes() {
+  var b = $('#afill'); busy(b, true);
+  call('webFillCodes').then(function (r) {
+    busy(b, false); toast(r.msg, 'ok'); reboot(function () { loadItems(); });
+  }).catch(function (e) { busy(b, false); toast(errMsg(e), 'err'); });
+}
+
+/* ---------- الموردون ---------- */
+function vSup() {
+  $('#view').innerHTML =
+    '<div class="card"><h2>إضافة مورد</h2><div class="note" style="margin:-6px 0 10px">قائمة الموردين مشتركة مع قسم قيود الموردين: أي مورد تضيفه هنا يظهر هناك والعكس.</div><div class="grid"><div class="f wide"><label>اسم المورد</label><input id="sn"></div>' +
+    '<div class="f"><label>الجوال</label><input id="sp" inputmode="tel"></div><div class="f"><label>الرقم الضريبي</label><input id="st" inputmode="numeric"></div>' +
+    '<div class="f wide"><label>ملاحظات</label><input id="so"></div></div><br><button class="btn grn" id="sadd" onclick="addSup()">حفظ المورد</button></div><div id="sl"></div>';
+  loadSup();
+}
+function loadSup() {
+  call('webListSuppliers').then(function (a) {
+    $('#sl').innerHTML = a.length ? tbl(['اسم المورد', 'الجوال', 'الرقم الضريبي', 'ملاحظات'], a.map(function (s) {
+      return '<tr>' + td(esc(s.name), 'l') + td(esc(s.phone)) + td(esc(s.tax)) + td(esc(s.notes), 'l') + '</tr>';
+    })) : '<div class="muted">لا يوجد موردون بعد</div>';
+  }).catch(function (e) { toast(errMsg(e), 'err'); });
+}
+function addSup() {
+  var b = $('#sadd'); busy(b, true);
+  call('webAddSupplier', { name: $('#sn').value, phone: $('#sp').value, tax: $('#st').value, notes: $('#so').value }).then(function (r) {
+    busy(b, false);
+    if (!r.ok) { toast(r.msg, 'err'); return; }
+    toast(r.msg, 'ok'); reboot(function () { vSup(); });
+  }).catch(function (e) { busy(b, false); toast(errMsg(e), 'err'); });
+}
+
+/* ---------- إدخال اليومية ---------- */
+function vJEntry() {
+  var L = B.labels;
+  $('#view').innerHTML =
+    '<div class="stats"><div class="stat hi"><span>الرصيد الحالي</span><b id="bcash">' + fmt(B.bal.cash) + '</b></div>' +
+    '<div class="stat hi"><span>رصيد ' + esc(L.due) + ' الحالي</span><b id="bdue">' + fmt(B.bal.due) + '</b></div>' +
+    '<div class="stat"><span>' + esc(L.inn) + ' هذا التاريخ</span><b id="dIn">—</b></div>' +
+    '<div class="stat"><span>' + esc(L.out) + ' هذا التاريخ</span><b id="dOut">—</b></div>' +
+    '<div class="stat"><span>صافي النقد لهذا التاريخ</span><b id="dNet">—</b></div>' +
+    '<div class="stat"><span>' + esc(L.due) + ' هذا التاريخ</span><b id="dDue">—</b></div></div>' +
+    '<div class="card"><div class="grid"><div class="f"><label>التاريخ</label><input id="jdate" type="date" value="' + B.today + '" onchange="loadDay()"></div></div></div>' +
+    '<div id="jlines"></div><button class="btn sec" style="width:100%" onclick="addJLine()">+ إضافة سطر</button>' +
+    '<div class="note">كل سطر حركة واحدة: ' + esc(L.out) + ' أو ' + esc(L.inn) + ' وليس الاثنين. ' + esc(L.due) + ' تُحسب منفصلة ولا تدخل في الرصيد، وتُكتب مع أحدهما أو وحدها، والسداد بالسالب (فعّل خانة سداد).</div>' +
+    '<div class="bar"><div class="tot" id="jtot">—</div><button class="btn grn" id="jsave" onclick="saveJ()">حفظ اليومية</button></div>';
+  addJLine();
+  loadDay();
+}
+function loadDay() {
+  call('webJDay', $('#jdate').value).then(function (r) {
+    $('#bcash').textContent = fmt(r.bal.cash); $('#bdue').textContent = fmt(r.bal.due);
+    $('#dIn').textContent = fmt(r.inn); $('#dOut').textContent = fmt(r.out); $('#dNet').textContent = fmt(r.net); $('#dDue').textContent = fmt(r.due);
+  }).catch(function (e) { toast(errMsg(e), 'err'); });
+}
+function addJLine() {
+  var L = B.labels, d = document.createElement('div');
+  d.className = 'card line';
+  d.innerHTML =
+    '<div class="grid i5"><div class="f wide"><label>البيان</label><input class="st" autocomplete="off"></div>' +
+    '<div class="f"><label>' + esc(L.due) + '</label><input class="d" inputmode="decimal" autocomplete="off">' +
+    '<label style="display:flex;gap:6px;align-items:center;font-weight:400"><input type="checkbox" class="ng" style="width:20px;min-height:20px"> سداد (يُحفظ بالسالب)</label></div>' +
+    '<div class="f"><label>' + esc(L.out) + '</label><input class="o" inputmode="decimal" autocomplete="off"></div>' +
+    '<div class="f"><label>' + esc(L.inn) + '</label><input class="i" inputmode="decimal" autocomplete="off"></div></div>' +
+    '<div class="ltot"><span></span><button type="button" class="x">حذف السطر</button></div>';
+  $('#jlines').appendChild(d);
+  d.addEventListener('input', calcJ);
+  $('.x', d).onclick = function () { if ($$('.line').length > 1) { d.remove(); calcJ(); } else { toast('يجب أن يبقى سطر واحد على الأقل', 'err'); } };
+  calcJ();
+}
+function jDue(d) { var v = num($('.d', d).value); return $('.ng', d).checked ? -Math.abs(v) : v; }
+function calcJ() {
+  var a = 0, o = 0, i = 0, L = B.labels;
+  $$('.line').forEach(function (d) { a += jDue(d); o += num($('.o', d).value); i += num($('.i', d).value); });
+  $('#jtot').innerHTML = esc(L.inn) + ': <b style="display:inline">' + fmt(i) + '</b> · ' + esc(L.out) + ': <b style="display:inline">' + fmt(o) + '</b> · ' + esc(L.due) + ': <b style="display:inline">' + fmt(a) + '</b>';
+}
+function saveJ() {
+  var b = $('#jsave');
+  var p = { date: $('#jdate').value, lines: $$('.line').map(function (d) {
+    var due = $('.d', d).value.trim();
+    return { st: $('.st', d).value, due: due === '' ? '' : String(jDue(d)), out: $('.o', d).value, inn: $('.i', d).value };
+  }) };
+  busy(b, true);
+  call('webSaveJournal', p).then(function (r) {
+    busy(b, false);
+    if (!r.ok) { toast(r.msg, 'err'); return; }
+    toast(r.msg, 'ok'); B.bal = r.bal; vJEntry();
+  }).catch(function (e) { busy(b, false); toast(errMsg(e), 'err'); });
+}
+
+/* ---------- الملخص اليومي ---------- */
+function vDaily() {
+  var L = B.labels;
+  $('#view').innerHTML = '<div class="muted">جارٍ التحميل…</div>';
+  call('webDaily').then(function (r) {
+    var t = r.totals, h =
+      '<div class="stats"><div class="stat hi"><span>الرصيد الحالي</span><b>' + fmt(r.bal.cash) + '</b></div><div class="stat"><span>رصيد ' + esc(L.due) + '</span><b>' + fmt(r.bal.due) + '</b></div>' +
+      '<div class="stat"><span>إجمالي ' + esc(L.inn) + '</span><b>' + fmt(t.inn) + '</b></div><div class="stat"><span>إجمالي ' + esc(L.out) + '</span><b>' + fmt(t.out) + '</b></div></div>';
+    if (!r.days.length) { $('#view').innerHTML = h + '<div class="muted">لا توجد حركات بعد</div>'; return; }
+    h += '<div class="tw"><table><tr><th>التاريخ</th><th>' + esc(L.due) + '</th><th>' + esc(L.out) + '</th><th>' + esc(L.inn) + '</th><th>صافي النقد</th><th>الرصيد</th><th>رصيد ' + esc(L.due) + '</th></tr>' +
+      r.days.map(function (d) {
+        return '<tr><td>' + esc(d.date) + '</td><td>' + fmt(d.due) + '</td><td>' + fmt(d.out) + '</td><td>' + fmt(d.inn) + '</td><td class="' + (d.net < 0 ? 'neg' : '') + '">' + fmt(d.net) + '</td><td>' + fmt(d.cash) + '</td><td>' + fmt(d.dueBal) + '</td></tr>';
+      }).join('') + '</table></div><div class="pdf"><button class="btn sec" onclick="runPdf(this,\'daily\',{})">تصدير PDF</button><div id="pdfo"></div></div>';
+    $('#view').innerHTML = h;
+  }).catch(function (e) { toast(errMsg(e), 'err'); });
+}
+
+
+/* ---------- بحث اليومية: جدول بنفس أعمدة الملف مع صف الإجمالي ---------- */
+function vJSearch() {
+  var L = B.labels;
+  $('#view').innerHTML =
+    '<div class="card"><div class="grid"><div class="f wide"><label>كلمة في البيان</label><input id="jq" autocomplete="off" onkeydown="if(event.key===\'Enter\')doJSearch(0)"></div>' +
+    '<div class="f"><label>من تاريخ</label><input id="jf" type="date"></div><div class="f"><label>إلى تاريخ</label><input id="jt" type="date"></div>' +
+    '<div class="f"><label>النوع</label><select id="jy"><option>الكل</option><option>' + esc(L.inn) + '</option><option>' + esc(L.out) + '</option><option>' + esc(L.due) + '</option></select></div></div><br>' +
+    '<button class="btn" onclick="doJSearch(0)">بحث</button></div><div id="jres"></div>';
+  doJSearch(0);
+}
+function jParams() { return { q: $('#jq').value, from: $('#jf').value, to: $('#jt').value, type: $('#jy').value }; }
+function jStats(t, count) {
+  var L = B.labels;
+  return '<div class="stats"><div class="stat"><span>إجمالي ' + esc(L.inn) + '</span><b>' + fmt(t.inn) + '</b></div><div class="stat"><span>إجمالي ' + esc(L.out) + '</span><b>' + fmt(t.out) + '</b></div>' +
+    '<div class="stat hi"><span>صافي النقد</span><b>' + fmt(t.net) + '</b></div><div class="stat"><span>إجمالي ' + esc(L.due) + '</span><b>' + fmt(t.due) + '</b></div>' +
+    '<div class="stat"><span>عدد الحركات</span><b>' + count + '</b></div></div>';
+}
+function doJSearch(off) {
+  var L = B.labels, p = jParams(); p.off = off || 0; JOFF = p.off;
+  $('#jres').innerHTML = '<div class="muted">جارٍ البحث…</div>';
+  call('webSearchJournal', p).then(function (r) {
+    var t = r.totals, h = jStats(t, r.count);
+    regRows(r.rows);
+    if (!r.rows.length) { $('#jres').innerHTML = h + '<div class="muted">لا توجد نتائج</div>'; return; }
+    h += tbl(['التاريخ', 'البيان', L.due, L.out, L.inn, 'تعديل'], r.rows.map(function (x) {
+      return '<tr>' + td(esc(x.date)) + td(esc(x.st), 'l') + td(x.due ? fmt(x.due) : '') + td(x.out ? fmt(x.out) : '') + td(x.inn ? fmt(x.inn) : '') + editBtn(x) + '</tr>';
+    }), '<tr class="tot"><td colspan="2">الإجمالي (' + r.count + ' حركة)</td>' + td(fmt(t.due)) + td(fmt(t.out)) + td(fmt(t.inn)) + '<td></td></tr>');
+    h += pager(r, 'doJSearch') + pdfBox('jsearch', 'jParams()');
+    $('#jres').innerHTML = h;
+  }).catch(function (e) { $('#jres').innerHTML = ''; toast(errMsg(e), 'err'); });
+}
+
+/* ---------- سجل اليومية (كل الأعمدة مع الرصيد ورصيد الذمم ووقت الإدخال) ---------- */
+function vJLog() {
+  var L = B.labels;
+  $('#view').innerHTML =
+    '<div class="card"><div class="grid"><div class="f wide"><label>كلمة في البيان</label><input id="gq" autocomplete="off" onkeydown="if(event.key===\'Enter\')doJLog(0)"></div>' +
+    '<div class="f"><label>من تاريخ</label><input id="gf" type="date"></div><div class="f"><label>إلى تاريخ</label><input id="gt" type="date"></div>' +
+    '<div class="f"><label>النوع</label><select id="gy"><option>الكل</option><option>' + esc(L.inn) + '</option><option>' + esc(L.out) + '</option><option>' + esc(L.due) + '</option></select></div></div><br>' +
+    '<button class="btn" onclick="doJLog(0)">عرض</button></div><div id="gres"></div>';
+  doJLog(0);
+}
+function doJLog(off) {
+  var L = B.labels; JOFF = off || 0;
+  $('#gres').innerHTML = '<div class="muted">جارٍ التحميل…</div>';
+  call('webJLog', { q: $('#gq').value, from: $('#gf').value, to: $('#gt').value, type: $('#gy').value, off: off || 0 }).then(function (r) {
+    var t = r.totals, h = jStats(t, r.count);
+    regRows(r.rows);
+    if (!r.rows.length) { $('#gres').innerHTML = h + '<div class="muted">لا توجد حركات</div>'; return; }
+    h += tbl(['التاريخ', 'البيان', L.due, L.out, L.inn, 'الرصيد', 'رصيد ' + L.due, 'وقت الإدخال', 'تعديل'], r.rows.map(function (x) {
+      return '<tr>' + td(esc(x.date)) + td(esc(x.st), 'l') + td(x.due ? fmt(x.due) : '') + td(x.out ? fmt(x.out) : '') + td(x.inn ? fmt(x.inn) : '') + td(fmt(x.bal)) + td(fmt(x.dueBal)) + td(esc(x.time)) + editBtn(x) + '</tr>';
+    }), '<tr class="tot"><td colspan="2">الإجمالي (' + r.count + ' حركة)</td>' + td(fmt(t.due)) + td(fmt(t.out)) + td(fmt(t.inn)) + '<td colspan="4"></td></tr>');
+    $('#gres').innerHTML = h + pager(r, 'doJLog') + '<div class="note">عمودا الرصيد ورصيد الذمم تراكميان بترتيب الإدخال.</div>';
+  }).catch(function (e) { $('#gres').innerHTML = ''; toast(errMsg(e), 'err'); });
+}
+
+
+/* ======================= قسم قيود الموردين (ملف قيود الموردين) ======================= */
+var SUP = (function () {
+  var METHODS = ['نقدي كاش', 'شام كاش', 'دولار'];
+  var MAP = { sup: 'suppliers', sentry: 'entry', sstmt: 'statement', ssum: 'summary', slog: 'log', ssup: 'suppliers', saudit: 'audit' };
+  var D = { suppliers: [], entries: [], audit: [] }, loaded = false, loading = null;
+  var cur = null, pageEl = null, editEntry = null, editSup = null, stmtSup = '';
+  var pad = function (n) { return String(n).padStart(2, '0'); };
+  var today = function () { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+  var yearStart = function () { return new Date().getFullYear() + '-01-01'; };
+  var n = function (v) { var x = parseFloat(en(v).replace(/,/g, '')); return isFinite(x) ? x : 0; };
+  var rateNow = function (c) { var x = ((B.set && B.set.curs) || []).filter(function (z) { return z.code === c; })[0]; return x && x.rate > 0 ? x.rate : 0; };
+  var unitOf = function (s) { return s && s.acur ? ' ' + esc(s.acur) : ''; };
+  function acc(e, s) { if (!s || !s.acur) return { inc: n(e.inc), out: n(e.out) }; var r = e.rate || rateNow(s.acur) || 1; return { inc: n(e.inc) / r, out: n(e.out) / r }; }
+  function acctUI(d, s) {
+    var w = d.querySelector('#e-ratew'), lb = w && w.querySelector('span'), info = d.querySelector('#e-acc');
+    if (!w) return;
+    w._force = s && s.acur ? s.acur : '';
+    if (lb) lb.textContent = w._force ? 'سعر ' + w._force + ' اليوم' : 'سعر الصرف';
+    if (w._force && !d.querySelector('#e-rate').value) d.querySelector('#e-rate').value = rateNow(w._force) || '';
+    if (info) info.innerHTML = w._force ? 'حساب هذا المورد بالـ <b>' + esc(w._force) + '</b>: اكتب المبلغ بالعملة التي دفعت/استلمت بها، وأدخل سعر ' + esc(w._force) + ' اليوم ليُحوَّل الرصيد.' : '';
+    curShow(d.querySelector('#e-cur'), w);
+  }
+  var norm = function (s) { return String(s || '').trim().toLowerCase(); };
+  var cls = function (x) { return x < 0 ? 'neg' : 'pos'; };
+  var empty = function (t) { return '<div class="empty">' + t + '</div>'; };
+  var inRange = function (d, f, t) { return (!f || d >= f) && (!t || d <= t); };
+  var ok = function (t) { toast(t, 'ok'); }, bad = function (t) { toast(t, 'err'); };
+  function scall(fn) {
+    var a = [].slice.call(arguments, 1).map(function (x) { return x && typeof x === 'object' ? JSON.parse(JSON.stringify(x)) : x; });
+    return call.apply(null, [fn].concat(a));
+  }
+
+  /* ---- البيانات ---- */
+  function apply(d) {
+    D.suppliers = (d.suppliers || []).map(function (s) { return Object.assign({}, s, { id: s.name }); });
+    D.entries = d.entries || []; D.audit = d.audit || [];
+    loaded = true;
+    var h = document.getElementById('supHome'); if (h) h.textContent = homeStat();
+    if (pageEl && cur && MAP[CUR]) P[cur].fill(pageEl);
+  }
+  function ensure() {
+    if (loaded) return Promise.resolve();
+    if (!loading) loading = scall('webSupLoad').then(function (d) { loading = null; apply(d); }, function (e) { loading = null; throw e; });
+    return loading;
+  }
+  function reload(quiet) {
+    return scall('webSupLoad').then(function (d) { apply(d); if (!quiet) ok('تم تحديث البيانات'); }, function (e) { if (!quiet) bad(errMsg(e)); });
+  }
+  function put(kind, rec) {
+    return scall(kind === 'entries' ? 'webSupSaveEntry' : 'webSupSaveSupplier', rec).then(function (d) { apply(d); if (kind !== 'entries') reboot(); return true; }, function (e) { bad(errMsg(e)); return false; });
+  }
+  function del(kind, id) {
+    return scall(kind === 'entries' ? 'webSupDeleteEntry' : 'webSupDeleteSupplier', id).then(function (d) { apply(d); if (kind !== 'entries') reboot(); return true; }, function (e) { bad(errMsg(e)); return false; });
+  }
+
+  /* ---- حسابات ---- */
+  var supById = function (id) { return D.suppliers.find(function (s) { return s.id === id; }); };
+  var supName = function (id) { var s = supById(id); return s ? s.name : '(مورد محذوف)'; };
+  var byDate = function (a, b) { return (a.date || '').localeCompare(b.date || '') || (Number(String(a.id).split('|').pop()) - Number(String(b.id).split('|').pop())); };
+  function ledger(sid) {
+    var s = supById(sid), b = n(s && s.opening);
+    return D.entries.filter(function (e) { return e.sid === sid; }).sort(byDate).map(function (e) { var a = acc(e, s); b += a.inc - a.out; return Object.assign({}, e, { ai: a.inc, ao: a.out, bal: b }); });
+  }
+  function totals() {
+    var m = {}; D.suppliers.forEach(function (s) { m[s.id] = { inc: 0, out: 0, n: 0 }; });
+    D.entries.forEach(function (e) { var r = m[e.sid]; if (r) { var a = acc(e, supById(e.sid)); r.inc += a.inc; r.out += a.out; r.n++; } });
+    return m;
+  }
+  function balanceOf(sid) { var s = supById(sid); if (!s) return 0; var t = totals()[sid] || { inc: 0, out: 0 }; return n(s.opening) + t.inc - t.out; }
+  function baseOf(sid) { var s = supById(sid), b = balanceOf(sid); return s && s.acur ? b * (rateNow(s.acur) || 1) : b; }
+  function homeStat() {
+    if (!loaded) return 'جارٍ التحميل…';
+    var tb = D.suppliers.reduce(function (a, s) { return a + baseOf(s.id); }, 0);
+    return 'إجمالي الأرصدة: ' + fmt(tb) + ' · ' + D.suppliers.length + ' مورد';
+  }
+  var sortedSup = function () { return D.suppliers.slice().sort(function (a, b) { return a.name.localeCompare(b.name, 'ar'); }); };
+  function supOptions(v, all) {
+    return '<option value="">' + (all || 'اختر المورد…') + '</option>' + sortedSup().map(function (s) { return '<option value="' + esc(s.id) + '"' + (s.id === v ? ' selected' : '') + '>' + esc(s.name) + '</option>'; }).join('');
+  }
+  function methodOpts(v, all) {
+    var list = METHODS.concat(D.entries.map(function (e) { return e.method; }).filter(Boolean)).filter(function (x, i, a) { return a.indexOf(x) === i; });
+    return '<option value="">' + (all || 'بدون') + '</option>' + list.map(function (m) { return '<option' + (m === v ? ' selected' : '') + '>' + esc(m) + '</option>'; }).join('');
+  }
+  function actions(id) { var le = D.entries.find(function (z) { return z.id === id; }); if (le && le.link) return '<span class="badge">' + (le.link.indexOf('INV|') === 0 ? 'من فاتورة شراء' : 'من اليومية') + '</span>'; return '<button class="btn sec sm" data-act="editentry" data-id="' + esc(id) + '">تعديل</button> <button class="btn warn sm" data-act="delentry" data-id="' + esc(id) + '">حذف</button>'; }
+  function armDelete(btn, fn) {
+    if (btn.dataset.armed) { clearTimeout(+btn.dataset.armed); btn.classList.remove('arm'); btn.textContent = btn.dataset.txt; delete btn.dataset.armed; fn(); return; }
+    btn.dataset.txt = btn.textContent; btn.textContent = 'تأكيد الحذف؟'; btn.classList.add('arm');
+    btn.dataset.armed = setTimeout(function () { btn.classList.remove('arm'); btn.textContent = btn.dataset.txt; delete btn.dataset.armed; }, 3500);
+  }
+
+  /* ---- التصدير ---- */
+  var EXP = {};
+  function csvText(head, rows) { var q = function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }; return '﻿' + [head].concat(rows).map(function (r) { return r.map(q).join(','); }).join('\r\n'); }
+  function exportBar(id, pdf) {
+    return '<div class="row noprint" style="margin-top:12px">' + (pdf ? '<button class="btn sm" data-act="exp-pdf" data-id="' + id + '">PDF للمشاركة</button>' : '') +
+      '<button class="btn sec sm" data-act="exp-csv" data-id="' + id + '">حفظ CSV (Excel)</button><button class="btn sec sm" data-act="exp-print" data-id="' + id + '">طباعة</button>' +
+      '<button class="btn sec sm" data-act="exp-copy" data-id="' + id + '">نسخ الجدول</button></div><div id="pdf-' + id + '" class="noprint"></div>';
+  }
+  function doExport(kind, id, btn) {
+    var x = EXP[id]; if (!x) return;
+    if (kind === 'csv') {
+      try { var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csvText(x.head, x.rows)], { type: 'text/csv;charset=utf-8' })); a.download = x.name + '.csv'; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000); ok('تم تجهيز الملف'); }
+      catch (e) { bad('تعذر حفظ الملف. استخدم زر النسخ.'); }
+      return;
+    }
+    if (kind === 'print') { window.print(); return; }
+    if (kind === 'pdf') {
+      var box = document.getElementById('pdf-' + id); busy(btn, true); box.innerHTML = '<div class="note"><span class="spin"></span>جارٍ إنشاء ملف PDF…</div>';
+      scall('webSupPdf', x.pdf).then(function (r) { busy(btn, false); box.innerHTML = '<a class="lnk" href="' + esc(r.url) + '" target="_blank" rel="noopener">فتح كشف الحساب PDF ومشاركته ←</a>'; },
+        function (e) { busy(btn, false); box.innerHTML = ''; bad(errMsg(e)); });
+      return;
+    }
+    var txt = [x.head].concat(x.rows).map(function (r) { return r.join('\t'); }).join('\n');
+    (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function () { ok('تم نسخ الجدول'); }, function () { bad('تعذر النسخ تلقائيًا'); });
+  }
+
+  /* ================= الصفحات ================= */
+  var P = {};
+  var IN = 'inputmode="decimal" autocomplete="off"';
+
+  /* ---- إدخال قيد ---- */
+  P.entry = {
+    html: function () {
+      return '<h1 id="e-title">إدخال قيد</h1><p class="sub">اختر المورد وأدخل البيانات ثم احفظ. القيد يُرحَّل تلقائيًا لصفحة المورد والسجل.</p>' +
+        '<div class="card"><div class="grid">' +
+        '<label class="f"><span>اسم المورد</span><select id="e-sup"></select></label>' +
+        '<div class="f wide note" id="e-acc" style="margin:0"></div>' +
+        '<label class="f"><span>التاريخ</span><input id="e-date" type="date"></label>' +
+        '<label class="f wide"><span>البيان</span><input id="e-desc" list="dl-desc" autocomplete="off"></label>' +
+        '<label class="f"><span>الوارد (مقبوضات)</span><input id="e-inc" ' + IN + '></label>' +
+        '<label class="f"><span>الصادر (مدفوعات)</span><input id="e-out" ' + IN + '></label>' +
+        '<label class="f"><span>طريقة الدفع</span><select id="e-method"></select></label>' +
+        '<label class="f"><span>العملة</span><select id="e-cur"></select></label><label class="f" id="e-ratew"><span>سعر الصرف</span><input id="e-rate" ' + IN + '></label>' +
+        '<div class="f"><span>الرصيد الحالي</span><div id="e-bal" class="big">—</div></div></div>' +
+        '<div id="e-err"></div>' +
+        '<div class="row" style="margin-top:14px"><button class="btn grn" data-act="saveentry" id="e-save">حفظ وترحيل القيد</button><button class="btn sec" data-act="cancelentry" id="e-cancel" hidden>إلغاء التعديل</button></div><div id="e-dls"></div></div>' +
+        '<div class="card"><h2>آخر 10 قيود للمورد المختار</h2><div id="e-last"></div></div>';
+    },
+    init: function (d) {
+      d.querySelector('#e-date').value = today(); d._load = editEntry;
+      d.addEventListener('change', function (e) { if (e.target.id === 'e-sup') P.entry.fill(d); });
+      d.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-act]'); if (!b) return; var a = b.dataset.act;
+        if (a === 'saveentry') saveEntry(d, b);
+        if (a === 'cancelentry') { editEntry = null; d._load = null; clearEntry(d); }
+        if (a === 'editentry') { editEntry = b.dataset.id; d._load = editEntry; P.entry.fill(d); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+        if (a === 'delentry') armDelete(b, function () { delEntry(b.dataset.id); });
+      });
+    },
+    fill: function (d) {
+      var sel = d.querySelector('#e-sup'), cv = sel.value; sel.innerHTML = supOptions(cv); sel.value = cv;
+      var ms = d.querySelector('#e-method'), mv = ms.value; ms.innerHTML = methodOpts(mv); ms.value = mv; curFill(d.querySelector('#e-cur'), d.querySelector('#e-rate'), d.querySelector('#e-ratew'));
+      if (d._load) {
+        var x = D.entries.find(function (y) { return y.id === d._load; });
+        if (x && supById(x.sid)) {
+          sel.value = x.sid; d.querySelector('#e-date').value = x.date; d.querySelector('#e-desc').value = x.desc || '';
+          var rr = x.cur ? (x.rate || 1) : 1; d.querySelector('#e-inc').value = x.inc ? +(x.inc / rr).toFixed(6) : ''; d.querySelector('#e-out').value = x.out ? +(x.out / rr).toFixed(6) : ''; curSet(d.querySelector('#e-cur'), d.querySelector('#e-rate'), d.querySelector('#e-ratew'), x.cur, x.rate); ms.innerHTML = methodOpts(x.method); ms.value = x.method || '';
+          d.querySelector('#e-title').textContent = 'تعديل قيد'; d.querySelector('#e-save').textContent = 'حفظ التعديل'; d.querySelector('#e-cancel').hidden = false;
+        }
+        d._load = null;
+      }
+      d.querySelector('#e-dls').innerHTML = '<datalist id="dl-desc">' + D.entries.map(function (x) { return x.desc; }).filter(function (v, i, a) { return v && a.indexOf(v) === i; }).slice(0, 200).map(function (v) { return '<option value="' + esc(v) + '"></option>'; }).join('') + '</datalist>';
+      var sid = sel.value, bal = d.querySelector('#e-bal');
+      if (!sid) { acctUI(d, null); bal.textContent = '—'; bal.className = 'big'; d.querySelector('#e-last').innerHTML = empty('اختر مورداً لعرض آخر قيوده ورصيده.'); return; }
+      var sp = supById(sid), b = balanceOf(sid); acctUI(d, sp);
+      bal.innerHTML = fmt(b) + unitOf(sp) + (sp && sp.acur ? '<small style="display:block;font-size:13px;color:var(--mut);font-weight:600">≈ ' + fmt(baseOf(sid)) + ' ' + esc(B.set.base) + ' بسعر اليوم</small>' : ''); bal.className = 'big ' + cls(b);
+      var last = ledger(sid).reverse().slice(0, 10);
+      d.querySelector('#e-last').innerHTML = last.length ? '<div class="tw"><table><thead><tr><th>التاريخ</th><th>البيان</th><th class="num">الوارد</th><th class="num">الصادر</th><th class="num">الرصيد</th><th>طريقة الدفع</th><th></th></tr></thead><tbody>' +
+        last.map(function (x) { return '<tr><td>' + esc(x.date) + '</td><td class="wrapc">' + esc(x.desc) + curNote(x) + '</td><td class="num">' + (x.ai ? fmt(x.ai) : '') + '</td><td class="num">' + (x.ao ? fmt(x.ao) : '') + '</td><td class="num ' + cls(x.bal) + '"><b>' + fmt(x.bal) + '</b></td><td>' + esc(x.method || '') + '</td><td>' + actions(x.id) + '</td></tr>'; }).join('') +
+        '</tbody></table></div>' : empty('لا توجد قيود لهذا المورد بعد.');
+    }
+  };
+  function resetEntry(d) {
+    ['#e-desc', '#e-inc', '#e-out'].forEach(function (s) { d.querySelector(s).value = ''; }); d.querySelector('#e-method').value = ''; d.querySelector('#e-date').value = today();
+    d.querySelector('#e-title').textContent = 'إدخال قيد'; d.querySelector('#e-save').textContent = 'حفظ وترحيل القيد'; d.querySelector('#e-cancel').hidden = true; d.querySelector('#e-err').innerHTML = ''; curSet(d.querySelector('#e-cur'), d.querySelector('#e-rate'), d.querySelector('#e-ratew'), '', '');
+  }
+  function clearEntry(d) { resetEntry(d); P.entry.fill(d); }
+  function saveEntry(d, btn) {
+    var err = d.querySelector('#e-err'), show = function (t) { err.innerHTML = '<div class="msg">' + esc(t) + '</div>'; };
+    var sid = d.querySelector('#e-sup').value, date = d.querySelector('#e-date').value, desc = d.querySelector('#e-desc').value.trim();
+    var inc = n(d.querySelector('#e-inc').value), out = n(d.querySelector('#e-out').value), method = d.querySelector('#e-method').value;
+    if (!sid) return show('اختر اسم المورد.');
+    if (!date) return show('أدخل التاريخ.');
+    if (!inc && !out) return show('أدخل مبلغاً في الوارد أو الصادر.');
+    if (inc < 0 || out < 0) return show('المبالغ يجب أن تكون موجبة.');
+    var ss0 = supById(sid); if (ss0 && ss0.acur && !(n(d.querySelector('#e-rate').value) > 0)) return show('أدخل سعر ' + ss0.acur + ' اليوم.');
+    err.innerHTML = '';
+    var old = editEntry ? D.entries.find(function (x) { return x.id === editEntry; }) : null;
+    var rec = Object.assign({}, old || {}, { sid: sid, date: date, desc: desc, inc: inc, out: out, method: method, cur: d.querySelector('#e-cur').value, rate: d.querySelector('#e-rate').value });
+    busy(btn, true);
+    put('entries', rec).then(function (r) {
+      busy(btn, false); if (!r) return;
+      ok(old ? 'تم حفظ التعديل' : 'تم ترحيل القيد إلى ' + supName(sid)); rememberRate(rec.cur || (ss0 && ss0.acur), rec.rate);
+      editEntry = null; d._load = null; resetEntry(d); P.entry.fill(d);
+    });
+  }
+  function delEntry(id) { del('entries', id).then(function (r) { if (r) ok('تم حذف القيد'); }); }
+
+  /* ---- كشف مورد ---- */
+  P.statement = {
+    html: function () {
+      return '<h1>كشف حساب مورد</h1><p class="sub">اختر المورد والفترة: يظهر الرصيد المرحّل قبل الفترة ثم الحركات برصيد تراكمي.</p>' +
+        '<div class="card"><div class="grid"><label class="f"><span>اسم المورد</span><select id="k-sup"></select></label>' +
+        '<label class="f"><span>من تاريخ</span><input id="k-from" type="date"></label><label class="f"><span>إلى تاريخ</span><input id="k-to" type="date"></label></div></div>' +
+        '<div id="k-stats" class="stats"></div><div id="k-tbl"></div>';
+    },
+    init: function (d) {
+      d.querySelector('#k-from').value = yearStart(); d.querySelector('#k-to').value = today();
+      d.addEventListener('change', function (e) { if (e.target.id === 'k-sup') stmtSup = e.target.value; P.statement.fill(d); });
+    },
+    fill: function (d) {
+      var sel = d.querySelector('#k-sup'), cv = sel.value || stmtSup; sel.innerHTML = supOptions(cv); sel.value = cv;
+      var sid = sel.value, from = d.querySelector('#k-from').value, to = d.querySelector('#k-to').value;
+      if (!sid) { d.querySelector('#k-stats').innerHTML = ''; d.querySelector('#k-tbl').innerHTML = empty('اختر المورد لعرض الكشف.'); return; }
+      var all = ledger(sid), s = supById(sid);
+      var before = all.filter(function (x) { return from && x.date < from; }), carried = before.length ? before[before.length - 1].bal : n(s.opening);
+      var rows = all.filter(function (x) { return inRange(x.date, from, to); });
+      var si = rows.reduce(function (a, x) { return a + x.ai; }, 0), so = rows.reduce(function (a, x) { return a + x.ao; }, 0), close = carried + si - so;
+      d.querySelector('#k-stats').innerHTML = (s.acur ? '<div class="st"><small>عملة الحساب</small><b>' + esc(s.acur) + '</b></div>' : '') + '<div class="st"><small>الرصيد المرحّل</small><b class="' + cls(carried) + '">' + fmt(carried) + '</b></div><div class="st"><small>إجمالي الوارد</small><b>' + fmt(si) + '</b></div><div class="st"><small>إجمالي الصادر</small><b>' + fmt(so) + '</b></div><div class="stat hi"><span>الرصيد الختامي</span><b>' + fmt(close) + '</b></div>';
+      EXP.statement = { name: 'كشف-' + s.name, head: ['التاريخ', 'البيان', 'طريقة الدفع', 'الوارد', 'الصادر', 'الرصيد'],
+        rows: [[from || '', 'رصيد مرحّل', '', '', '', fmt(carried)]].concat(rows.map(function (x) { return [x.date, x.desc || '', x.method || '', fmt(x.ai), fmt(x.ao), fmt(x.bal)]; })),
+        pdf: { name: s.name, from: from, to: to } };
+      d.querySelector('#k-tbl').innerHTML = '<div class="tw"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>طريقة الدفع</th><th class="num">الوارد</th><th class="num">الصادر</th><th class="num">الرصيد</th><th class="noprint"></th></tr></thead><tbody><tr class="detail"><td></td><td class="wrapc"><b>رصيد مرحّل</b></td><td></td><td></td><td></td><td class="num ' + cls(carried) + '"><b>' + fmt(carried) + '</b></td><td></td></tr>' +
+        rows.map(function (x) { return '<tr><td>' + esc(x.date) + '</td><td class="wrapc">' + esc(x.desc) + curNote(x) + '</td><td>' + esc(x.method || '') + '</td><td class="num">' + (x.ai ? fmt(x.ai) : '') + '</td><td class="num">' + (x.ao ? fmt(x.ao) : '') + '</td><td class="num ' + cls(x.bal) + '"><b>' + fmt(x.bal) + '</b></td><td class="noprint">' + actions(x.id) + '</td></tr>'; }).join('') +
+        '</tbody><tfoot><tr><td colspan="3">مجموع الفترة</td><td class="num">' + fmt(si) + '</td><td class="num">' + fmt(so) + '</td><td class="num">' + fmt(close) + '</td><td></td></tr></tfoot></table></div>' +
+        (rows.length ? '' : empty('لا توجد حركات في هذه الفترة.')) + (s.acur ? '<div class="note">المبالغ بالـ ' + esc(s.acur) + ' (عملة حساب المورد)، وكل قيد محوَّل بسعر يومه. الرصيد بالعملة الأساسية بسعر اليوم: ' + fmt(close * (rateNow(s.acur) || 1)) + ' ' + esc(B.set.base) + '.</div>' : '') + exportBar('statement', !s.acur);
+    }
+  };
+
+  /* ---- ملخص الأرصدة ---- */
+  P.summary = {
+    html: function () {
+      return '<h1>ملخص الأرصدة</h1><p class="sub">وضع جميع الموردين في نظرة واحدة. اضغط على اسم المورد لفتح كشفه.</p>' +
+        '<div id="m-stats" class="stats"></div><div class="card"><h2>أعلى 10 موردين رصيداً</h2><div id="m-chart"></div></div><div id="m-tbl"></div>';
+    },
+    init: function (d) { d.addEventListener('click', function (e) { var l = e.target.closest('[data-sup]'); if (l) { stmtSup = l.dataset.sup; go('sstmt'); } }); },
+    fill: function (d) {
+      var t = totals();
+      var list = D.suppliers.map(function (s) {
+        var r = t[s.id], k = s.acur ? (rateNow(s.acur) || 1) : 1, bal = n(s.opening) + r.inc - r.out;
+        return { id: s.id, name: s.name, acur: s.acur, open: n(s.opening), inc: r.inc, out: r.out, bal: bal, k: k, base: bal * k };
+      }).sort(function (a, b) { return b.base - a.base; });
+      var ti = 0, tout = 0, tb = 0, top2 = 0; list.forEach(function (r) { ti += r.inc * r.k; tout += r.out * r.k; tb += r.base; top2 += r.open * r.k; });
+      var U = function (r) { return r.acur ? ' <span class="badge">' + esc(r.acur) + '</span>' : ''; };
+      d.querySelector('#m-stats').innerHTML = list.length ? '<div class="st"><small>عدد الموردين</small><b>' + list.length + '</b></div><div class="st"><small>إجمالي الوارد</small><b>' + fmt(ti) + '</b></div><div class="st"><small>إجمالي الصادر</small><b>' + fmt(tout) + '</b></div><div class="stat hi"><span>إجمالي الأرصدة (' + esc(B.set.base) + ')</span><b>' + fmt(tb) + '</b></div>' : '';
+      var top = list.slice(0, 10), mx = Math.max.apply(null, [1].concat(top.map(function (r) { return Math.abs(r.base); })));
+      d.querySelector('#m-chart').innerHTML = top.length ? '<div class="bars">' + top.map(function (r) { return '<div class="bl">' + esc(r.name) + '</div><div class="bt"><div class="bb' + (r.base < 0 ? ' n' : '') + '" style="width:' + Math.max(1, Math.abs(r.base) / mx * 100) + '%"></div></div><div class="bv ' + cls(r.base) + '">' + fmt(r.base) + '</div>'; }).join('') + '</div>' : empty('أضف موردين وقيوداً ليظهر الرسم.');
+      EXP.summary = { name: 'ملخص-الأرصدة', head: ['المورد', 'عملة الحساب', 'رصيد افتتاحي', 'إجمالي الوارد', 'إجمالي الصادر', 'الرصيد الحالي', 'بالعملة الأساسية'], rows: list.map(function (r) { return [r.name, r.acur || B.set.base, fmt(r.open), fmt(r.inc), fmt(r.out), fmt(r.bal), fmt(r.base)]; }) };
+      d.querySelector('#m-tbl').innerHTML = list.length ? '<div class="tw"><table><thead><tr><th class="l">المورد</th><th class="num">رصيد افتتاحي</th><th class="num">إجمالي الوارد</th><th class="num">إجمالي الصادر</th><th class="num">الرصيد الحالي</th><th class="num">بالعملة الأساسية</th></tr></thead><tbody>' +
+        list.map(function (r) { return '<tr><td class="l"><a role="button" tabindex="0" data-sup="' + esc(r.id) + '" style="color:var(--c);font-weight:800;cursor:pointer">' + esc(r.name) + '</a>' + U(r) + '</td><td class="num">' + fmt(r.open) + '</td><td class="num">' + fmt(r.inc) + '</td><td class="num">' + fmt(r.out) + '</td><td class="num ' + cls(r.bal) + '"><b>' + fmt(r.bal) + '</b></td><td class="num ' + cls(r.base) + '">' + fmt(r.base) + '</td></tr>'; }).join('') +
+        '</tbody><tfoot><tr><td class="l">الإجمالي (' + esc(B.set.base) + ')</td><td class="num">' + fmt(top2) + '</td><td class="num">' + fmt(ti) + '</td><td class="num">' + fmt(tout) + '</td><td></td><td class="num">' + fmt(tb) + '</td></tr></tfoot></table></div>' +
+        (list.some(function (r) { return r.acur; }) ? '<div class="note">أرصدة الموردين ذوي الحساب بعملة أجنبية تظهر بعملتهم، وتُحوَّل للعملة الأساسية بسعر اليوم.</div>' : '') + exportBar('summary') : '';
+    }
+  };
+
+  /* ---- السجل العام ---- */
+  P.log = {
+    html: function () {
+      return '<h1>السجل العام</h1><p class="sub">كل القيود لكل الموردين، مع الفلترة والبحث.</p>' +
+        '<div class="card"><div class="grid"><label class="f"><span>المورد</span><select id="l-sup"></select></label><label class="f"><span>طريقة الدفع</span><select id="l-method"></select></label>' +
+        '<label class="f"><span>من تاريخ</span><input id="l-from" type="date"></label><label class="f"><span>إلى تاريخ</span><input id="l-to" type="date"></label>' +
+        '<label class="f"><span>بحث في البيان</span><input id="l-q" autocomplete="off"></label></div></div><div id="l-stats" class="stats"></div><div id="l-tbl"></div>';
+    },
+    init: function (d) { var t; d.addEventListener('input', function () { clearTimeout(t); t = setTimeout(function () { P.log.fill(d); }, 200); }); d.addEventListener('change', function () { P.log.fill(d); }); },
+    fill: function (d) {
+      var ss = d.querySelector('#l-sup'), sv = ss.value; ss.innerHTML = supOptions(sv, 'كل الموردين'); ss.value = sv;
+      var ms = d.querySelector('#l-method'), mv = ms.value; ms.innerHTML = methodOpts(mv, 'كل الطرق'); ms.value = mv;
+      var from = d.querySelector('#l-from').value, to = d.querySelector('#l-to').value, q = norm(d.querySelector('#l-q').value);
+      var list = D.entries.filter(function (x) { return (!ss.value || x.sid === ss.value) && (!ms.value || x.method === ms.value) && inRange(x.date, from, to) && (!q || norm(x.desc).indexOf(q) > -1); }).sort(function (a, b) { return byDate(b, a); });
+      var si = 0, so = 0; list.forEach(function (x) { si += n(x.inc); so += n(x.out); });
+      d.querySelector('#l-stats').innerHTML = list.length ? '<div class="st"><small>عدد القيود</small><b>' + list.length + '</b></div><div class="st"><small>إجمالي الوارد</small><b>' + fmt(si) + '</b></div><div class="st"><small>إجمالي الصادر</small><b>' + fmt(so) + '</b></div><div class="stat hi"><span>الصافي</span><b>' + fmt(si - so) + '</b></div>' : '';
+      EXP.log = { name: 'السجل', head: ['المورد', 'التاريخ', 'البيان', 'الوارد', 'الصادر', 'طريقة الدفع'], rows: list.map(function (x) { return [supName(x.sid), x.date, x.desc || '', fmt(x.inc), fmt(x.out), x.method || '']; }) };
+      var shown = list.slice(0, 300);
+      d.querySelector('#l-tbl').innerHTML = list.length ? '<div class="tw"><table><thead><tr><th class="l">المورد</th><th>التاريخ</th><th>البيان</th><th class="num">الوارد</th><th class="num">الصادر</th><th>طريقة الدفع</th><th class="noprint"></th></tr></thead><tbody>' +
+        shown.map(function (x) { return '<tr><td class="l">' + esc(supName(x.sid)) + '</td><td>' + esc(x.date) + '</td><td class="wrapc">' + esc(x.desc) + curNote(x) + '</td><td class="num">' + (x.inc ? fmt(x.inc) : '') + '</td><td class="num">' + (x.out ? fmt(x.out) : '') + '</td><td>' + esc(x.method || '') + '</td><td class="noprint">' + actions(x.id) + '</td></tr>'; }).join('') +
+        '</tbody><tfoot><tr><td colspan="3">المجموع (' + list.length + ' قيد)</td><td class="num">' + fmt(si) + '</td><td class="num">' + fmt(so) + '</td><td></td><td></td></tr></tfoot></table></div>' +
+        (list.length > shown.length ? '<div class="note">يُعرض أحدث 300 قيد، والمجاميع والتصدير تشمل كل النتائج. ضيّق البحث لرؤية الباقي.</div>' : '') + exportBar('log')
+        : empty(D.entries.length ? 'لا توجد قيود مطابقة.' : 'لا توجد قيود بعد.');
+    }
+  };
+
+  /* ---- الموردون ---- */
+  P.suppliers = {
+    html: function () {
+      return '<h1>الموردون</h1><p class="sub">الرصيد الافتتاحي الموجب يُعامل كوارد، والسالب كصادر.</p>' +
+        '<div class="card"><h2 id="s-h">إضافة مورد</h2><div class="grid">' +
+        '<label class="f"><span>اسم المورد</span><input id="s-name" autocomplete="off"></label><label class="f"><span>رصيد افتتاحي</span><input id="s-open" ' + IN + '></label>' +
+        '<label class="f"><span>رقم الجوال</span><input id="s-phone" inputmode="tel"></label><label class="f"><span>الرقم الضريبي</span><input id="s-tax" inputmode="numeric"></label>' +
+        '<label class="f"><span>عملة الحساب</span><select id="s-acur"></select></label>' +
+        '<label class="f wide"><span>ملاحظات</span><input id="s-note"></label></div><div class="note">اختر الدولار لمورد تتعامل معه بالدولار: رصيده يُحسب بالدولار وكل قيد يُحوَّل بسعر يومه.</div><div id="s-err"></div>' +
+        '<div class="row" style="margin-top:12px"><button class="btn grn" data-act="savesup" id="s-save">إضافة المورد</button><button class="btn sec" data-act="cancelsup" id="s-cancel" hidden>إلغاء التعديل</button></div></div>' +
+        '<div id="s-tbl"></div>';
+    },
+    init: function (d) {
+      d.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-act]'); if (!b) return; var a = b.dataset.act;
+        if (a === 'savesup') {
+          var name = d.querySelector('#s-name').value.trim(), err = d.querySelector('#s-err'), show = function (t) { err.innerHTML = '<div class="msg">' + esc(t) + '</div>'; };
+          if (!name) return show('اكتب اسم المورد.');
+          if (D.suppliers.some(function (s) { return s.id !== editSup && norm(s.name) === norm(name); })) return show('المورد موجود مسبقاً.');
+          var old = editSup ? D.suppliers.find(function (s) { return s.id === editSup; }) : null;
+          var rec = Object.assign({}, old || {}, { name: name, opening: n(d.querySelector('#s-open').value), phone: d.querySelector('#s-phone').value.trim(), tax: d.querySelector('#s-tax').value.trim(), note: d.querySelector('#s-note').value.trim(), acur: d.querySelector('#s-acur').value });
+          busy(b, true);
+          put('suppliers', rec).then(function (r) { busy(b, false); if (r) { ok(old ? 'تم حفظ التعديل' : 'تمت إضافة المورد'); editSup = null; clearSup(d); } });
+        }
+        if (a === 'cancelsup') { editSup = null; clearSup(d); }
+        if (a === 'editsup') {
+          var s = supById(b.dataset.id); if (!s) return; editSup = s.id;
+          d.querySelector('#s-name').value = s.name; d.querySelector('#s-open').value = s.opening || ''; d.querySelector('#s-phone').value = s.phone || ''; d.querySelector('#s-tax').value = s.tax || ''; d.querySelector('#s-note').value = s.note || ''; d.querySelector('#s-acur').value = s.acur || '';
+          d.querySelector('#s-h').textContent = 'تعديل مورد'; d.querySelector('#s-save').textContent = 'حفظ التعديل'; d.querySelector('#s-cancel').hidden = false; window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        if (a === 'delsup') armDelete(b, function () {
+          var s = supById(b.dataset.id); if (!s) return;
+          if (D.entries.some(function (x) { return x.sid === s.id; })) { bad('لا يمكن حذف مورد له قيود مسجلة.'); return; }
+          del('suppliers', s.id).then(function (r) { if (r) ok('تم حذف المورد'); });
+        });
+      });
+    },
+    fill: function (d) {
+      var ac = d.querySelector('#s-acur'), av = ac.value; ac.innerHTML = '<option value="">' + esc(B.set.base) + ' (الأساسية)</option>' + ((B.set && B.set.curs) || []).map(function (c) { return '<option>' + esc(c.code) + '</option>'; }).join(''); ac.value = av;
+      var t = totals(), list = sortedSup();
+      EXP.suppliers = { name: 'الموردون', head: ['المورد', 'عملة الحساب', 'رصيد افتتاحي', 'الجوال', 'الرقم الضريبي', 'عدد القيود', 'الرصيد الحالي', 'ملاحظات'], rows: list.map(function (s) { return [s.name, s.acur || B.set.base, fmt(s.opening), s.phone || '', s.tax || '', t[s.id].n, fmt(balanceOf(s.id)), s.note || '']; }) };
+      d.querySelector('#s-tbl').innerHTML = list.length ? '<div class="tw"><table><thead><tr><th class="l">المورد</th><th class="num">رصيد افتتاحي</th><th>الجوال</th><th>الرقم الضريبي</th><th>القيود</th><th class="num">الرصيد الحالي</th><th>ملاحظات</th><th class="noprint"></th></tr></thead><tbody>' +
+        list.map(function (s) { var b = balanceOf(s.id); return '<tr><td class="l"><b>' + esc(s.name) + '</b>' + (s.acur ? ' <span class="badge">' + esc(s.acur) + '</span>' : '') + '</td><td class="num">' + fmt(s.opening) + '</td><td>' + esc(s.phone || '') + '</td><td>' + esc(s.tax || '') + '</td><td>' + t[s.id].n + '</td><td class="num ' + cls(b) + '"><b>' + fmt(b) + unitOf(s) + '</b></td><td class="wrapc">' + esc(s.note || '') + '</td><td class="noprint"><button class="btn sec sm" data-act="editsup" data-id="' + esc(s.id) + '">تعديل</button> <button class="btn warn sm" data-act="delsup" data-id="' + esc(s.id) + '">حذف</button></td></tr>'; }).join('') +
+        '</tbody></table></div>' + exportBar('suppliers') : empty('لا يوجد موردون بعد. أضف أول مورد من النموذج أعلاه.');
+    }
+  };
+  function clearSup(d) {
+    ['#s-name', '#s-open', '#s-phone', '#s-tax', '#s-note', '#s-acur'].forEach(function (s) { d.querySelector(s).value = ''; });
+    d.querySelector('#s-h').textContent = 'إضافة مورد'; d.querySelector('#s-save').textContent = 'إضافة المورد'; d.querySelector('#s-cancel').hidden = true; d.querySelector('#s-err').innerHTML = '';
+  }
+
+  /* ---- سجل التعديلات ---- */
+  P.audit = {
+    html: function () {
+      return '<h1>سجل التعديلات</h1><p class="sub">من أضاف أو عدّل أو حذف، وماذا ومتى. آخر 300 عملية.</p>' +
+        '<div class="card"><div class="grid"><label class="f"><span>بحث</span><input id="a-q" autocomplete="off" placeholder="مورد، مستخدم، عملية…"></label></div></div><div id="a-tbl"></div>';
+    },
+    init: function (d) { d.addEventListener('input', function () { P.audit.fill(d); }); },
+    fill: function (d) {
+      var q = norm(d.querySelector('#a-q').value);
+      var list = D.audit.slice().sort(function (a, b) { return (b.at || 0) - (a.at || 0); }).filter(function (x) { return !q || [x.user, x.action, x.target, x.detail].some(function (v) { return norm(v).indexOf(q) > -1; }); }).slice(0, 300);
+      var dt = function (ms) { var o = new Date(ms); return o.getFullYear() + '-' + pad(o.getMonth() + 1) + '-' + pad(o.getDate()) + ' ' + pad(o.getHours()) + ':' + pad(o.getMinutes()); };
+      EXP.audit = { name: 'سجل-التعديلات', head: ['التاريخ والوقت', 'المستخدم', 'العملية', 'المورد', 'التفاصيل'], rows: list.map(function (x) { return [dt(x.at), x.user, x.action, x.target, x.detail || '']; }) };
+      d.querySelector('#a-tbl').innerHTML = list.length ? '<div class="tw"><table><thead><tr><th>التاريخ والوقت</th><th>المستخدم</th><th>العملية</th><th>المورد</th><th>التفاصيل</th></tr></thead><tbody>' +
+        list.map(function (x) { return '<tr><td>' + dt(x.at) + '</td><td>' + esc(x.user) + '</td><td>' + esc(x.action) + '</td><td>' + esc(x.target) + '</td><td class="wrapc">' + esc(x.detail || '') + '</td></tr>'; }).join('') + '</tbody></table></div>' + exportBar('audit')
+        : empty('لا توجد عمليات مسجلة بعد.');
+    }
+  };
+
+  /* ---- العرض ---- */
+  function show(v) {
+    var view = document.getElementById('view');
+    cur = MAP[v] || 'entry'; pageEl = null;
+    if (!loaded) {
+      view.innerHTML = '<div class="muted"><span class="spin"></span>جارٍ تحميل قيود الموردين…</div>';
+      ensure().then(function () { if (CUR === v) show(v); }, function (e) {
+        if (CUR === v) view.innerHTML = '<div class="muted">تعذّر تحميل قيود الموردين: ' + esc(errMsg(e)) + '<br><br><button class="btn sec" onclick="go(CUR)">إعادة المحاولة</button></div>';
+      });
+      return;
+    }
+    var d = document.createElement('div'); d.innerHTML = P[cur].html(); view.replaceChildren(d); pageEl = d;
+    if (P[cur].init) P[cur].init(d);
+    P[cur].fill(d);
+  }
+  document.addEventListener('click', function (e) {
+    if (!MAP[CUR]) return;
+    var b = e.target.closest('[data-act="editentry"]');
+    if (b && cur !== 'entry') { editEntry = b.dataset.id; go('sentry'); return; }
+    var g = e.target.closest('[data-act="delentry"]');
+    if (g && cur !== 'entry') { armDelete(g, function () { delEntry(g.dataset.id); }); return; }
+    var x = e.target.closest('[data-act^="exp-"]');
+    if (x) doExport(x.dataset.act.slice(4), x.dataset.id, x);
+  });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && loaded && MAP[CUR]) reload(true); });
+
+  return { openStmt: function (name) { stmtSup = name; go('sstmt'); }, show: show, quiet: function () { if (loaded) reload(true); }, reload: function () { return reload(false); }, prefetch: function () { ensure().catch(function () {}); }, homeStat: homeStat };
+})();
+
+
+/* ======================= فواتير الشراء: الفاتورة الكاملة، الدفع، العملات، الصور، تنبيه الأسعار ======================= */
+var PMETHODS = ['نقدي كاش', 'شام كاش', 'دولار'];
+var INVEDIT = null, PENDINV = null, INVCUR = null, PQ = '', INVROWS = [];
+var SPIN = '<div class="muted"><span class="spin"></span>جارٍ التحميل…</div>';
+
+function vInv() {
+  var E = INVEDIT && INVEDIT.data;
+  $('#view').innerHTML =
+    (E ? '<div class="card" style="border:2px solid var(--org)"><div class="row" style="justify-content:space-between"><b>تعديل الفاتورة رقم ' + esc(E.inv) + ' — ' + esc(E.sup) + '</b><button class="btn sec sm" onclick="cancelInvEdit()">إلغاء التعديل</button></div></div>' : '') +
+    '<div class="card"><h2>بيانات الفاتورة</h2><div class="grid">' +
+    '<div class="f wide"><label>اسم المورد</label><select id="isup">' + supOpts(E ? E.sup : '') + '</select></div>' +
+    '<div class="f"><label>رقم الفاتورة</label><input id="iinv" autocomplete="off"></div>' +
+    '<div class="f"><label>التاريخ</label><input id="idate" type="date"></div>' +
+    '<div class="f"><label>الدفع</label><select id="ipay"><option>آجل</option><option>نقدي</option></select></div>' +
+    '<div class="f" id="imw"><label>طريقة الدفع</label><select id="imethod">' + PMETHODS.map(function (m) { return '<option>' + esc(m) + '</option>'; }).join('') + '</select></div>' +
+    '<div class="f"><label>العملة</label><select id="icur"></select></div>' +
+    '<div class="f" id="iratew"><label>سعر الصرف</label><input id="irate" inputmode="decimal" autocomplete="off"></div></div>' +
+    '<div class="note" id="ipaynote"></div></div>' +
+    '<div id="ilines"></div>' +
+    '<button class="btn sec" style="width:100%" onclick="addInvLine()">+ إضافة صنف</button>' +
+    '<div class="card" style="margin-top:14px"><h2>صورة الفاتورة <small style="font-weight:400;color:var(--mut)">(اختياري)</small></h2><input type="file" id="iphoto" accept="image/*"><div class="note">تُرفع الصورة تلقائيًا بعد حفظ الفاتورة.</div></div>' +
+    (B.formUrl && !E ? '<div class="note" style="text-align:center"><a href="' + esc(B.formUrl) + '" target="_blank" rel="noopener">فتح نموذج Google Form لإدخال الأصناف</a></div>' : '') +
+    '<div class="bar"><div class="tot">إجمالي الفاتورة<b id="itot">0.00</b><span id="ibase" style="font-size:12px"></span></div><button class="btn grn" id="isave" onclick="saveInv()">' + (E ? 'حفظ التعديل' : 'حفظ الفاتورة') + '</button></div>';
+  $('#isup').value = E ? E.sup : '';
+  $('#iinv').value = E ? E.inv : '';
+  $('#idate').value = E ? E.date : B.today;
+  $('#ipay').value = E && E.pay ? E.pay : 'آجل';
+  if (E && E.method) $('#imethod').value = E.method;
+  curFill($('#icur'), $('#irate'), $('#iratew'), calcInv);
+  if (E && E.cur) curSet($('#icur'), $('#irate'), $('#iratew'), E.cur, E.rate);
+  $('#ipay').onchange = payNote; payNote();
+  if (E) E.lines.forEach(function (l) { addInvLine({ name: l.item, code: l.code, price: +(l.price / (E.cur ? E.rate : 1)).toFixed(6), qty: l.qty }); });
+  else addInvLine();
+  calcInv();
+}
+function payNote() {
+  var cash = $('#ipay').value === 'نقدي';
+  $('#imw').classList.toggle('hide', !cash);
+  $('#ipaynote').textContent = cash ? 'نقدي: يُسجَّل إجمالي الفاتورة في حساب المورد ويُسدَّد فورًا، ويُسجَّل الدفع في اليومية كمدفوعات.'
+    : 'آجل: يُضاف إجمالي الفاتورة إلى حساب المورد في قيود الموردين (وارد).';
+}
+function cancelInvEdit() { var k = INVEDIT && INVEDIT.key; INVEDIT = null; if (k) openInv(k); else go('pinv'); }
+
+function addInvLine(v) {
+  v = v || {};
+  var d = document.createElement('div');
+  d.className = 'card line';
+  d.innerHTML =
+    '<div class="grid l4">' +
+    '<div class="f wide"><label>الصنف</label><input class="n" list="dl-items" autocomplete="off" placeholder="اكتب أو اختر الصنف"></div>' +
+    '<div class="f"><label>الكود <small>(اختياري)</small></label><input class="c" autocomplete="off" placeholder="تلقائي"></div>' +
+    '<div class="f"><label>سعر الشراء</label><input class="p" inputmode="decimal" autocomplete="off"></div>' +
+    '<div class="f"><label>الكمية</label><input class="q" inputmode="decimal" autocomplete="off"></div>' +
+    '<div class="f nw hide"><label>الوحدة <span class="badge">صنف جديد</span></label><input class="u" autocomplete="off"></div>' +
+    '<div class="f nw hide"><label>التصنيف <span class="badge">صنف جديد</span></label><input class="g" autocomplete="off"></div></div>' +
+    '<div class="pa note" style="margin-top:6px"></div>' +
+    '<div class="ltot"><span>الإجمالي: <b class="lt">0.00</b></span><button type="button" class="x">حذف السطر</button></div>';
+  $('#ilines').appendChild(d);
+  var n = $('.n', d), c = $('.c', d);
+  function onName() {
+    var nm = n.value.trim().toLowerCase();
+    var hit = B.items.filter(function (i) { return i.name.toLowerCase() === nm; })[0];
+    if (hit) { c.value = hit.code; c.readOnly = true; $$('.nw', d).forEach(function (e) { e.classList.add('hide'); }); }
+    else {
+      if (c.readOnly) { c.value = ''; c.readOnly = false; }
+      $$('.nw', d).forEach(function (e) { e.classList.toggle('hide', !nm); });
+    }
+  }
+  n.addEventListener('input', onName); n.addEventListener('change', onName);
+  d.addEventListener('input', function () { calcInv(); });
+  d.addEventListener('change', function () { calcInv(); });
+  $('.x', d).onclick = function () { if ($$('.line').length > 1) { d.remove(); calcInv(); } else { toast('يجب أن تبقى فاتورة بسطر واحد على الأقل', 'err'); } };
+  if (v.name) { n.value = v.name; onName(); if (v.code && !c.readOnly) c.value = v.code; }
+  if (v.price !== undefined) $('.p', d).value = v.price;
+  if (v.qty !== undefined) $('.q', d).value = v.qty;
+}
+
+function calcInv() {
+  var t = 0, rate = curRateOf($('#icur'), $('#irate'));
+  $$('.line').forEach(function (d) {
+    var p = num($('.p', d).value), v = p * num($('.q', d).value);
+    $('.lt', d).textContent = fmt(v); t += v;
+    var pa = $('.pa', d), nm = $('.n', d).value.trim().toLowerCase();
+    if (!pa) return;
+    var hit = B.items.filter(function (i) { return i.name.toLowerCase() === nm; })[0];
+    if (hit && hit.last > 0 && p > 0) {
+      var diff = (p * rate - hit.last) / hit.last * 100;
+      var info = ' آخر سعر ' + fmt(hit.last) + (hit.lastSup ? ' من ' + esc(hit.lastSup) : '') + (hit.lastDate ? ' بتاريخ ' + esc(hit.lastDate) : '') + (hit.min > 0 && hit.min < hit.last ? ' · أقل سعر سابق ' + fmt(hit.min) : '');
+      pa.innerHTML = Math.abs(diff) < 0.01 ? 'نفس آخر سعر.' + info
+        : diff > 0 ? '<b class="neg">⬆ أعلى بنسبة ' + diff.toFixed(1) + '%</b> —' + info
+        : '<b class="pos">⬇ أقل بنسبة ' + Math.abs(diff).toFixed(1) + '%</b> —' + info;
+    } else pa.innerHTML = '';
+  });
+  $('#itot').textContent = fmt(t);
+  var ib = $('#ibase');
+  if (ib) ib.textContent = rate !== 1 ? '≈ ' + fmt(t * rate) + ' ' + B.set.base : '';
+}
+
+function saveInv(confirmDup) {
+  var btn = $('#isave'), E = INVEDIT;
+  var p = { supplier: $('#isup').value, invoice: $('#iinv').value, date: $('#idate').value, pay: $('#ipay').value, method: $('#imethod').value,
+    cur: $('#icur').value, rate: $('#irate').value, confirmDup: !!confirmDup,
+    lines: $$('.line').map(function (d) {
+      return { name: $('.n', d).value, code: $('.c', d).value, unit: $('.u', d).value, cat: $('.g', d).value, price: $('.p', d).value, qty: $('.q', d).value };
+    }) };
+  if (E) { p.key = E.key; p.sig = E.sig; }
+  var fi = $('#iphoto'), file = fi && fi.files && fi.files[0];
+  busy(btn, true);
+  call(E ? 'webInvReplace' : 'webSaveInvoice', p).then(function (r) {
+    if (r.dup) {
+      busy(btn, false);
+      var old = $('#dupbox'); if (old) old.remove();
+      var bx = document.createElement('div'); bx.id = 'dupbox'; bx.className = 'card';
+      bx.innerHTML = '<b class="neg">' + esc(r.msg) + '</b><div class="row" style="margin-top:10px"><button class="btn grn" type="button">متابعة الحفظ</button><button class="btn sec" type="button">إلغاء</button></div>';
+      $('#view').insertBefore(bx, $('#view').firstChild);
+      var bs = $$('button', bx); bs[0].onclick = function () { bx.remove(); saveInv(true); }; bs[1].onclick = function () { bx.remove(); };
+      window.scrollTo(0, 0); return;
+    }
+    if (!r.ok) { busy(btn, false); toast(r.msg, 'err'); return; }
+    var done = function (extra) {
+      busy(btn, false); toast(r.msg + (extra || ''), extra && extra.indexOf('تعذّر') > -1 ? 'err' : 'ok');
+      INVEDIT = null; SUP.quiet(); DASH = null;
+      reboot(function () { if (E) openInv(r.key); else if (CUR === 'inv') vInv(); });
+    };
+    if (file) { btn.textContent = 'جارٍ رفع الصورة…'; uploadPhoto(r.key, file).then(function () { done(' مع الصورة'); }, function (e) { done(' (تعذّر رفع الصورة: ' + errMsg(e) + ')'); }); }
+    else done('');
+  }).catch(function (e) { busy(btn, false); toast(errMsg(e), 'err'); });
+}
+
+/* صورة الفاتورة: تصغير قبل الرفع لتسريع الإرسال من الآيباد */
+function imgData(file) {
+  return new Promise(function (res, rej) {
+    var fr = new FileReader();
+    fr.onload = function () {
+      var im = new Image();
+      im.onload = function () {
+        var k = Math.min(1, 1600 / Math.max(im.width, im.height)), c = document.createElement('canvas');
+        c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+        res(c.toDataURL('image/jpeg', 0.82).split(',')[1]);
+      };
+      im.onerror = function () { rej(new Error('تعذّر قراءة الصورة')); };
+      im.src = fr.result;
+    };
+    fr.onerror = function () { rej(new Error('تعذّر قراءة الملف')); };
+    fr.readAsDataURL(file);
+  });
+}
+function uploadPhoto(key, file) { return imgData(file).then(function (d) { return call('webInvAttach', { key: key, data: d }); }); }
+
+/* أسطر البحث والسجل تفتح الفاتورة كاملة */
+function editPBtn(x) { return '<td><button class="btn sec sm" onclick="openInvRow(' + x.row + ')">فتح الفاتورة</button></td>'; }
+function openInvRow(row) { var x = PR[row]; if (x) openInv(String(x.sup).trim() + '|' + en(x.inv) + '|' + x.date); }
+
+/* ---------- صفحة الفواتير ---------- */
+function vPInv() {
+  if (PENDINV) { var k = PENDINV; PENDINV = null; showInv(k); return; }
+  $('#view').innerHTML = '<div class="card"><div class="grid"><div class="f wide"><label>بحث (مورد / رقم فاتورة / صنف)</label><input id="vq" autocomplete="off" onkeydown="if(event.key===\'Enter\')doPInv()"></div>' +
+    '<div class="f"><label>من تاريخ</label><input id="vf" type="date"></div><div class="f"><label>إلى تاريخ</label><input id="vt" type="date"></div></div><br>' +
+    '<button class="btn" onclick="doPInv()">عرض</button></div><div id="vres"></div>';
+  doPInv();
+}
+function doPInv() {
+  $('#vres').innerHTML = SPIN;
+  call('webInvList', { q: $('#vq').value, from: $('#vf').value, to: $('#vt').value }).then(function (r) {
+    INVROWS = r.rows;
+    var h = '<div class="stats"><div class="stat hi"><span>إجمالي الفواتير</span><b>' + fmt(r.total) + '</b></div><div class="stat"><span>عدد الفواتير</span><b>' + r.count + '</b></div></div>';
+    if (!r.rows.length) { $('#vres').innerHTML = h + '<div class="muted">لا توجد فواتير</div>'; return; }
+    h += tbl(['التاريخ', 'المورد', 'رقم الفاتورة', 'الأصناف', 'الإجمالي', 'الدفع', '', ''], r.rows.map(function (x, i) {
+      return '<tr>' + td(esc(x.date)) + td(esc(x.sup), 'l') + td(esc(x.inv)) + td(x.n) + td(fmt(x.total)) +
+        td(esc(x.pay || '—') + (x.cur ? ' <span class="badge">' + esc(x.cur) + '</span>' : '')) + td(x.photo ? '📎' : '') +
+        '<td><button class="btn sec sm" onclick="openInvIdx(' + i + ')">فتح</button></td></tr>';
+    }), '<tr class="tot"><td colspan="4">الإجمالي (' + r.count + ' فاتورة)</td>' + td(fmt(r.total)) + '<td colspan="3"></td></tr>');
+    if (r.count > r.rows.length) h += '<div class="note">يُعرض أحدث ' + r.rows.length + ' فاتورة. ضيّق البحث لرؤية الباقي.</div>';
+    $('#vres').innerHTML = h;
+  }).catch(function (e) { $('#vres').innerHTML = ''; toast(errMsg(e), 'err'); });
+}
+function openInvIdx(i) { var x = INVROWS[i]; if (x) showInv(x.key); }
+function openInv(key) { if (CUR !== 'pinv') { PENDINV = key; go('pinv'); } else showInv(key); }
+function showInv(key) {
+  window.scrollTo(0, 0);
+  $('#view').innerHTML = '<div class="muted"><span class="spin"></span>جارٍ فتح الفاتورة…</div>';
+  call('webInvGet', key).then(function (v) { INVCUR = v; if (CUR === 'pinv') renderInv(); }).catch(function (e) {
+    $('#view').innerHTML = '<div class="muted">' + esc(errMsg(e)) + '<br><br><button class="btn sec" onclick="go(\'pinv\')">← كل الفواتير</button></div>';
+  });
+}
+function renderInv() {
+  var v = INVCUR, k = v.cur ? v.rate : 1, cu = v.cur ? ' (' + esc(v.cur) + ')' : '';
+  var info = [['المورد', esc(v.sup)], ['رقم الفاتورة', esc(v.inv)], ['التاريخ', esc(v.date)], ['الدفع', esc(v.pay || 'غير محدد') + (v.method ? ' · ' + esc(v.method) : '')],
+    ['العملة', v.cur ? esc(v.cur) + ' · سعر الصرف ' + fmt(v.rate) : esc(v.base)], ['المصدر', esc(v.src) + (v.time ? ' · ' + esc(v.time) : '')]];
+  $('#view').innerHTML = '<div class="row noprint" style="margin-bottom:12px"><button class="btn sec sm" onclick="go(\'pinv\')">← كل الفواتير</button></div>' +
+    '<div class="card"><h2>فاتورة شراء رقم ' + esc(v.inv) + '</h2><div class="stats">' + info.map(function (x) { return '<div class="st"><small>' + x[0] + '</small><b style="font-size:15.5px">' + x[1] + '</b></div>'; }).join('') + '</div>' +
+    tbl(['#', 'كود الصنف', 'الصنف', 'السعر' + cu, 'الكمية', 'الإجمالي' + cu], v.lines.map(function (l, i) {
+      return '<tr>' + td(i + 1) + td(esc(l.code)) + td(esc(l.item), 'l') + td(fmt(l.price / k)) + td(esc(l.qty)) + td(fmt(l.total / k)) + '</tr>';
+    }), '<tr class="tot"><td colspan="5">الإجمالي' + cu + '</td>' + td(fmt(v.total / k)) + '</tr>' + (v.cur ? '<tr class="tot"><td colspan="5">الإجمالي بـ ' + esc(v.base) + '</td>' + td(fmt(v.total)) + '</tr>' : '')) +
+    '<div class="note">' + (v.pay === 'نقدي' ? 'مسجّلة في حساب المورد (وارد وصادر) وفي اليومية كمدفوعات.' : v.pay ? 'مسجّلة في حساب المورد كـ وارد (آجل).' : 'فاتورة غير مربوطة بحساب المورد. عدّلها واختر نوع الدفع لربطها.') + '</div></div>' +
+    '<div class="card"><h2>صور الفاتورة</h2><div class="thumbs">' + (v.photos.length ? v.photos.map(function (u) {
+      var id = (/[-\w]{25,}/.exec(u) || [''])[0];
+      return '<a href="' + esc(u) + '" target="_blank" rel="noopener"><img src="https://drive.google.com/thumbnail?id=' + esc(id) + '&sz=w400" alt="صورة الفاتورة" loading="lazy"></a>';
+    }).join('') : '<span class="note" style="margin:0">لا توجد صور.</span>') + '</div>' +
+    '<div class="row noprint" style="margin-top:10px"><input type="file" id="vphoto" accept="image/*" style="flex:1 1 220px"><button class="btn sec" id="vup" onclick="addInvPhoto()">رفع الصورة</button></div></div>' +
+    '<div class="row noprint"><button class="btn" onclick="editInv()">تعديل الفاتورة</button><button class="btn sec" id="vpdf" onclick="invPdf()">PDF للمشاركة</button>' +
+    '<button class="btn sec" onclick="window.print()">طباعة</button><button class="btn warn" id="vdel" onclick="delInv(this)">حذف الفاتورة</button></div><div id="pdfo" class="noprint"></div>';
+}
+function editInv() { INVEDIT = { key: INVCUR.key, sig: INVCUR.sig, data: INVCUR }; go('inv'); }
+function invPdf() {
+  var b = $('#vpdf'); busy(b, true);
+  $('#pdfo').innerHTML = '<div class="note"><span class="spin"></span>جارٍ إنشاء ملف PDF…</div>';
+  call('webInvPdf', INVCUR.key).then(function (r) {
+    busy(b, false); $('#pdfo').innerHTML = '<a class="lnk" href="' + esc(r.url) + '" target="_blank" rel="noopener">فتح الفاتورة PDF ومشاركتها ←</a>';
+  }, function (e) { busy(b, false); $('#pdfo').innerHTML = ''; toast(errMsg(e), 'err'); });
+}
+function addInvPhoto() {
+  var f = $('#vphoto').files[0];
+  if (!f) { toast('اختر صورة أولًا', 'err'); return; }
+  var b = $('#vup'); busy(b, true); b.textContent = 'جارٍ الرفع…';
+  uploadPhoto(INVCUR.key, f).then(function () { toast('تم رفع الصورة', 'ok'); showInv(INVCUR.key); },
+    function (e) { busy(b, false); b.textContent = 'رفع الصورة'; toast(errMsg(e), 'err'); });
+}
+function delInv(b) {
+  if (!b.dataset.armed) { b.dataset.armed = 1; b.textContent = 'تأكيد حذف الفاتورة نهائيًا'; b.classList.add('arm'); return; }
+  busy(b, true);
+  call('webInvDelete', { key: INVCUR.key, sig: INVCUR.sig }).then(function (r) {
+    busy(b, false);
+    if (!r.ok) { toast(r.msg, 'err'); return; }
+    toast(r.msg, 'ok'); SUP.quiet(); DASH = null; reboot(function () { go('pinv'); });
+  }, function (e) { busy(b, false); toast(errMsg(e), 'err'); });
+}
+
+/* ---------- مقارنة الأسعار ---------- */
+function vPrice() {
+  $('#view').innerHTML = '<h1>مقارنة أسعار الأصناف</h1><p class="sub">لكل صنف أسعار كل مورد، والمورد الأرخص بآخر سعر يظهر أولًا.</p>' +
+    '<div class="card"><div class="row"><div class="f" style="flex:3 1 220px"><label>ابحث عن صنف أو كود</label><input id="cq" list="dl-items" autocomplete="off" onkeydown="if(event.key===\'Enter\')doPrice()"></div>' +
+    '<button class="btn" onclick="doPrice()" style="align-self:flex-end">بحث</button></div></div><div id="cres"></div>';
+  $('#cq').value = PQ; PQ = '';
+  doPrice();
+}
+function doPrice() {
+  $('#cres').innerHTML = SPIN;
+  call('webPriceCompare', $('#cq').value).then(function (r) {
+    if (!r.items.length) { $('#cres').innerHTML = '<div class="muted">لا توجد مشتريات مطابقة</div>'; return; }
+    $('#cres').innerHTML = r.items.map(function (it) {
+      return '<div class="card"><h2>' + esc(it.item) + (it.code ? ' <span class="badge">' + esc(it.code) + '</span>' : '') + '</h2>' +
+        tbl(['المورد', 'آخر سعر', 'تاريخ آخر شراء', 'أقل سعر', 'أعلى سعر', 'المتوسط', 'مرات الشراء'], it.sups.map(function (s, i) {
+          return '<tr>' + td(esc(s.sup) + (i === 0 && it.sups.length > 1 ? ' <span class="badge" style="background:#E8F5E9;color:var(--grn)">الأرخص</span>' : ''), 'l') +
+            td(fmt(s.last)) + td(esc(s.lastDate)) + td(fmt(s.min)) + td(fmt(s.max)) + td(fmt(s.avg)) + td(s.n) + '</tr>';
+        })) + '</div>';
+    }).join('') + (r.count > r.items.length ? '<div class="note">يُعرض ' + r.items.length + ' صنف من ' + r.count + '. ضيّق البحث.</div>' : '');
+  }).catch(function (e) { $('#cres').innerHTML = ''; toast(errMsg(e), 'err'); });
+}
+/* ======================= اليومية: العملات وربط دفعات الموردين ======================= */
+function vJEntry() {
+  var L = B.labels;
+  $('#view').innerHTML =
+    '<div class="stats"><div class="stat hi"><span>الرصيد الحالي</span><b id="bcash">' + fmt(B.bal.cash) + '</b></div>' +
+    '<div class="stat hi"><span>رصيد ' + esc(L.due) + ' الحالي</span><b id="bdue">' + fmt(B.bal.due) + '</b></div>' +
+    '<div class="stat"><span>' + esc(L.inn) + ' هذا التاريخ</span><b id="dIn">—</b></div>' +
+    '<div class="stat"><span>' + esc(L.out) + ' هذا التاريخ</span><b id="dOut">—</b></div>' +
+    '<div class="stat"><span>صافي النقد لهذا التاريخ</span><b id="dNet">—</b></div>' +
+    '<div class="stat"><span>' + esc(L.due) + ' هذا التاريخ</span><b id="dDue">—</b></div></div>' +
+    '<div class="card"><div class="grid"><div class="f"><label>التاريخ</label><input id="jdate" type="date" value="' + B.today + '" onchange="loadDay()"></div>' +
+    '<div class="f"><label>العملة</label><select id="jcur"></select></div><div class="f" id="jratew"><label>سعر الصرف</label><input id="jrate" inputmode="decimal" autocomplete="off"></div></div></div>' +
+    '<div id="jlines"></div><button class="btn sec" style="width:100%" onclick="addJLine()">+ إضافة سطر</button>' +
+    '<div class="note">كل سطر حركة واحدة: ' + esc(L.out) + ' أو ' + esc(L.inn) + ' وليس الاثنين. ' + esc(L.due) + ' تُحسب منفصلة ولا تدخل في الرصيد، والسداد بالسالب (فعّل خانة سداد). ' +
+    'لدفعة مورد: اكتب المبلغ في ' + esc(L.out) + ' واختر المورد، فتُرحَّل تلقائيًا إلى كشف حسابه في قيود الموردين.</div>' +
+    '<div class="bar"><div class="tot" id="jtot">—</div><button class="btn grn" id="jsave" onclick="saveJ()">حفظ اليومية</button></div>';
+  curFill($('#jcur'), $('#jrate'), $('#jratew'), calcJ);
+  addJLine();
+  loadDay();
+}
+function addJLine() {
+  var L = B.labels, d = document.createElement('div');
+  d.className = 'card line';
+  d.innerHTML =
+    '<div class="grid i5"><div class="f wide"><label>البيان</label><input class="st" autocomplete="off"></div>' +
+    '<div class="f"><label>' + esc(L.due) + '</label><input class="d" inputmode="decimal" autocomplete="off">' +
+    '<label style="display:flex;gap:6px;align-items:center;font-weight:400"><input type="checkbox" class="ng" style="width:20px;min-height:20px"> سداد (يُحفظ بالسالب)</label></div>' +
+    '<div class="f"><label>' + esc(L.out) + '</label><input class="o" inputmode="decimal" autocomplete="off"></div>' +
+    '<div class="f"><label>' + esc(L.inn) + '</label><input class="i" inputmode="decimal" autocomplete="off"></div>' +
+    '<div class="f wide"><label>المورد <small>(اختياري، لسطور ' + esc(L.out) + ')</small></label><select class="sp">' + supOpts('', 'بدون مورد') + '</select></div></div>' +
+    '<div class="ltot"><span></span><button type="button" class="x">حذف السطر</button></div>';
+  $('#jlines').appendChild(d);
+  d.addEventListener('input', calcJ);
+  $('.x', d).onclick = function () { if ($$('.line').length > 1) { d.remove(); calcJ(); } else { toast('يجب أن يبقى سطر واحد على الأقل', 'err'); } };
+  calcJ();
+}
+function calcJ() {
+  var a = 0, o = 0, i = 0, L = B.labels, c = $('#jcur'), cu = c && c.value && c.value !== B.set.base ? ' ' + esc(c.value) : '';
+  $$('.line').forEach(function (d) { a += jDue(d); o += num($('.o', d).value); i += num($('.i', d).value); });
+  $('#jtot').innerHTML = esc(L.inn) + ': <b style="display:inline">' + fmt(i) + cu + '</b> · ' + esc(L.out) + ': <b style="display:inline">' + fmt(o) + cu + '</b> · ' + esc(L.due) + ': <b style="display:inline">' + fmt(a) + cu + '</b>';
+}
+function saveJ() {
+  var b = $('#jsave'), withSup = false;
+  var p = { date: $('#jdate').value, cur: $('#jcur').value, rate: $('#jrate').value, lines: $$('.line').map(function (d) {
+    var due = $('.d', d).value.trim(), sp = $('.sp', d).value.trim();
+    if (sp) withSup = true;
+    return { st: $('.st', d).value, due: due === '' ? '' : String(jDue(d)), out: $('.o', d).value, inn: $('.i', d).value, sup: sp };
+  }) };
+  busy(b, true);
+  call('webSaveJournal', p).then(function (r) {
+    busy(b, false);
+    if (!r.ok) { toast(r.msg, 'err'); return; }
+    toast(r.msg + (withSup ? '، ورُحّلت دفعات الموردين لكشوفهم' : ''), 'ok'); B.bal = r.bal; DASH = null;
+    if (withSup) SUP.quiet();
+    vJEntry();
+  }).catch(function (e) { busy(b, false); toast(errMsg(e), 'err'); });
+}
+function jNote(x) {
+  return (x.sup ? ' <span class="badge">⇠ ' + esc(x.sup) + '</span>' : '') + (x.cur ? ' <span class="badge">' + esc(x.cur) + ' × ' + fmt(x.rate) + '</span>' : '');
+}
+function editBtn(x) {
+  var inv = x.link && x.link.indexOf('INV|') === 0;
+  return '<td><button class="btn sec sm" onclick="editJ(' + x.row + ')">' + (inv ? 'فتح الفاتورة' : 'تعديل') + '</button></td>';
+}
+function editJ(row) {
+  var x = JR[row]; if (!x) return;
+  if (x.link && x.link.indexOf('INV|') === 0) { openInv(x.link.slice(4)); return; }
+  var L = B.labels, k = x.cur ? x.rate : 1, old = $('#jedit'); if (old) old.remove();
+  var v = function (a) { return a ? +(a / k).toFixed(6) : ''; };
+  var bx = document.createElement('div'); bx.id = 'jedit'; bx.className = 'card';
+  bx.innerHTML = '<h2>تعديل حركة</h2><div class="grid">' +
+    '<div class="f"><label>التاريخ</label><input id="ed" type="date" value="' + esc(x.date) + '"></div>' +
+    '<div class="f wide"><label>البيان</label><input id="es" value="' + esc(x.st) + '" autocomplete="off"></div>' +
+    '<div class="f"><label>' + esc(L.due) + ' <small>(السداد بالسالب)</small></label><input id="edu" inputmode="decimal" value="' + v(x.due) + '"></div>' +
+    '<div class="f"><label>' + esc(L.out) + '</label><input id="eo" inputmode="decimal" value="' + v(x.out) + '"></div>' +
+    '<div class="f"><label>' + esc(L.inn) + '</label><input id="ei" inputmode="decimal" value="' + v(x.inn) + '"></div>' +
+    '<div class="f"><label>العملة</label><select id="ecur"></select></div><div class="f" id="eratew"><label>سعر الصرف</label><input id="erate" inputmode="decimal" autocomplete="off"></div>' +
+    '<div class="f wide"><label>المورد <small>(اختياري، لسطور ' + esc(L.out) + ')</small></label><select id="esp">' + supOpts(x.sup || '', 'بدون مورد') + '</select></div></div><br>' +
+    '<div class="row"><button class="btn grn" id="esv">حفظ التعديل</button><button class="btn sec" id="ecn">إلغاء</button>' +
+    '<button class="btn" id="edl" style="background:var(--red);border-color:var(--red)">حذف الحركة</button></div>';
+  $('#view').insertBefore(bx, $('#view').firstChild);
+  window.scrollTo(0, 0);
+  curFill($('#ecur'), $('#erate'), $('#eratew'));
+  curSet($('#ecur'), $('#erate'), $('#eratew'), x.cur, x.rate);
+  var orig = { date: x.date, st: x.st, due: x.due, out: x.out, inn: x.inn };
+  var after = function (r, sup) { toast(r.msg, 'ok'); B.bal = r.bal; DASH = null; bx.remove(); refreshJ(); if (x.sup || sup) SUP.quiet(); };
+  $('#ecn').onclick = function () { bx.remove(); };
+  $('#esv').onclick = function () {
+    var b = this, sup = $('#esp').value.trim(); busy(b, true);
+    call('webJUpdate', { row: row, orig: orig, nw: { date: $('#ed').value, st: $('#es').value, due: $('#edu').value, out: $('#eo').value, inn: $('#ei').value,
+      sup: sup, cur: $('#ecur').value, rate: $('#erate').value } }).then(function (r) {
+      busy(b, false);
+      if (!r.ok) { toast(r.msg, 'err'); return; }
+      after(r, sup);
+    }).catch(function (e) { busy(b, false); toast(errMsg(e), 'err'); });
+  };
+  var armed = false;
+  $('#edl').onclick = function () {
+    var b = this;
+    if (!armed) { armed = true; b.textContent = 'تأكيد الحذف نهائيًا'; return; }
+    busy(b, true);
+    call('webJDelete', { row: row, orig: orig }).then(function (r) {
+      busy(b, false);
+      if (!r.ok) { toast(r.msg, 'err'); return; }
+      after(r, '');
+    }).catch(function (e) { busy(b, false); toast(errMsg(e), 'err'); });
+  };
+}
+function doJSearch(off) {
+  var L = B.labels, p = jParams(); p.off = off || 0; JOFF = p.off;
+  $('#jres').innerHTML = '<div class="muted">جارٍ البحث…</div>';
+  call('webSearchJournal', p).then(function (r) {
+    var t = r.totals, h = jStats(t, r.count);
+    regRows(r.rows);
+    if (!r.rows.length) { $('#jres').innerHTML = h + '<div class="muted">لا توجد نتائج</div>'; return; }
+    h += tbl(['التاريخ', 'البيان', L.due, L.out, L.inn, 'تعديل'], r.rows.map(function (x) {
+      return '<tr>' + td(esc(x.date)) + td(esc(x.st) + jNote(x), 'l') + td(x.due ? fmt(x.due) : '') + td(x.out ? fmt(x.out) : '') + td(x.inn ? fmt(x.inn) : '') + editBtn(x) + '</tr>';
+    }), '<tr class="tot"><td colspan="2">الإجمالي (' + r.count + ' حركة)</td>' + td(fmt(t.due)) + td(fmt(t.out)) + td(fmt(t.inn)) + '<td></td></tr>');
+    h += pager(r, 'doJSearch') + pdfBox('jsearch', 'jParams()');
+    $('#jres').innerHTML = h;
+  }).catch(function (e) { $('#jres').innerHTML = ''; toast(errMsg(e), 'err'); });
+}
+function doJLog(off) {
+  var L = B.labels; JOFF = off || 0;
+  $('#gres').innerHTML = '<div class="muted">جارٍ التحميل…</div>';
+  call('webJLog', { q: $('#gq').value, from: $('#gf').value, to: $('#gt').value, type: $('#gy').value, off: off || 0 }).then(function (r) {
+    var t = r.totals, h = jStats(t, r.count);
+    regRows(r.rows);
+    if (!r.rows.length) { $('#gres').innerHTML = h + '<div class="muted">لا توجد حركات</div>'; return; }
+    h += tbl(['التاريخ', 'البيان', L.due, L.out, L.inn, 'الرصيد', 'رصيد ' + L.due, 'وقت الإدخال', 'تعديل'], r.rows.map(function (x) {
+      return '<tr>' + td(esc(x.date)) + td(esc(x.st) + jNote(x), 'l') + td(x.due ? fmt(x.due) : '') + td(x.out ? fmt(x.out) : '') + td(x.inn ? fmt(x.inn) : '') + td(fmt(x.bal)) + td(fmt(x.dueBal)) + td(esc(x.time)) + editBtn(x) + '</tr>';
+    }), '<tr class="tot"><td colspan="2">الإجمالي (' + r.count + ' حركة)</td>' + td(fmt(t.due)) + td(fmt(t.out)) + td(fmt(t.inn)) + '<td colspan="4"></td></tr>');
+    $('#gres').innerHTML = h + pager(r, 'doJLog') + '<div class="note">عمودا الرصيد ورصيد الذمم تراكميان بترتيب الإدخال. المبالغ بالعملة الأساسية.</div>';
+  }).catch(function (e) { $('#gres').innerHTML = ''; toast(errMsg(e), 'err'); });
+}
+/* ======================= الرئيسية (لوحة)، التقارير، البحث الشامل، الإعدادات، رمز الدخول ======================= */
+document.head.insertAdjacentHTML('beforeend', '<style>' +
+  'body[data-sec="r"]{--c:#9A4D00;--c2:#C9730A;--cl:#FBEEDD}body[data-sec="x"]{--c:#37474F;--c2:#5B6F7A;--cl:#ECEFF1}' +
+  '.tile.r{background:linear-gradient(135deg,#9A4D00,#C9730A)}' +
+  '.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px;margin:0 0 16px}' +
+  '.kpi{background:#fff;border:1px solid var(--bd);border-radius:16px;padding:12px 14px;box-shadow:var(--sh);border-top:4px solid var(--k)}' +
+  '.kpi span{display:block;font-size:12.5px;color:var(--mut);font-weight:700}.kpi b{display:block;font-size:21px;font-variant-numeric:tabular-nums}.kpi small{font-size:12px;color:var(--mut)}' +
+  '.srch{display:flex;gap:8px;margin:0 0 16px}.srch input{flex:1;border-radius:14px;min-height:50px;background:#fff;box-shadow:var(--sh)}.srch .btn{border-radius:14px}' +
+  '.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:14px}' +
+  '.lst{list-style:none;margin:0;padding:0}.lst li{display:flex;justify-content:space-between;gap:10px;padding:9px 2px;border-top:1px solid var(--bd);cursor:pointer}.lst li:first-child{border-top:0}.lst b{font-variant-numeric:tabular-nums}' +
+  '.leg{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin-top:6px}.leg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-left:5px;vertical-align:middle}' +
+  '.thumbs{display:flex;flex-wrap:wrap;gap:10px}.thumbs img{height:150px;max-width:100%;border-radius:10px;border:1px solid var(--bd);object-fit:cover}' +
+  '.chips2{display:flex;flex-wrap:wrap;gap:8px}.chips2 button{border:1px solid var(--bd);background:#fff;border-radius:99px;padding:6px 14px;font-weight:700;color:var(--c)}' +
+  '#pin{position:fixed;inset:0;z-index:100;background:linear-gradient(135deg,#1F4E79,#6D2E5B);display:flex;align-items:center;justify-content:center;padding:20px}' +
+  '#pin .card{width:100%;max-width:340px;text-align:center}#pin input{text-align:center;font-size:26px;letter-spacing:8px}' +
+  '</style>');
+$('#homeBtn').insertAdjacentHTML('beforebegin', '<button onclick="go(\'settings\')" title="الإعدادات">⚙︎</button>');
+
+ICON.r = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>';
+var MN = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+SECTIONS.p.tabs = [['inv', 'إدخال فاتورة'], ['pinv', 'الفواتير'], ['psearch', 'بحث وتقارير'], ['plog', 'سجل المشتريات'], ['items', 'الأصناف'], ['pprice', 'مقارنة الأسعار'], ['sup', 'الموردين']];
+SECTIONS.r = { title: 'التقارير', tabs: [['rmon', 'تقرير شهري'], ['ryear', 'تقرير سنوي']] };
+SECTIONS.x = { title: '', tabs: [] };
+VIEW_SEC.pinv = 'p'; VIEW_SEC.pprice = 'p'; VIEW_SEC.rmon = 'r'; VIEW_SEC.ryear = 'r'; VIEW_SEC.settings = 'x'; VIEW_SEC.gsearch = 'x';
+var XTITLE = { settings: 'الإعدادات', gsearch: 'البحث الشامل' };
+
+function go(v) {
+  var prevSec = VIEW_SEC[CUR] || '';
+  if (v !== 'inv') INVEDIT = null;
+  CUR = v;
+  var sec = VIEW_SEC[v] || '';
+  document.body.setAttribute('data-sec', sec);
+  $('#ttl').textContent = sec === 'x' ? XTITLE[v] : sec ? SECTIONS[sec].title : 'مكتبة الصفاء';
+  $('#homeBtn').classList.toggle('hide', !sec);
+  var nav = $('#tabs'), tabs = sec ? SECTIONS[sec].tabs : [];
+  if (tabs.length) {
+    nav.classList.remove('hide');
+    nav.innerHTML = tabs.map(function (t) { return '<button class="' + (t[0] === v ? 'on' : '') + '" onclick="go(\'' + t[0] + '\')">' + t[1] + '</button>'; }).join('');
+    var on = $('button.on', nav); if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', inline: 'center' });
+  } else nav.classList.add('hide');
+  window.scrollTo(0, 0);
+  var V = { home: vHome, inv: vInv, pinv: vPInv, psearch: vPSearch, plog: vPLog, items: vItems, pprice: vPrice, jentry: vJEntry, daily: vDaily, jsearch: vJSearch, jlog: vJLog,
+    rmon: vRMon, ryear: vRYear, settings: vSettings, gsearch: vGSearch };
+  if (V[v]) V[v](); else { SUP.show(v); if (prevSec !== 's') SUP.quiet(); }
+}
+
+/* ---------- العملات ---------- */
+function curList() { var s = B.set || { base: '', curs: [] }; return [s.base].concat(s.curs.map(function (c) { return c.code; })); }
+function curDefRate(c) {
+  if (!c || c === B.set.base) return '';
+  var x = B.set.curs.filter(function (z) { return z.code === c; })[0];
+  return x && x.rate > 0 ? x.rate : '';
+}
+function curShow(sel, wrap) { if (wrap) wrap.classList.toggle('hide', !sel.value || sel.value === B.set.base); }
+function curFill(sel, inp, wrap, cb) {
+  var v = sel.value, list = curList();
+  sel.innerHTML = list.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('');
+  if (v && list.indexOf(v) > -1) sel.value = v;
+  if (!sel._bound) {
+    sel._bound = 1;
+    sel.addEventListener('change', function () { inp.value = curDefRate(sel.value); curShow(sel, wrap); if (cb) cb(); });
+    if (cb) inp.addEventListener('input', cb);
+  }
+  curShow(sel, wrap);
+}
+function curSet(sel, inp, wrap, cur, rate) {
+  if (cur && !$$('option', sel).some(function (o) { return o.value === cur; })) sel.insertAdjacentHTML('beforeend', '<option>' + esc(cur) + '</option>');
+  sel.value = cur || B.set.base;
+  inp.value = cur ? rate : '';
+  curShow(sel, wrap);
+}
+function curRateOf(sel, inp) { if (!sel || !sel.value || sel.value === B.set.base) return 1; var r = num(inp.value); return r > 0 ? r : 1; }
+function curNote(x) {
+  if (!x || !x.cur) return '';
+  var a = x.inc || x.out || 0;
+  return ' <span class="badge">' + fmt(a / (x.rate || 1)) + ' ' + esc(x.cur) + ' × ' + fmt(x.rate) + '</span>';
+}
+
+/* ---------- رمز الدخول ---------- */
+var TOK = (function () { try { return localStorage.getItem('safa_tok') || ''; } catch (e) { return ''; } })();
+var PINP = null;
+function setTok(t) { TOK = t || ''; try { if (TOK) localStorage.setItem('safa_tok', TOK); else localStorage.removeItem('safa_tok'); } catch (e) { /* */ } }
+function call(fn) {
+  var a = Array.prototype.slice.call(arguments, 1);
+  return new Promise(function (res, rej) {
+    google.script.run.withSuccessHandler(res).withFailureHandler(function (e) {
+      if (/PIN_REQUIRED/.test(errMsg(e))) pinGate().then(function () { call.apply(null, [fn].concat(a)).then(res, rej); }, rej);
+      else rej(e);
+    }).api(fn, a.concat([TOK]));
+  });
+}
+function pinGate() {
+  if (PINP) return PINP;
+  PINP = new Promise(function (res) {
+    var o = document.createElement('div'); o.id = 'pin';
+    o.innerHTML = '<div class="card"><h2 style="margin-bottom:4px">مكتبة الصفاء</h2><p class="sub">أدخل رمز الدخول</p><form><input id="pinin" type="password" inputmode="numeric" autocomplete="off" maxlength="8"><div id="pine"></div><br><button class="btn" style="width:100%">دخول</button></form></div>';
+    document.body.appendChild(o);
+    var inp = $('#pinin', o);
+    setTimeout(function () { inp.focus(); }, 60);
+    $('form', o).onsubmit = function (ev) {
+      ev.preventDefault();
+      var b = $('button', o); busy(b, true);
+      google.script.run.withSuccessHandler(function (r) { setTok(r.tok); o.remove(); PINP = null; res(); })
+        .withFailureHandler(function (e) { busy(b, false); inp.value = ''; $('#pine', o).innerHTML = '<div class="msg">' + esc(errMsg(e)) + '</div>'; })
+        .api('webCheckPin', [en(inp.value)]);
+    };
+  });
+  return PINP;
+}
+
+/* ---------- الرسم البياني ---------- */
+function chartSvg(labels, series) {
+  var W = 700, H = 230, pb = 28, pt = 12, n = labels.length, g = series.length, max = 1, out = '';
+  series.forEach(function (s) { s.v.forEach(function (x) { if (x > max) max = x; }); });
+  var bw = W / n, w = Math.max(3, bw * 0.78 / g);
+  for (var i = 0; i < n; i++) {
+    series.forEach(function (s, j) {
+      var h = Math.max(0, (H - pb - pt) * (s.v[i] / max)), x = i * bw + bw * 0.11 + j * w;
+      out += '<rect x="' + x.toFixed(1) + '" y="' + (H - pb - h).toFixed(1) + '" width="' + Math.max(1, w - 1).toFixed(1) + '" height="' + h.toFixed(1) + '" rx="2" fill="' + s.c + '"><title>' + esc(s.n + ' — ' + labels[i] + ': ' + fmt(s.v[i])) + '</title></rect>';
+    });
+    out += '<text x="' + (i * bw + bw / 2).toFixed(1) + '" y="' + (H - 9) + '" text-anchor="middle" font-size="11" fill="#637082">' + esc(labels[i]) + '</text>';
+  }
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="direction:ltr;display:block" role="img"><line x1="0" x2="' + W + '" y1="' + (H - pb) + '" y2="' + (H - pb) + '" stroke="#DCE3EB"/>' + out + '</svg>' +
+    '<div class="leg">' + series.map(function (s) { return '<span><i style="background:' + s.c + '"></i>' + esc(s.n) + '</span>'; }).join('') + '</div>';
+}
+var SER = function (rows) {
+  return [{ n: 'المشتريات', c: '#2E6DA4', v: rows.map(function (m) { return m.p; }) }, { n: 'المقبوضات', c: '#13907F', v: rows.map(function (m) { return m.inn; }) }, { n: 'المدفوعات', c: '#EF6C00', v: rows.map(function (m) { return m.out; }) }];
+};
+
+/* ---------- الرئيسية: لوحة المؤشرات والبحث ---------- */
+var DASH = null, GQ = '', GR = null;
+function dateLine() { try { return new Date().toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return B.today; } }
+function vHome() {
+  $('#view').innerHTML =
+    '<div class="hero"><h2>مكتبة الصفاء</h2><p>' + esc(dateLine()) + '</p></div>' +
+    '<form class="srch" onsubmit="event.preventDefault();doGSearch()"><input id="hq" type="search" placeholder="ابحث في كل شيء: مورد، صنف، رقم فاتورة، بيان…" autocomplete="off"><button class="btn">بحث</button></form>' +
+    '<div id="kpis" class="kpis"><div class="muted" style="grid-column:1/-1"><span class="spin"></span>جارٍ تجهيز اللوحة…</div></div>' +
+    '<div class="tiles">' +
+    tile('p', 'inv', 'فواتير الشراء', 'إدخال فاتورة، الفواتير، البحث، الأصناف، مقارنة الأسعار', B.items.length + ' صنف · ' + B.suppliers.length + ' مورد') +
+    tile('j', 'jentry', 'اليومية', 'إدخال اليومية، الملخص اليومي، البحث والتقارير', 'الرصيد الحالي: ' + fmt(B.bal.cash)) +
+    tile('s', 'sentry', 'قيود الموردين', 'إدخال قيد، كشف حساب، ملخص الأرصدة، السجل', SUP.homeStat()) +
+    tile('r', 'rmon', 'التقارير', 'تقارير شهرية وسنوية للمشتريات واليومية والموردين', 'شهريًا وسنويًا') + '</div>' +
+    '<div id="dash2"></div>';
+  if (DASH) renderDash();
+  call('webDash').then(function (d) { DASH = d; if (CUR === 'home') renderDash(); }).catch(function () { var k = $('#kpis'); if (k && CUR === 'home' && !DASH) k.innerHTML = ''; });
+}
+function renderDash() {
+  var d = DASH, ch = d.pPrev ? (d.pMonth - d.pPrev) / d.pPrev * 100 : null;
+  var K = function (c, t, v, s) { return '<div class="kpi" style="--k:' + c + '"><span>' + t + '</span><b>' + v + '</b>' + (s ? '<small>' + s + '</small>' : '') + '</div>'; };
+  $('#kpis').innerHTML =
+    K('#1F4E79', 'مشتريات هذا الشهر', fmt(d.pMonth), d.invMonth + ' فاتورة' + (ch === null ? '' : ' · ' + (ch >= 0 ? '⬆ ' : '⬇ ') + Math.abs(ch).toFixed(0) + '% عن الشهر الماضي')) +
+    K('#00695C', 'رصيد الصندوق', '<span class="' + (d.cash < 0 ? 'neg' : '') + '">' + fmt(d.cash) + '</span>', 'الذمم: ' + fmt(d.due)) +
+    K('#2E7D32', 'مقبوضات الشهر', fmt(d.jin), 'مدفوعات الشهر: ' + fmt(d.jout)) +
+    K('#6D2E5B', 'أرصدة الموردين', fmt(d.supTotal), d.supCount + ' مورد');
+  $('#dash2').innerHTML =
+    '<div class="card" style="margin-top:16px"><h2>آخر 12 شهرًا</h2>' + chartSvg(d.months.map(function (m) { return MN[+m.k.slice(5) - 1]; }), SER(d.months)) + '</div>' +
+    '<div class="two"><div class="card"><h2>أعلى الموردين رصيدًا</h2>' + (d.topSup.length ? '<ul class="lst">' + d.topSup.map(function (s, i) {
+      return '<li onclick="SUP.openStmt(DASH.topSup[' + i + '].name)"><span>' + esc(s.name) + '</span><b class="' + (s.bal < 0 ? 'neg' : '') + '">' + fmt(s.bal) + '</b></li>';
+    }).join('') + '</ul>' : '<div class="muted">لا توجد بيانات</div>') + '</div>' +
+    '<div class="card"><h2>أكثر الأصناف شراءً هذا العام</h2>' + (d.topItems.length ? '<ul class="lst">' + d.topItems.map(function (it, i) {
+      return '<li onclick="PQ=DASH.topItems[' + i + '].item;go(\'pprice\')"><span>' + esc(it.item) + ' <small style="color:var(--mut)">× ' + esc(String(+it.qty.toFixed(2))) + '</small></span><b>' + fmt(it.total) + '</b></li>';
+    }).join('') + '</ul>' : '<div class="muted">لا توجد مشتريات هذا العام</div>') + '</div></div>';
+}
+
+/* ---------- البحث الشامل ---------- */
+function doGSearch() {
+  var q = $('#hq').value.trim();
+  if (q.length < 2) { toast('اكتب حرفين على الأقل', 'err'); return; }
+  GQ = q;
+  if (CUR === 'gsearch') vGSearch(); else go('gsearch');
+}
+function vGSearch() {
+  $('#view').innerHTML = '<form class="srch" onsubmit="event.preventDefault();doGSearch()"><input id="hq" type="search" autocomplete="off"><button class="btn">بحث</button></form><div id="hres">' + SPIN + '</div>';
+  $('#hq').value = GQ;
+  call('webGlobalSearch', GQ).then(function (r) {
+    GR = r;
+    var sec = function (t, n, body) { return n ? '<div class="card"><h2>' + t + ' <small>(' + n + ')</small></h2>' + body + '</div>' : ''; };
+    var h = sec('الموردون', r.sup.length, '<div class="chips2">' + r.sup.map(function (s, i) { return '<button onclick="SUP.openStmt(GR.sup[' + i + '])">' + esc(s) + '</button>'; }).join('') + '</div>') +
+      sec('الأصناف', r.items.length, '<div class="chips2">' + r.items.map(function (s, i) { return '<button onclick="PQ=GR.items[' + i + '].name;go(\'pprice\')">' + esc(s.name) + (s.code ? ' · ' + esc(s.code) : '') + '</button>'; }).join('') + '</div>') +
+      sec('فواتير الشراء', r.inv.length, tbl(['التاريخ', 'المورد', 'رقم الفاتورة', 'أصناف مطابقة', 'الإجمالي', ''], r.inv.map(function (x, i) {
+        return '<tr>' + td(esc(x.date)) + td(esc(x.sup), 'l') + td(esc(x.inv)) + td(esc(x.items.join('، ')), 'l') + td(fmt(x.total)) + '<td><button class="btn sec sm" onclick="openInv(GR.inv[' + i + '].key)">فتح</button></td></tr>';
+      }))) +
+      sec('اليومية', r.j.length, tbl(['التاريخ', 'البيان', B.labels.due, B.labels.out, B.labels.inn], r.j.map(function (x) {
+        return '<tr>' + td(esc(x.date)) + td(esc(x.st) + jNote(x), 'l') + td(x.due ? fmt(x.due) : '') + td(x.out ? fmt(x.out) : '') + td(x.inn ? fmt(x.inn) : '') + '</tr>';
+      }))) +
+      sec('قيود الموردين', r.s.length, tbl(['التاريخ', 'المورد', 'البيان', 'الوارد', 'الصادر', ''], r.s.map(function (x, i) {
+        return '<tr>' + td(esc(x.date)) + td(esc(x.sid), 'l') + td(esc(x.desc), 'l') + td(x.inc ? fmt(x.inc) : '') + td(x.out ? fmt(x.out) : '') + '<td><button class="btn sec sm" onclick="SUP.openStmt(GR.s[' + i + '].sid)">الكشف</button></td></tr>';
+      })));
+    $('#hres').innerHTML = h || '<div class="muted">لا توجد نتائج لـ «' + esc(GQ) + '»</div>';
+  }).catch(function (e) { $('#hres').innerHTML = ''; toast(errMsg(e), 'err'); });
+}
+
+/* ---------- التقارير ---------- */
+var RYEAR = null;
+function repSum(rows) { var t = { p: 0, n: 0, inn: 0, out: 0, net: 0, due: 0, sin: 0, sout: 0 }; rows.forEach(function (x) { Object.keys(t).forEach(function (k) { t[k] += x[k]; }); }); return t; }
+function repKpis(t) {
+  var K = function (c, a, v) { return '<div class="kpi" style="--k:' + c + '"><span>' + a + '</span><b>' + v + '</b></div>'; };
+  return '<div class="kpis">' + K('#1F4E79', 'المشتريات', fmt(t.p)) + K('#13907F', 'المقبوضات', fmt(t.inn)) + K('#EF6C00', 'المدفوعات', fmt(t.out)) +
+    K('#00695C', 'صافي النقد', '<span class="' + (t.net < 0 ? 'neg' : '') + '">' + fmt(t.net) + '</span>') + K('#6D2E5B', 'وارد الموردين', fmt(t.sin)) + K('#9B4A85', 'صادر الموردين', fmt(t.sout)) + '</div>';
+}
+function repTable(head, labels, rows, t) {
+  return tbl([head, 'المشتريات', 'عدد الفواتير', 'المقبوضات', 'المدفوعات', 'صافي النقد', 'الذمم', 'وارد الموردين', 'صادر الموردين'], rows.map(function (x, i) {
+    return '<tr>' + td('<b>' + labels[i] + '</b>', 'l') + td(fmt(x.p)) + td(x.n) + td(fmt(x.inn)) + td(fmt(x.out)) + td(fmt(x.net), x.net < 0 ? 'neg' : '') + td(fmt(x.due)) + td(fmt(x.sin)) + td(fmt(x.sout)) + '</tr>';
+  }), '<tr class="tot">' + td('الإجمالي', 'l') + td(fmt(t.p)) + td(t.n) + td(fmt(t.inn)) + td(fmt(t.out)) + td(fmt(t.net)) + td(fmt(t.due)) + td(fmt(t.sin)) + td(fmt(t.sout)) + '</tr>');
+}
+function vRMon() {
+  $('#view').innerHTML = '<div class="card noprint"><div class="row"><div class="f" style="flex:0 1 200px"><label>السنة</label><select id="ry" onchange="RYEAR=this.value;doRMon()"></select></div>' +
+    '<button class="btn sec" onclick="window.print()" style="align-self:flex-end">طباعة</button></div></div><div id="rres">' + SPIN + '</div>';
+  doRMon();
+}
+function doRMon() {
+  $('#rres').innerHTML = SPIN;
+  call('webReport', { year: RYEAR }).then(function (r) {
+    RYEAR = r.year;
+    $('#ry').innerHTML = r.years.map(function (y) { return '<option' + (y == r.year ? ' selected' : '') + '>' + y + '</option>'; }).join('');
+    var rows = r.byMonth, t = repSum(rows), labels = rows.map(function (x) { return MN[x.m - 1]; });
+    $('#rres').innerHTML = '<h1>التقرير الشهري — ' + r.year + '</h1><p class="sub">كل المبالغ بالعملة الأساسية (' + esc(B.set.base) + ').</p>' + repKpis(t) +
+      '<div class="card">' + chartSvg(labels, SER(rows)) + '</div>' + repTable('الشهر', labels, rows, t);
+  }).catch(function (e) { $('#rres').innerHTML = ''; toast(errMsg(e), 'err'); });
+}
+function vRYear() {
+  $('#view').innerHTML = '<div class="row noprint" style="margin-bottom:12px"><button class="btn sec" onclick="window.print()">طباعة</button></div><div id="rres">' + SPIN + '</div>';
+  call('webReport', {}).then(function (r) {
+    var rows = r.byYear.slice().reverse(), t = repSum(rows), labels = rows.map(function (x) { return String(x.y); });
+    $('#rres').innerHTML = '<h1>التقرير السنوي</h1><p class="sub">كل المبالغ بالعملة الأساسية (' + esc(B.set.base) + ').</p>' + repKpis(t) +
+      (rows.length > 1 ? '<div class="card">' + chartSvg(labels, SER(rows)) + '</div>' : '') + repTable('السنة', labels, rows, t);
+  }).catch(function (e) { $('#rres').innerHTML = ''; toast(errMsg(e), 'err'); });
+}
+
+/* ---------- الإعدادات ---------- */
+var SETS = null;
+function vSettings() {
+  $('#view').innerHTML = SPIN;
+  call('webGetSettings').then(function (s) { SETS = s; if (CUR === 'settings') renderSettings(); }).catch(function (e) { $('#view').innerHTML = ''; toast(errMsg(e), 'err'); });
+}
+function renderSettings() {
+  var s = SETS, pw = function (id) { return '<input id="' + id + '" type="password" inputmode="numeric" autocomplete="off" maxlength="8">'; };
+  $('#view').innerHTML =
+    '<div class="card"><h2>العملات</h2><div class="grid"><div class="f"><label>العملة الأساسية (تُحسب بها كل الأرصدة والتقارير)</label><input id="sbase" value="' + esc(s.set.base) + '"></div></div>' +
+    '<div id="scurs" style="margin-top:12px"></div><button class="btn sec sm" onclick="addCurRow()">+ إضافة عملة</button>' +
+    '<div class="note">سعر الصرف هنا افتراضي ويظهر تلقائيًا عند اختيار العملة، ويمكن تعديله في كل فاتورة أو قيد. المبالغ تُحفظ بالعملة الأساسية مع حفظ العملة وسعر الصرف للمرجع.</div>' +
+    '<div class="row" style="margin-top:12px"><button class="btn grn" id="scsave" onclick="saveCurs()">حفظ العملات</button></div></div>' +
+    '<div class="card"><h2>رمز الدخول</h2><p class="sub">' + (s.pin ? 'الرمز مفعّل: يُطلب عند فتح الواجهة على أي جهاز جديد.' : 'غير مفعّل.') + '</p><div class="grid">' +
+    (s.pin ? '<div class="f"><label>الرمز الحالي</label>' + pw('pold') + '</div>' : '') +
+    '<div class="f"><label>' + (s.pin ? 'الرمز الجديد' : 'الرمز') + ' (4 إلى 8 أرقام)</label>' + pw('pnew') + '</div><div class="f"><label>تأكيد الرمز</label>' + pw('pnew2') + '</div></div>' +
+    '<div class="row" style="margin-top:12px"><button class="btn grn" onclick="savePin(false)">' + (s.pin ? 'تغيير الرمز' : 'تفعيل الرمز') + '</button>' + (s.pin ? '<button class="btn warn" onclick="savePin(true)">إلغاء الرمز</button>' : '') + '</div>' +
+    '<div class="note">للحماية الكاملة اجعل إعداد النشر في Apps Script «Who has access» على «Only myself».</div></div>' +
+    '<div class="card"><h2>النسخ الاحتياطي</h2><p class="sub">نسخة تلقائية كل أسبوع من الملفين بصيغة Excel في مجلد «نسخ احتياطية - مكتبة الصفاء» على Drive، ويُحتفظ بآخر 10 نسخ لكل ملف.</p>' +
+    '<div class="stats"><div class="st"><small>آخر نسخة</small><b style="font-size:16px">' + (s.backup.last ? esc(new Date(s.backup.last).toLocaleString('ar-SA-u-ca-gregory-nu-latn')) : 'لم تُنشأ بعد') + '</b></div></div>' +
+    '<div class="row"><button class="btn" id="bkn" onclick="backupNow()">إنشاء نسخة الآن</button>' + (s.backup.url ? '<a class="lnk" style="margin:0" href="' + esc(s.backup.url) + '" target="_blank" rel="noopener">فتح مجلد النسخ ←</a>' : '') + '</div></div>';
+  s.set.curs.forEach(function (c) { addCurRow(c); });
+}
+function addCurRow(c) {
+  c = c || { code: '', rate: '' };
+  var d = document.createElement('div'); d.className = 'row cur-row'; d.style.marginBottom = '10px';
+  d.innerHTML = '<div class="f"><label>العملة</label><input class="cc" value="' + esc(c.code) + '" placeholder="مثل: دولار"></div>' +
+    '<div class="f"><label>سعر الصرف الافتراضي (1 = كم ' + esc(SETS.set.base) + ')</label><input class="cr" inputmode="decimal" value="' + (c.rate || '') + '"></div>' +
+    '<button class="x" type="button" style="align-self:flex-end">حذف</button>';
+  $('.x', d).onclick = function () { d.remove(); };
+  $('#scurs').appendChild(d);
+}
+function saveCurs() {
+  var b = $('#scsave'); busy(b, true);
+  call('webSaveSettings', { base: $('#sbase').value, curs: $$('.cur-row').map(function (d) { return { code: $('.cc', d).value, rate: en($('.cr', d).value) }; }) }).then(function (s) {
+    busy(b, false); SETS = s; B.set = s.set; toast('تم حفظ العملات', 'ok'); renderSettings();
+  }, function (e) { busy(b, false); toast(errMsg(e), 'err'); });
+}
+function savePin(off) {
+  var p = { old: $('#pold') ? en($('#pold').value) : '', pin: '' };
+  if (!off) {
+    var a = en($('#pnew').value), a2 = en($('#pnew2').value);
+    if (!/^\d{4,8}$/.test(a)) { toast('الرمز يجب أن يكون من 4 إلى 8 أرقام', 'err'); return; }
+    if (a !== a2) { toast('الرمزان غير متطابقين', 'err'); return; }
+    p.pin = a;
+  }
+  call('webSetPin', p).then(function (r) { setTok(r.tok); toast(off ? 'تم إلغاء الرمز' : 'تم حفظ الرمز', 'ok'); vSettings(); }, function (e) { toast(errMsg(e), 'err'); });
+}
+function backupNow() {
+  var b = $('#bkn'); busy(b, true); b.textContent = 'جارٍ إنشاء النسخة…';
+  call('webBackupNow').then(function () { toast('تم إنشاء النسخة الاحتياطية', 'ok'); vSettings(); },
+    function (e) { busy(b, false); b.textContent = 'إنشاء نسخة الآن'; toast(errMsg(e), 'err'); });
+}
+
+
+/* ======================= سعر الصرف المتغير وحسابات الموردين بالدولار ======================= */
+function curShow(sel, wrap) { if (wrap) wrap.classList.toggle('hide', !wrap._force && (!sel.value || sel.value === B.set.base)); }
+function acurOf(name) { return (B.acur || {})[String(name || '').trim()] || ''; }
+function rememberRate(cur, rate) {
+  var r = num(rate);
+  if (!cur || !(r > 0) || !B.set) return;
+  B.set.curs.forEach(function (c) { if (c.code === cur && c.rate !== r) { c.rate = r; c.at = Date.now(); } });
+}
+function forceRate(wrap, inp, sel, ac, note) {
+  if (!wrap) return;
+  wrap._force = ac;
+  var l = wrap.querySelector('label'), cur = sel.value !== B.set.base ? sel.value : '';
+  if (l) l.textContent = ac ? 'سعر ' + ac + ' اليوم' : 'سعر الصرف';
+  if (ac && !inp.value) inp.value = curDefRate(ac);
+  curShow(sel, wrap);
+  if (note) note.innerHTML = ac ? 'حساب هذا المورد بالـ <b>' + esc(ac) + '</b>: سعر ' + esc(ac) + ' اليوم مطلوب ليُحوَّل المبلغ إلى رصيده' + (cur && cur !== ac ? '. <b class="neg">اختر ' + esc(ac) + ' أو ' + esc(B.set.base) + ' كعملة.</b>' : '.') : '';
+}
+
+/* فاتورة الشراء: مورد بحساب دولاري */
+vInv = (function (orig) {
+  return function () {
+    orig();
+    var E = INVEDIT && INVEDIT.data;
+    $('#ipaynote').insertAdjacentHTML('afterend', '<div class="note" id="iacc"></div>');
+    var upd = function () { forceRate($('#iratew'), $('#irate'), $('#icur'), acurOf($('#isup').value), $('#iacc')); calcInv(); };
+    $('#isup').addEventListener('input', upd); $('#isup').addEventListener('change', upd); $('#icur').addEventListener('change', upd);
+    upd();
+    if (E && !E.cur && E.arate) $('#irate').value = E.arate;
+  };
+})(vInv);
+
+/* اليومية: دفعة لمورد بحساب دولاري */
+vJEntry = (function (orig) {
+  return function () {
+    orig();
+    $('#jlines').insertAdjacentHTML('beforebegin', '<div class="note" id="jacc" style="margin:-4px 0 10px"></div>');
+    var upd = function () {
+      var ac = '';
+      $$('.sp', $('#jlines')).forEach(function (i) { if (!ac) ac = acurOf(i.value); });
+      forceRate($('#jratew'), $('#jrate'), $('#jcur'), ac, $('#jacc'));
+    };
+    $('#jlines').addEventListener('input', upd); $('#jlines').addEventListener('change', upd); $('#jcur').addEventListener('change', upd);
+    upd();
+  };
+})(vJEntry);
+saveJ = (function (orig) {
+  return function () {
+    var c = $('#jcur').value, ac = '';
+    $$('.sp', $('#jlines')).forEach(function (i) { if (!ac) ac = acurOf(i.value); });
+    rememberRate(c !== B.set.base ? c : ac, $('#jrate').value);
+    orig();
+  };
+})(saveJ);
+editJ = (function (orig) {
+  return function (row) {
+    orig(row);
+    var x = JR[row], sp = $('#esp');
+    if (!sp || !$('#jedit')) return;
+    $('#erate').closest('.f').insertAdjacentHTML('afterend', '<div class="f wide note" id="eacc" style="margin:0"></div>');
+    var upd = function () { forceRate($('#eratew'), $('#erate'), $('#ecur'), acurOf(sp.value), $('#eacc')); };
+    sp.addEventListener('input', upd); sp.addEventListener('change', upd); $('#ecur').addEventListener('change', upd);
+    if (x && !x.cur && x.rate > 1 && acurOf(x.sup)) $('#erate').value = x.rate;
+    upd();
+  };
+})(editJ);
+
+/* الرئيسية: سعر الصرف اليوم مع تحديث سريع */
+vHome = (function (orig) {
+  return function () {
+    orig();
+    var cs = (B.set && B.set.curs) || [];
+    if (!cs.length) return;
+    $('#kpis').insertAdjacentHTML('beforebegin', '<div class="card" style="padding:10px 14px">' + cs.map(function (c, i) {
+      return '<div class="row" style="justify-content:space-between;gap:10px">' +
+        '<div><span class="note" style="margin:0">سعر ' + esc(c.code) + ' اليوم</span><div><b style="font-size:20px">' + (c.rate ? fmt(c.rate) + ' ' + esc(B.set.base) : '<span class="neg">غير محدد</span>') + '</b> ' +
+        (c.at ? '<small style="color:var(--mut)">آخر تحديث ' + esc(new Date(c.at).toLocaleString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) + '</small>' : '') + '</div></div>' +
+        '<form class="row" style="gap:6px" onsubmit="event.preventDefault();setRate(' + i + ')"><input id="rt' + i + '" inputmode="decimal" autocomplete="off" placeholder="السعر الجديد" style="width:150px;min-height:42px"><button class="btn sm" style="min-height:42px">تحديث</button></form></div>';
+    }).join('<hr style="border:0;border-top:1px solid var(--bd);margin:8px 0">') +
+      '<div class="note">السعر يتحدث تلقائيًا كلما أدخلت عملية بسعر جديد، ويظهر افتراضيًا في الإدخال التالي.</div></div>');
+  };
+})(vHome);
+function setRate(i) {
+  var c = B.set.curs[i], v = en($('#rt' + i).value);
+  if (!(num(v) > 0)) { toast('أدخل سعرًا صحيحًا', 'err'); return; }
+  call('webSetRate', { code: c.code, rate: v }).then(function (s) { B.set = s; DASH = null; toast('تم تحديث سعر ' + c.code, 'ok'); if (CUR === 'home') vHome(); }, function (e) { toast(errMsg(e), 'err'); });
+}
+
+/* ======================= الملخص اليومي: تفاصيل اليوم في نافذة منبثقة ======================= */
+(function () {
+  var st = document.createElement('style');
+  st.textContent = '.dpop{position:fixed;inset:0;z-index:90;background:rgba(15,23,32,.45);display:flex;align-items:flex-end;justify-content:center;animation:dpf .15s}' +
+    '.dpop .dbox{background:#fff;width:100%;max-width:820px;max-height:88vh;border-radius:18px 18px 0 0;display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,.25);animation:dpu .2s ease-out}' +
+    '@media(min-width:700px){.dpop{align-items:center}.dpop .dbox{border-radius:18px}}' +
+    '.dpop .dhd{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--bd);background:linear-gradient(135deg,var(--j),var(--j2));color:#fff;border-radius:18px 18px 0 0}' +
+    '.dpop .dhd b{flex:1;font-size:17px;text-align:center}.dpop .dhd button{background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:10px;min-width:40px;min-height:40px;font-size:18px;cursor:pointer}' +
+    '.dpop .dhd button:disabled{opacity:.35}.dpop .dbd{overflow:auto;padding:12px 14px calc(14px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}' +
+    '.dpop .stats{margin-bottom:10px}tr.dclk{cursor:pointer}tr.dclk:active td,tr.dclk:hover td{background:#E8F3F1}' +
+    '@keyframes dpf{from{opacity:0}}@keyframes dpu{from{transform:translateY(40px);opacity:.4}}';
+  document.head.appendChild(st);
+})();
+var DDAYS = [], DMAP = {};
+function vDaily() {
+  var L = B.labels;
+  $('#view').innerHTML = '<div class="muted">جارٍ التحميل…</div>';
+  call('webDaily').then(function (r) {
+    var t = r.totals, h =
+      '<div class="stats"><div class="stat hi"><span>الرصيد الحالي</span><b>' + fmt(r.bal.cash) + '</b></div><div class="stat"><span>رصيد ' + esc(L.due) + '</span><b>' + fmt(r.bal.due) + '</b></div>' +
+      '<div class="stat"><span>إجمالي ' + esc(L.inn) + '</span><b>' + fmt(t.inn) + '</b></div><div class="stat"><span>إجمالي ' + esc(L.out) + '</span><b>' + fmt(t.out) + '</b></div></div>';
+    DDAYS = r.days.map(function (d) { DMAP[d.date] = d; return d.date; });
+    if (!r.days.length) { $('#view').innerHTML = h + '<div class="muted">لا توجد حركات بعد</div>'; return; }
+    h += '<div class="note">اضغط على أي يوم لعرض تفاصيله.</div><div class="tw"><table><tr><th>التاريخ</th><th>' + esc(L.due) + '</th><th>' + esc(L.out) + '</th><th>' + esc(L.inn) + '</th><th>صافي النقد</th><th>الرصيد</th><th>رصيد ' + esc(L.due) + '</th></tr>' +
+      r.days.map(function (d) {
+        return '<tr class="dclk" onclick="dayPop(\'' + esc(d.date) + '\')"><td><b style="color:var(--j)">' + esc(d.date) + '</b></td><td>' + fmt(d.due) + '</td><td>' + fmt(d.out) + '</td><td>' + fmt(d.inn) + '</td><td class="' + (d.net < 0 ? 'neg' : '') + '">' + fmt(d.net) + '</td><td>' + fmt(d.cash) + '</td><td>' + fmt(d.dueBal) + '</td></tr>';
+      }).join('') + '</table></div><div class="pdf"><button class="btn sec" onclick="runPdf(this,\'daily\',{})">تصدير PDF</button><div id="pdfo"></div></div>';
+    $('#view').innerHTML = h;
+  }).catch(function (e) { toast(errMsg(e), 'err'); });
+}
+function dayClose() { var p = $('#dpop'); if (p) p.remove(); document.body.style.overflow = ''; document.removeEventListener('keydown', dayKey); }
+function dayKey(e) { if (e.key === 'Escape') dayClose(); }
+function dayRows(date, off, acc) {
+  return call('webJLog', { q: '', from: date, to: date, type: 'الكل', off: off }).then(function (r) {
+    acc = acc.concat(r.rows);
+    return r.next && off < 1000 ? dayRows(date, off + r.rows.length, acc) : { rows: acc, totals: r.totals, count: r.count };
+  });
+}
+function dayPop(date) {
+  var L = B.labels, i = DDAYS.indexOf(date), p = $('#dpop');
+  if (!p) {
+    p = document.createElement('div'); p.id = 'dpop'; p.className = 'dpop';
+    p.onclick = function (e) { if (e.target === p) dayClose(); };
+    document.body.appendChild(p); document.body.style.overflow = 'hidden'; document.addEventListener('keydown', dayKey);
+  }
+  /* DDAYS مرتبة من الأحدث للأقدم */
+  var older = DDAYS[i + 1], newer = i > 0 ? DDAYS[i - 1] : '';
+  p.innerHTML = '<div class="dbox"><div class="dhd"><button title="اليوم الأحدث" ' + (newer ? 'onclick="dayPop(\'' + newer + '\')"' : 'disabled') + '>›</button>' +
+    '<b>تفاصيل يوم ' + esc(date) + '</b><button title="اليوم الأقدم" ' + (older ? 'onclick="dayPop(\'' + older + '\')"' : 'disabled') + '>‹</button>' +
+    '<button title="إغلاق" onclick="dayClose()">✕</button></div><div class="dbd" id="dbd">' + SPIN + '</div></div>';
+  dayRows(date, 0, []).then(function (r) {
+    if (!$('#dbd')) return;
+    regRows(r.rows);
+    var t = r.totals, pd = DMAP[older], open = pd ? pd.cash : 0, run = open;
+    var h = '<div class="stats"><div class="stat"><span>' + esc(L.inn) + '</span><b>' + fmt(t.inn) + '</b></div><div class="stat"><span>' + esc(L.out) + '</span><b>' + fmt(t.out) + '</b></div>' +
+      '<div class="stat hi"><span>صافي النقد</span><b class="' + (t.net < 0 ? 'neg' : '') + '">' + fmt(t.net) + '</b></div><div class="stat"><span>' + esc(L.due) + '</span><b>' + fmt(t.due) + '</b></div>' +
+      '<div class="stat"><span>رصيد اليوم السابق</span><b>' + fmt(open) + '</b></div><div class="stat hi"><span>رصيد نهاية اليوم</span><b>' + fmt(open + t.net) + '</b></div>' +
+      '<div class="stat"><span>عدد الحركات</span><b>' + r.count + '</b></div></div>';
+    if (!r.rows.length) { $('#dbd').innerHTML = h + '<div class="muted">لا توجد حركات في هذا اليوم</div>'; return; }
+    var orow = '<tr style="background:#EEF3F8"><td class="l"><b>رصيد اليوم السابق</b>' + (older ? ' <small>(' + esc(older) + ')</small>' : '') + '</td><td></td><td></td><td></td><td><b>' + fmt(open) + '</b></td><td colspan="2"></td></tr>';
+    h += tbl(['البيان', L.due, L.out, L.inn, 'الرصيد', 'وقت الإدخال', ''], [orow].concat(r.rows.map(function (x) {
+      return '<tr>' + td(esc(x.st) + jNote(x), 'l') + td(x.due ? fmt(x.due) : '') + td(x.out ? fmt(x.out) : '') + td(x.inn ? fmt(x.inn) : '') + td(fmt(run += x.inn - x.out)) +
+        td('<small>' + esc(String(x.time || '').slice(11) || x.time || '') + '</small>') +
+        '<td><button class="btn sec sm" onclick="dayClose();editJ(' + x.row + ')">' + (x.link && x.link.indexOf('INV|') === 0 ? 'الفاتورة' : 'تعديل') + '</button></td></tr>';
+    })), '<tr class="tot"><td>الإجمالي</td>' + td(fmt(t.due)) + td(fmt(t.out)) + td(fmt(t.inn)) + td(fmt(open + t.net)) + '<td colspan="2"></td></tr>');
+    $('#dbd').innerHTML = h;
+  }).catch(function (e) { if ($('#dbd')) $('#dbd').innerHTML = '<div class="muted">' + esc(errMsg(e)) + '</div>'; });
+}
+refreshJ = (function (orig) { return function () { if (CUR === 'daily') vDaily(); else orig(); }; })(refreshJ);
+
+/* قائمة الموردين: نفس تصميم خانة المورد في قيود الموردين */
+function supOpts(v, none) {
+  var list = (B.suppliers || []).slice().sort(function (a, b) { return String(a).localeCompare(String(b), 'ar'); });
+  if (v && list.indexOf(v) < 0) list.unshift(v);
+  return '<option value="">' + esc(none || 'اختر المورد…') + '</option>' + list.map(function (s) { return '<option value="' + esc(s) + '"' + (s === v ? ' selected' : '') + '>' + esc(s) + '</option>'; }).join('');
+}
+
+/* ======================= السرعة: ذاكرة مؤقتة للقراءة + تحميل مسبق ======================= */
+/* صفحات العرض تظهر فورًا من آخر نسخة محفوظة، ثم تتحدث بهدوء من الخادم.
+   أي حفظ أو تعديل أو حذف يمسح الذاكرة، فلا تظهر بيانات قديمة بعد تعديلاتك. */
+var QC = {}, QTTL = 20000;
+var QREAD = { webDash: 1, webDaily: 1, webInvList: 1, webSearchPurchases: 1, webPLog: 1, webListItems: 1, webPriceCompare: 1, webSearchJournal: 1,
+  webJLog: 1, webJDay: 1, webReport: 1, webGetSettings: 1, webGlobalSearch: 1, webInvGet: 1, webListSuppliers: 1 };
+var QQUIET = { webAutoBackup: 1, webPinState: 1, webCheckPin: 1, webPdf: 1, webInvPdf: 1, webSupPdf: 1, webBoot: 1, webSupLoad: 1 };
+/* صفحات يُعاد رسمها تلقائيًا إذا وصلت بيانات أحدث (لا تحتوي نماذج إدخال) */
+var QAUTO = { home: 1, daily: 1, pinv: 1, items: 1, rmon: 1, ryear: 1 };
+function qClear() { QC = {}; }
+/* إذا انتقلت لقسم آخر قبل وصول الرد، لا يُكتب الرد القديم فوق القسم الجديد */
+var QGEN = 0, QPF = false;
+var QDROP = { webDaily: 1, webInvList: 1, webSearchPurchases: 1, webPLog: 1, webListItems: 1, webPriceCompare: 1, webSearchJournal: 1, webJLog: 1, webReport: 1, webGetSettings: 1, webGlobalSearch: 1, webJDay: 1 };
+go = (function (orig) { return function () { QGEN++; return orig.apply(null, arguments); }; })(go);
+call = (function (orig) {
+  return function (fn) {
+    var a = Array.prototype.slice.call(arguments, 1);
+    if (!QREAD[fn]) {
+      if (!QQUIET[fn]) qClear();
+      return orig.apply(null, arguments);
+    }
+    var k = fn + '|' + JSON.stringify(a), c = QC[k], view = CUR, now = Date.now();
+    var fetch = function () {
+      var p = orig.apply(null, [fn].concat(a)).then(function (r) {
+        var old = QC[k], same = old && old.j === JSON.stringify(r);
+        QC[k] = { v: r, j: JSON.stringify(r), t: Date.now() };
+        return { r: r, changed: old && !same };
+      }, function (e) { delete QC[k]; throw e; });
+      QC[k] = QC[k] || {}; QC[k].p = p;
+      return p;
+    };
+    if (c && c.j) {
+      if (now - c.t > QTTL && !c.p) {
+        fetch().then(function (x) {
+          QC[k] && (QC[k].p = null);
+          if (x.changed && CUR === view && QAUTO[view] && !$('#dpop') && !$('#jedit') && !(document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))) {
+            var y = window.scrollY; go(view); setTimeout(function () { window.scrollTo(0, y); }, 30);
+          }
+        }).catch(function () { /* */ });
+      }
+      return Promise.resolve(JSON.parse(c.j));
+    }
+    if (c && c.p) { var g2 = QGEN, d2 = QDROP[fn] && !QPF; return c.p.then(function (x) { return d2 && g2 !== QGEN ? new Promise(function () {}) : JSON.parse(JSON.stringify(x.r)); }); }
+    var g = QGEN, drop = QDROP[fn] && !QPF;
+    return fetch().then(function (x) { QC[k] && (QC[k].p = null); return drop && g !== QGEN ? new Promise(function () {}) : x.r; });
+  };
+})(call);
+refreshView = (function (orig) { return function () { qClear(); orig(); }; })(refreshView);
+/* تحميل مسبق هادئ لأكثر الصفحات استخدامًا، واحدة تلو الأخرى */
+function qPrefetch() {
+  var list = [['webDaily'], ['webInvList', { q: '', from: '', to: '' }], ['webListItems'], ['webJLog', { q: '', from: '', to: '', type: 'الكل', off: 0 }],
+    ['webPLog', { q: '', from: '', to: '', off: 0 }], ['webReport', { year: null }],
+    ['webSearchJournal', { q: '', from: '', to: '', type: 'الكل', off: 0 }], ['webSearchPurchases', '', 0]];
+  var i = 0;
+  (function next() {
+    if (i >= list.length) return;
+    var x = list[i++];
+    QPF = true; var pr = call.apply(null, x); QPF = false;
+    pr.then(function () { setTimeout(next, 300); }, function () { setTimeout(next, 300); });
+  })();
+}
+function loadDay() {
+  var dt = $('#jdate'); if (!dt) return;
+  call('webJDay', dt.value).then(function (r) {
+    if (!$('#bcash')) return;
+    $('#bcash').textContent = fmt(r.bal.cash); $('#bdue').textContent = fmt(r.bal.due);
+    $('#dIn').textContent = fmt(r.inn); $('#dOut').textContent = fmt(r.out); $('#dNet').textContent = fmt(r.net); $('#dDue').textContent = fmt(r.due);
+  }).catch(function (e) { toast(errMsg(e), 'err'); });
+}
+
+
+/* ======================= قراءة فاتورة المورد (PDF أو صورة) وتعبئة الجدول ======================= */
+var AION = null;
+function aiNorm(s) { return String(s || '').toLowerCase().replace(/[ً-ْـ]/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/[^\w؀-ۿ]+/g, ' ').trim(); }
+function aiItem(name) {
+  var n = aiNorm(name); if (!n) return null;
+  var best = null, bs = 0, A = n.split(' ');
+  for (var i = 0; i < B.items.length; i++) {
+    var m = aiNorm(B.items[i].name);
+    if (m === n) return B.items[i];
+    var Bw = m.split(' '), inter = A.filter(function (w) { return Bw.indexOf(w) > -1; }).length, sc = inter / Math.max(A.length, Bw.length);
+    if (sc > bs) { bs = sc; best = B.items[i]; }
+  }
+  return bs >= 0.75 ? best : null;
+}
+function aiCur(c) {
+  c = String(c || '').toLowerCase();
+  var list = (B.set && B.set.curs) || [];
+  if (!c) return '';
+  if (/syp|ل\.?\s?س|ليره|ليرة|s\.p/.test(c)) return B.set.base;
+  var f = list.filter(function (x) { return c.indexOf(String(x.code).toLowerCase()) > -1 || String(x.code).toLowerCase().indexOf(c) > -1; })[0];
+  if (f) return f.code;
+  if (/usd|\$|دولار|dollar/.test(c)) { f = list.filter(function (x) { return /دولار|usd|\$/i.test(x.code); })[0]; if (f) return f.code; }
+  return '';
+}
+function aiKeyBox(after) {
+  var o = document.createElement('div'); o.className = 'dpop'; o.id = 'aikey';
+  o.innerHTML = '<div class="dbox"><div class="dhd" style="background:linear-gradient(135deg,var(--p),var(--p2))"><b>تفعيل قراءة الفواتير</b><button onclick="document.getElementById(\'aikey\').remove()">✕</button></div><div class="dbd">' +
+    '<p>تحتاج مرة واحدة فقط إلى مفتاح مجاني من Google:</p><ol style="line-height:2">' +
+    '<li>افتح <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener"><b>aistudio.google.com/apikey</b></a> وسجّل دخولك بحساب Google.</li>' +
+    '<li>اضغط <b>Create API key</b> ثم انسخ المفتاح.</li><li>الصقه هنا واضغط حفظ.</li></ol>' +
+    '<div class="f"><label>مفتاح Gemini</label><input id="aikin" autocomplete="off" dir="ltr" placeholder="الصق المفتاح هنا"></div>' +
+    '<div class="note">يُحفظ المفتاح في الخادم الخاص بك فقط ولا يظهر في الواجهة.</div>' +
+    '<button class="btn" style="width:100%;margin-top:10px" id="aiksv">حفظ</button></div></div>';
+  document.body.appendChild(o);
+  $('#aiksv').onclick = function () {
+    var k = $('#aikin').value.trim(); if (!k) return;
+    busy($('#aiksv'), true);
+    call('webSetGeminiKey', { key: k }).then(function (r) { AION = true; o.remove(); toast('تم التفعيل ✓', 'ok'); if (after) after(); },
+      function (e) { busy($('#aiksv'), false); toast(errMsg(e), 'err'); });
+  };
+}
+function aiPick() {
+  if (!navigator.onLine) { toast('قراءة الفاتورة تحتاج اتصالًا بالإنترنت', 'err'); return; }
+  var go2 = function () { $('#aifile').value = ''; $('#aifile').click(); };
+  if (AION) return go2();
+  call('webAiState').then(function (s) { AION = s.on; if (s.on) go2(); else aiKeyBox(go2); }, function (e) { toast(errMsg(e), 'err'); });
+}
+/* الصور من الكاميرا كبيرة جدًا: نصغّرها في الجهاز قبل الإرسال (أسرع بكثير وبنفس الدقة للقراءة) */
+function aiShrink(f) {
+  return new Promise(function (res) {
+    if (!/^image\//.test(f.type) && !/\.(jpe?g|png|heic|heif|webp)$/i.test(f.name)) return res(f);
+    var url = URL.createObjectURL(f), im = new Image();
+    im.onload = function () {
+      var M = 1800, w = im.naturalWidth, h = im.naturalHeight, k = Math.min(1, M / Math.max(w, h));
+      var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob(function (b) { res(b && b.size < f.size ? new File([b], (f.name || 'invoice').replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }) : f); }, 'image/jpeg', 0.82);
+    };
+    im.onerror = function () { URL.revokeObjectURL(url); res(f); };
+    im.src = url;
+  });
+}
+var AIRUN = 0;
+function aiRead(f0) {
+  if (!f0) return;
+  var st = $('#aist'), run = ++AIRUN, t0 = Date.now();
+  st.innerHTML = '<span class="spin"></span> جارٍ تجهيز الملف…';
+  aiShrink(f0).then(function (f) {
+    if (run !== AIRUN) return;
+    if (f.size > 18 * 1024 * 1024) { st.innerHTML = '<b class="neg">الملف كبير جدًا (الحد 18 ميغابايت)</b>'; return; }
+    if (/^image\//.test(f.type)) { try { var dt = new DataTransfer(); dt.items.add(f); $('#iphoto').files = dt.files; } catch (e) { /* */ } }
+    st.innerHTML = '<span class="spin"></span> جارٍ قراءة الفاتورة… <span id="aisec"></span>';
+    var tick = setInterval(function () {
+      var s = Math.round((Date.now() - t0) / 1000), el = $('#aisec');
+      if (run !== AIRUN || !el) { clearInterval(tick); return; }
+      el.textContent = s + ' ث' + (s > 60 ? ' — أطول من المعتاد، يمكنك الانتظار أو اختيار الملف من جديد' : '');
+    }, 1000);
+    var fr = new FileReader();
+    fr.onload = function () {
+      var data = String(fr.result).split(',')[1], mime = f.type || (/\.pdf$/i.test(f.name) ? 'application/pdf' : 'image/jpeg');
+      call('webInvExtract', { data: data, mime: mime }).then(function (r) {
+        clearInterval(tick); if (run !== AIRUN) return;
+        if (!r.ok) { st.innerHTML = '<b class="neg">' + esc(r.msg) + '</b>'; if (r.nokey) { AION = false; aiKeyBox(aiPick); } return; }
+        aiFill(r, st);
+      }, function (e) { clearInterval(tick); if (run === AIRUN) st.innerHTML = '<b class="neg">' + esc(errMsg(e)) + '</b>'; });
+    };
+    fr.readAsDataURL(f);
+  });
+}
+function aiFill(r, st) {
+  var notes = [];
+  if (r.supplier) { $('#isup').value = r.supplier; $('#isup').dispatchEvent(new Event('change')); }
+  else if (r.supplierRaw) notes.push('⚠︎ المورد «' + esc(r.supplierRaw) + '» غير موجود في قائمتك — اختره يدويًا أو أضفه من قسم الموردين.');
+  if (r.invoice) $('#iinv').value = r.invoice;
+  if (r.date) $('#idate').value = r.date;
+  var cur = aiCur(r.currency);
+  if (cur) { curSet($('#icur'), $('#irate'), $('#iratew'), cur === B.set.base ? '' : cur, cur === B.set.base ? '' : curDefRate(cur)); $('#icur').dispatchEvent(new Event('change')); }
+  else if (r.currency) notes.push('⚠︎ العملة في الفاتورة «' + esc(r.currency) + '» — تأكد من اختيار العملة الصحيحة.');
+  /* الأسطر: نستبدل الأسطر الفارغة فقط */
+  $$('.line').forEach(function (d) { if (!$('.n', d).value.trim() && !$('.p', d).value.trim() && !$('.q', d).value.trim()) d.remove(); });
+  var known = 0, fresh = 0;
+  r.items.forEach(function (x) {
+    var hit = aiItem(x.name);
+    if (hit) known++; else fresh++;
+    addInvLine({ name: hit ? hit.name : x.name, code: hit ? '' : '', price: x.price, qty: x.qty });
+    var d = $$('.line').pop();
+    if (!hit) {
+      if (x.unit) $('.u', d).value = x.unit;
+      $('.pa', d).innerHTML = '<span class="badge">من الفاتورة</span> ' + (x.code ? 'كود المورد: ' + esc(x.code) : '');
+    } else if (aiNorm(hit.name) !== aiNorm(x.name)) $('.pa', d).innerHTML = 'في الفاتورة: «' + esc(x.name) + '»';
+  });
+  if (!$$('.line').length) addInvLine();
+  calcInv();
+  var sum = r.items.reduce(function (a, x) { return a + x.price * x.qty; }, 0);
+  var h = '✅ تمت القراءة: ' + r.items.length + ' صنف (' + known + ' مطابق لأصنافك' + (fresh ? '، ' + fresh + ' جديد' : '') + ').';
+  if (r.total && Math.abs(sum - r.total) > Math.max(1, r.total * 0.005)) h += '<br>⚠︎ مجموع الأسطر ' + fmt(sum) + ' يختلف عن إجمالي الفاتورة ' + fmt(r.total) +
+    (r.tax ? ' (ضريبة ' + fmt(r.tax) + ')' : '') + (r.discount ? ' (خصم ' + fmt(r.discount) + ')' : '') + ' — راجع الأسطر.';
+  h += '<br><b>راجع البيانات قبل الحفظ.</b>';
+  if (notes.length) h += '<br>' + notes.join('<br>');
+  st.innerHTML = h;
+}
+vInv = (function (orig) {
+  return function () {
+    orig();
+    if (INVEDIT && INVEDIT.data) return;
+    $('#view').insertAdjacentHTML('afterbegin', '<div class="card" style="border:2px dashed var(--p2);background:#F4F8FC"><div class="row" style="justify-content:space-between;gap:10px;flex-wrap:wrap">' +
+      '<div><b>📄 قراءة فاتورة المورد تلقائيًا</b><div class="note" style="margin:2px 0 0">اختر ملف PDF أو صورة للفاتورة، وتُعبّأ الأصناف والأسعار والكميات تلقائيًا.</div></div>' +
+      '<button class="btn" type="button" onclick="aiPick()">اختيار ملف الفاتورة</button></div>' +
+      '<input type="file" id="aifile" accept="application/pdf,image/*" style="display:none" onchange="aiRead(this.files[0])"><div class="note" id="aist" style="margin-top:8px"></div></div>');
+  };
+})(vInv);
+
+/* لوحة أرقام لكل خانات المبالغ والأرقام (وفي الآيباد: لوحة أرقام خاصة داخل التطبيق) */
+(function () {
+  var RX = /مبلغ|المبالغ|صادر|وارد|مقبوض|مدفوع|ذمم|سعر|كمي|رصيد|إجمالي|اجمالي|صرف|كيلو|غرام|طبق|طن|خصم|قيمة|حد/;
+  var NO = /رقم الفاتورة|كود|بيان|اسم|ملاحظ|هاتف|تاريخ|كلمة|وصف|رمز|مقاس|نوع|عملة|مورد|حساب/;
+  var IPAD = false; /* الآيباد: لوحة المفاتيح الأصلية بطلب المستخدم */
+  var T = 0;
+  function fix() {
+    T = 0;
+    var L = document.querySelectorAll('input:not([data-nk])');
+    for (var n = 0; n < L.length; n++) {
+      var i = L[n], ty = (i.getAttribute('type') || 'text').toLowerCase(), im = i.getAttribute('inputmode') || '';
+      i.dataset.nk = 1;
+      if (ty === 'number') im = 'decimal';
+      else if (!im && (ty === 'text' || ty === 'search' || ty === 'tel') && !i.getAttribute('list')) {
+        var p = i.parentElement, l = p && p.querySelector('label'), t = (l ? l.textContent : '') + ' ' + (i.placeholder || '');
+        if (RX.test(t) && !NO.test(t)) im = 'decimal';
+      }
+      if (im !== 'decimal' && im !== 'numeric') continue;
+      if (IPAD && ty !== 'password') { i.dataset.kp = im; i.setAttribute('inputmode', 'none'); if (ty === 'number') i.setAttribute('type', 'text'); }
+      else i.setAttribute('inputmode', im);
+    }
+  }
+  new MutationObserver(function () { if (!T) T = setTimeout(fix, 40); }).observe(document.documentElement, { childList: true, subtree: true });
+  fix();
+  if (!IPAD) return;
+
+  /* ---------- لوحة الأرقام الخاصة بالآيباد ---------- */
+  var st = document.createElement('style');
+  st.textContent = '#kp{position:fixed;left:0;right:0;bottom:0;z-index:9998;background:#D1D5DB;padding:8px 8px calc(8px + env(safe-area-inset-bottom));display:none;direction:ltr;box-shadow:0 -6px 20px rgba(0,0,0,.18);font-family:system-ui,-apple-system,sans-serif}' +
+    '#kp .g{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;max-width:560px;margin:0 auto}' +
+    '#kp button{height:56px;border:0;border-radius:9px;background:#fff;font-size:26px;font-weight:500;color:#111;box-shadow:0 1px 0 rgba(0,0,0,.25);touch-action:manipulation;-webkit-user-select:none;user-select:none}' +
+    '#kp button:active{background:#AEB4BD}#kp .f{background:#AEB4BD;font-size:19px}#kp .ok{background:#1F4E79;color:#fff;font-size:19px;font-weight:700}';
+  document.head.appendChild(st);
+  var kp = document.createElement('div'); kp.id = 'kp';
+  kp.innerHTML = '<div class="g">' +
+    '<button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button class="f" data-k="back">⌫</button>' +
+    '<button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button class="f" data-k="neg">−</button>' +
+    '<button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button class="f" data-k="next">التالي</button>' +
+    '<button data-k=".">.</button><button data-k="0">0</button><button data-k="00">00</button><button class="ok" data-k="done">تم</button></div>';
+  var cur = null;
+  function mount() { if (!kp.parentNode && document.body) document.body.appendChild(kp); }
+  function show(i) {
+    mount(); cur = i;
+    kp.querySelector('[data-k="neg"]').style.visibility = i.dataset.kp === 'decimal' ? 'visible' : 'hidden';
+    kp.querySelector('[data-k="."]').style.visibility = i.dataset.kp === 'decimal' ? 'visible' : 'hidden';
+    kp.style.display = 'block';
+    document.body.style.paddingBottom = (kp.offsetHeight + 10) + 'px';
+    setTimeout(function () {
+      var r = i.getBoundingClientRect(), lim = window.innerHeight - kp.offsetHeight - 20;
+      if (r.bottom > lim || r.top < 60) window.scrollBy({ top: r.bottom - lim + 20, behavior: 'smooth' });
+    }, 30);
+  }
+  function hide() { kp.style.display = 'none'; document.body.style.paddingBottom = ''; cur = null; }
+  function fire(i, t) { i.dispatchEvent(new Event(t, { bubbles: true })); }
+  function sel(i) { try { var s = i.selectionStart, e = i.selectionEnd; if (s !== null && s !== undefined) return [s, e]; } catch (x) { /* */ } return [i.value.length, i.value.length]; }
+  function put(i, txt) {
+    var v = i.value, se = sel(i), nv = v.slice(0, se[0]) + txt + v.slice(se[1]);
+    if (txt === '.' && v.indexOf('.') > -1) return;
+    i.value = nv;
+    try { i.setSelectionRange(se[0] + txt.length, se[0] + txt.length); } catch (x) { /* */ }
+    fire(i, 'input');
+  }
+  function next(i) {
+    var L = Array.prototype.filter.call(document.querySelectorAll('input,select,textarea'), function (x) { return !x.disabled && !x.readOnly && x.offsetParent && x.type !== 'hidden' && x.type !== 'file' && x.type !== 'checkbox'; });
+    var k = L.indexOf(i), n = L[k + 1];
+    fire(i, 'change');
+    if (n) n.focus(); else { i.blur(); hide(); }
+  }
+  kp.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    var b = e.target.closest('button'); if (!b || !cur) return;
+    var k = b.dataset.k, i = cur;
+    if (k === 'back') {
+      var se = sel(i), v = i.value;
+      if (se[0] === se[1] && se[0] > 0) { i.value = v.slice(0, se[0] - 1) + v.slice(se[1]); try { i.setSelectionRange(se[0] - 1, se[0] - 1); } catch (x) { /* */ } }
+      else if (se[0] !== se[1]) { i.value = v.slice(0, se[0]) + v.slice(se[1]); try { i.setSelectionRange(se[0], se[0]); } catch (x) { /* */ } }
+      fire(i, 'input');
+    } else if (k === 'neg') { i.value = i.value.charAt(0) === '-' ? i.value.slice(1) : '-' + i.value; fire(i, 'input'); }
+    else if (k === 'next') next(i);
+    else if (k === 'done') { fire(i, 'change'); i.blur(); hide(); }
+    else put(i, k);
+  });
+  document.addEventListener('focusin', function (e) {
+    var i = e.target;
+    if (i && i.dataset && i.dataset.kp) show(i);
+    else if (cur && !kp.contains(i)) hide();
+  });
+  document.addEventListener('focusout', function () {
+    setTimeout(function () { var a = document.activeElement; if (cur && !(a && a.dataset && a.dataset.kp)) { fire(cur, 'change'); hide(); } }, 120);
+  });
+})();
+
+
+/* ======================= قسم موحّد: بحث وسجل المشتريات ======================= */
+SECTIONS.p.tabs = SECTIONS.p.tabs.filter(function (t) { return t[0] !== 'plog'; }).map(function (t) { return t[0] === 'psearch' ? ['psearch', 'بحث وسجل المشتريات'] : t; });
+QREAD.webPFind = 1; QDROP.webPFind = 1;
+var PF = { q: '', sup: '', from: '', to: '' };
+function pfRange(k) {
+  var d = new Date(), y = d.getFullYear(), m = d.getMonth(), p2 = function (n) { return ('0' + n).slice(-2); }, iso = function (x) { return x.getFullYear() + '-' + p2(x.getMonth() + 1) + '-' + p2(x.getDate()); };
+  var f = '', t = '';
+  if (k === 'today') f = t = iso(d);
+  else if (k === 'month') { f = iso(new Date(y, m, 1)); t = iso(new Date(y, m + 1, 0)); }
+  else if (k === 'last') { f = iso(new Date(y, m - 1, 1)); t = iso(new Date(y, m, 0)); }
+  else if (k === 'year') { f = y + '-01-01'; t = y + '-12-31'; }
+  $('#pf-f').value = f; $('#pf-t').value = t;
+  $$('.pfr').forEach(function (b) { b.classList.toggle('sec', b.dataset.k !== k); });
+  doPFind(0);
+}
+function vPSearch() {
+  $('#view').innerHTML =
+    '<div class="card"><div class="grid">' +
+    '<div class="f wide"><label>ابحث (صنف / كود / رقم فاتورة / مورد)</label><input id="pf-q" autocomplete="off" onkeydown="if(event.key===\'Enter\')doPFind(0)"></div>' +
+    '<div class="f"><label>المورد</label><select id="pf-s" onchange="doPFind(0)">' + supOpts(PF.sup, 'كل الموردين') + '</select></div>' +
+    '<div class="f"><label>من تاريخ</label><input id="pf-f" type="date" onchange="doPFind(0)"></div><div class="f"><label>إلى تاريخ</label><input id="pf-t" type="date" onchange="doPFind(0)"></div></div>' +
+    '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:10px">' +
+    [['today', 'اليوم'], ['month', 'هذا الشهر'], ['last', 'الشهر الماضي'], ['year', 'هذه السنة'], ['all', 'كل الفترات']].map(function (x) { return '<button type="button" class="btn sec sm pfr" data-k="' + x[0] + '" onclick="pfRange(\'' + x[0] + '\')">' + x[1] + '</button>'; }).join('') +
+    '<span style="flex:1"></span><button class="btn" onclick="doPFind(0)">بحث</button></div></div><div id="pf-res"></div>';
+  $('#pf-q').value = PF.q; $('#pf-f').value = PF.from; $('#pf-t').value = PF.to;
+  doPFind(0);
+}
+function vPLog() { go('psearch'); }
+function doPFind(off) {
+  PF = { q: $('#pf-q').value.trim(), sup: $('#pf-s').value, from: $('#pf-f').value, to: $('#pf-t').value };
+  POFFX = off || 0;
+  var res = $('#pf-res');
+  res.innerHTML = '<div class="muted">جارٍ البحث…</div>';
+  call('webPFind', { q: PF.q, sup: PF.sup, from: PF.from, to: PF.to, off: off || 0 }).then(function (r) {
+    if (!$('#pf-res')) return;
+    var h = '<div class="stats"><div class="stat hi"><span>إجمالي المشتريات</span><b>' + fmt(r.total) + '</b></div>' +
+      '<div class="stat"><span>عدد الفواتير</span><b>' + r.invs + '</b></div><div class="stat"><span>عدد الأسطر</span><b>' + r.count + '</b></div>' +
+      '<div class="stat"><span>عدد الموردين</span><b>' + r.sups + '</b></div><div class="stat"><span>مجموع الكميات</span><b>' + fmt(r.qty) + '</b></div></div>';
+    regPRows(r.rows);
+    if (!r.rows.length) { res.innerHTML = h + '<div class="muted">لا توجد نتائج</div>'; return; }
+    h += tbl(['المورد', 'رقم الفاتورة', 'التاريخ', 'كود الصنف', 'الصنف', 'سعر الشراء', 'الكمية', 'الإجمالي', 'المصدر', 'وقت الإدخال', ''],
+      r.rows.map(function (x) {
+        return '<tr>' + td(esc(x.sup)) + td(esc(x.inv)) + td(esc(x.date)) + td(esc(x.code)) + td(esc(x.item), 'l') + td(fmt(x.price)) + td(esc(x.qty)) + td(fmt(x.total)) + td(srcName(x.src)) + td('<small>' + esc(x.time) + '</small>') + editPBtn(x) + '</tr>';
+      }), '<tr class="tot"><td colspan="7">الإجمالي (' + r.count + ' سطر)</td>' + td(fmt(r.total)) + '<td colspan="3"></td></tr>');
+    h += pager(r, 'doPFind') + '<div class="pdf"><button class="btn sec" onclick="pfPdf(this)">تصدير PDF بالنتائج الحالية</button><div id="pdfo"></div></div>';
+    res.innerHTML = h;
+  }).catch(function (e) { if ($('#pf-res')) $('#pf-res').innerHTML = ''; toast(errMsg(e), 'err'); });
+}
+function pfPdf(btn) {
+  busy(btn, true); $('#pdfo').innerHTML = '<span class="muted">جارٍ إنشاء الملف…</span>';
+  call('webPFindPdf', PF).then(function (r) {
+    busy(btn, false);
+    $('#pdfo').innerHTML = r.ok ? '<a href="' + esc(r.url) + '" target="_blank" rel="noopener">فتح التقرير PDF ومشاركته ←</a>' : '';
+    if (!r.ok) toast(r.msg, 'err');
+  }).catch(function (e) { busy(btn, false); $('#pdfo').innerHTML = ''; toast(errMsg(e), 'err'); });
+}
+refreshP = (function (orig) { return function () { if (CUR === 'psearch') reboot(function () { doPFind(POFFX); }); else orig(); }; })(refreshP);
+/* التحميل المسبق: الصفحة الموحّدة بدل القديمتين */
+function qPrefetch() {
+  var list = [['webDaily'], ['webInvList', { q: '', from: '', to: '' }], ['webListItems'], ['webJLog', { q: '', from: '', to: '', type: 'الكل', off: 0 }],
+    ['webPFind', { q: '', sup: '', from: '', to: '', off: 0 }], ['webReport', { year: null }],
+    ['webSearchJournal', { q: '', from: '', to: '', type: 'الكل', off: 0 }]];
+  var i = 0;
+  (function next() {
+    if (i >= list.length) return;
+    var x = list[i++];
+    QPF = true; var pr = call.apply(null, x); QPF = false;
+    pr.then(function () { setTimeout(next, 300); }, function () { setTimeout(next, 300); });
+  })();
+}
+
+/* ======================= لوحة الرسوم البيانية في الرئيسية ======================= */
+var DMODE = 'm';
+(function () {
+  var st = document.createElement('style');
+  st.textContent = '.seg{display:inline-flex;background:#EEF2F6;border-radius:10px;padding:3px;gap:3px}.seg button{border:0;background:transparent;padding:7px 12px;border-radius:8px;font:inherit;font-size:13px;font-weight:700;color:var(--mut);cursor:pointer}' +
+    '.seg button.on{background:#fff;color:var(--p);box-shadow:0 1px 3px rgba(0,0,0,.12)}.chd{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}.chd h2{margin:0}' +
+    '.dn{display:flex;gap:18px;align-items:center;flex-wrap:wrap}.dn svg{width:190px;height:190px;flex:0 0 auto}.dn ul{list-style:none;margin:0;padding:0;flex:1;min-width:180px}.dn li{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd);font-size:14px}' +
+    '.dn li i{width:12px;height:12px;border-radius:3px;flex:0 0 auto}.dn li span{flex:1}.dn li small{color:var(--mut);min-width:38px;text-align:center}';
+  document.head.appendChild(st);
+})();
+function lineSvg(labels, vals, color) {
+  var W = 700, H = 210, pb = 28, pt = 16, pl = 26, n = vals.length, mx = Math.max.apply(null, vals.concat([0])), mn = Math.min.apply(null, vals.concat([0]));
+  if (mx === mn) mx = mn + 1;
+  var X = function (i) { return pl + (W - 2 * pl) * (n > 1 ? i / (n - 1) : 0.5); }, Y = function (v) { return pt + (H - pb - pt) * (1 - (v - mn) / (mx - mn)); };
+  var pts = vals.map(function (v, i) { return X(i).toFixed(1) + ',' + Y(v).toFixed(1); }).join(' ');
+  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="direction:ltr;display:block" role="img">';
+  if (mn < 0) s += '<line x1="0" x2="' + W + '" y1="' + Y(0).toFixed(1) + '" y2="' + Y(0).toFixed(1) + '" stroke="#E57373" stroke-dasharray="4 4"/>';
+  s += '<polygon points="' + X(0).toFixed(1) + ',' + Y(Math.max(mn, 0)).toFixed(1) + ' ' + pts + ' ' + X(n - 1).toFixed(1) + ',' + Y(Math.max(mn, 0)).toFixed(1) + '" fill="' + color + '" opacity=".12"/>';
+  s += '<polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>';
+  vals.forEach(function (v, i) {
+    s += '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(v).toFixed(1) + '" r="4.5" fill="#fff" stroke="' + (v < 0 ? '#C62828' : color) + '" stroke-width="2.5"><title>' + esc(labels[i] + ': ' + fmt(v)) + '</title></circle>';
+    s += '<text x="' + X(i).toFixed(1) + '" y="' + (H - 9) + '" text-anchor="middle" font-size="11" fill="#637082">' + esc(labels[i]) + '</text>';
+  });
+  return s + '</svg>';
+}
+function donutSvg(items) {
+  var C = ['#1F4E79', '#13907F', '#EF6C00', '#6D2E5B', '#2E7D32', '#C62828', '#90A4AE'], tot = items.reduce(function (a, x) { return a + x.v; }, 0) || 1, a0 = -Math.PI / 2, s = '';
+  var R = 90, r = 56, cx = 95, cy = 95;
+  items.forEach(function (x, i) {
+    var a1 = a0 + 2 * Math.PI * x.v / tot, big = a1 - a0 > Math.PI ? 1 : 0, p = function (rad, a) { return (cx + rad * Math.cos(a)).toFixed(2) + ' ' + (cy + rad * Math.sin(a)).toFixed(2); };
+    if (items.length === 1) s += '<circle cx="95" cy="95" r="73" fill="none" stroke="' + C[0] + '" stroke-width="34"/>';
+    else s += '<path d="M' + p(R, a0) + ' A' + R + ' ' + R + ' 0 ' + big + ' 1 ' + p(R, a1) + ' L' + p(r, a1) + ' A' + r + ' ' + r + ' 0 ' + big + ' 0 ' + p(r, a0) + 'Z" fill="' + C[i % C.length] + '"><title>' + esc(x.n + ': ' + fmt(x.v)) + '</title></path>';
+    a0 = a1;
+  });
+  s += '<text x="95" y="90" text-anchor="middle" font-size="12" fill="#637082">الإجمالي</text><text x="95" y="110" text-anchor="middle" font-size="15" font-weight="700" fill="#1F2933">' + esc(fmt(tot)) + '</text>';
+  return '<div class="dn"><svg viewBox="0 0 190 190">' + s + '</svg><ul>' + items.map(function (x, i) {
+    return '<li><i style="background:' + C[i % C.length] + '"></i><span>' + esc(x.n) + '</span><small dir="ltr">' + Math.round(x.v / tot * 100) + '%</small><b>' + fmt(x.v) + '</b></li>';
+  }).join('') + '</ul></div>';
+}
+function dashCharts() {
+  var d = DASH, c = document.getElementById('dch'); if (!c || !d) return;
+  var daily = DMODE === 'd' && d.days;
+  var lab = daily ? d.days.map(function (x, i) { return (i % 2 === 0 || d.days.length < 16) ? x.k : ''; }) : d.months.map(function (m) { return MN[+m.k.slice(5) - 1]; });
+  var sum = function (a, f) { return a.reduce(function (t, x) { return t + x[f]; }, 0); }, rows = daily ? d.days : d.months;
+  c.innerHTML = '<div class="chd"><h2>' + (daily ? 'هذا الشهر يومًا بيوم' : 'آخر 12 شهرًا') + '</h2><div class="seg"><button class="' + (daily ? 'on' : '') + '" onclick="DMODE=\'d\';dashCharts()">هذا الشهر</button>' +
+    '<button class="' + (daily ? '' : 'on') + '" onclick="DMODE=\'m\';dashCharts()">12 شهرًا</button></div></div>' + chartSvg(lab, SER(rows)) +
+    '<div class="note" style="margin-top:6px">المجموع: المشتريات ' + fmt(sum(rows, 'p')) + ' · المقبوضات ' + fmt(sum(rows, 'inn')) + ' · المدفوعات ' + fmt(sum(rows, 'out')) +
+    ' · <b class="' + (sum(rows, 'inn') - sum(rows, 'out') < 0 ? 'neg' : '') + '">صافي النقد ' + fmt(sum(rows, 'inn') - sum(rows, 'out')) + '</b></div>';
+}
+renderDash = (function (orig) {
+  return function () {
+    orig();
+    var d = DASH, box = document.getElementById('dash2'); if (!box || !d) return;
+    var first = box.querySelector('.card'); if (first) { first.id = 'dch'; dashCharts(); }
+    var h = '';
+    if (d.cashEnd && d.cashEnd.length) h += '<div class="card" style="margin-top:16px"><div class="chd"><h2>رصيد الصندوق آخر كل شهر</h2><b class="' + (d.cash < 0 ? 'neg' : '') + '">الآن: ' + fmt(d.cash) + '</b></div>' +
+      lineSvg(d.cashEnd.map(function (m) { return MN[+m.k.slice(5) - 1]; }), d.cashEnd.map(function (m) { return m.v; }), '#00695C') + '</div>';
+    if (d.supShare && d.supShare.length) h += '<div class="card" style="margin-top:16px"><h2>توزيع المشتريات على الموردين — ' + d.year + '</h2>' + donutSvg(d.supShare) + '</div>';
+    if (h && first) first.insertAdjacentHTML('afterend', h);
+  };
+})(renderDash);
+
+/* ---------- البدء ---------- */
+function bootApp() {
+  $('#view').innerHTML = SPIN;
+  reboot(function () {
+    go('home');
+    SUP.prefetch();
+    setTimeout(qPrefetch, 2500);
+    setTimeout(function () { call('webAutoBackup').then(function (r) { if (r && r.done) toast('تم حفظ نسخة احتياطية أسبوعية تلقائيًا', 'ok'); }).catch(function () { /* */ }); }, 5000);
+  }).catch(function (e) {
+    $('#view').innerHTML = '<div class="muted">تعذّر التحميل: ' + esc(errMsg(e)) + '<br><br><button class="btn sec" onclick="bootApp()">إعادة المحاولة</button></div>';
+  });
+}
+bootApp();
+</script>
+</body>
+</html>

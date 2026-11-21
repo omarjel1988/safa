@@ -319,8 +319,7 @@
   function checkShell() {
     if (!live() || !navigator.onLine || Date.now() - SHELLAT < 300000) return;
     SHELLAT = Date.now();
-    post(M.shell).then(function (s) {
-      s = M.shellOut(s);
+    fetch('shell.html', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (s) {
       if (!s || s.length < 1000) return;
       return kget('shell').then(function (old) { if (old !== s) return kset('shell', s).then(function () { if (old) SHELLNEW = true; }); });
     }).catch(function () {});
