@@ -2166,6 +2166,13 @@ window.onDom = (function () {
     new MutationObserver(function () { if (!q) { q = 1; Promise.resolve().then(run); } }).observe(document.documentElement, { childList: true, subtree: true });
     return function (f) { fns.push(f); try { f(); } catch (e) { } };
 })();
+/* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي، حتى لا يظهر شريطان بلونين مختلفين (الآيباد) */
+onDom(function () {
+    var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
+    if (!hd || !m) return;
+    var c = getComputedStyle(hd).backgroundColor;
+    if (c && c !== 'rgba(0, 0, 0, 0)' && m.content !== c) m.content = c;
+});
 /* واجهة موحّدة للتطبيقين: شريط تنقل سفلي/جانبي، زر إضافة سريع، المظهر (داكن + حجم الخط)،
    حركات انتقال، سحب السطر لإظهار أزراره، قفل تلقائي، تنزيل نسخة احتياطية */
 (function () {
@@ -2257,7 +2264,7 @@ window.onDom = (function () {
         document.body.style.zoom = z === 1 ? '' : String(z);
         var m = document.querySelector('meta[name=theme-color]');
         if (m)
-            m.content = CFG.dark() ? '#0F1720' : APP.color;
+            { var hd0 = document.querySelector('header'); m.content = (hd0 && getComputedStyle(hd0).backgroundColor) || (CFG.dark() ? '#0F1720' : APP.color); }
     }
     /* ---------- الأنماط ---------- */
     /* ---------- ورقة سفلية عامة ---------- */
