@@ -43,17 +43,13 @@
     '.u3-star{font-size:22px;background:none!important;color:#C9A227!important;min-width:44px}',
     '.u3-cam{display:inline-flex;align-items:center;gap:6px;margin-top:6px;border:1.5px solid var(--ui);color:var(--ui);background:transparent;border-radius:10px;min-height:40px;padding:4px 14px;font:800 14px Cairo,system-ui,sans-serif}',
     '.u3-thumb{display:block;max-width:140px;max-height:140px;border-radius:10px;margin-top:8px;border:1px solid #dfe5ea}',
-    '.u3-ban{display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between;background:#FFF4E5;border:1px solid #F5C58A;color:#7A4100;border-radius:14px;padding:10px 14px;margin:0 0 12px;font-weight:700}.u3-ban button{white-space:nowrap;border:0;border-radius:10px;background:#EF6C00;color:#fff;min-height:38px;padding:4px 14px;font:800 14px inherit}',
-    '.u3-ly{margin-top:12px}.u3-ly .g{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.u3-ly .c{background:#F4F8FC;border-radius:12px;padding:10px 12px}.u3-ly .c small{display:block;color:#637082}.u3-ly .c b{font-size:18px}',
-    '.u3-rise{outline:2px solid #C62828;outline-offset:2px}.u3-rb{display:inline-block;background:#C62828;color:#fff;border-radius:8px;padding:2px 8px;font-size:12.5px;font-weight:800;margin-inline-start:6px}',
     '.u3-chip{display:inline-block;border-radius:10px;padding:2px 9px;font-weight:800;font-size:12.5px}.u3-chip.r{background:#fdecec;color:#9b1c1c}.u3-chip.o{background:#fff1e0;color:#9a4d00}.u3-chip.g{background:#e9f6ee;color:#1d5b33}',
     'html.ui-dark .u3-in,body.dark .u3-in{background:#0F1720;color:#E6EDF3;border-color:#2A3644}html.ui-dark .u3-row,body.dark .u3-row{border-color:#243140}html.ui-dark .u3-row button,body.dark .u3-row button{background:#1E2A36}',
-    'html.ui-dark .u3-ban,body.dark .u3-ban{background:#33251a;border-color:#6b4a2c;color:#FFD9A8}html.ui-dark .u3-ly .c{background:#1E2A36}html.ui-dark .u3-ly .c small{color:#9AA7B4}',
     'body.dark .u3-chip.r{background:#3a1c1f;color:#f5c2c2}body.dark .u3-chip.o{background:#382d14;color:#f3dca0}body.dark .u3-chip.g{background:#16301f;color:#b8e6c6}body.dark .u3-thumb{border-color:#34494f}',
     'body:not(.u3x) .tiles{grid-template-columns:1fr 1fr!important;gap:10px!important}body:not(.u3x) .tile{padding:14px 13px!important;min-height:150px!important;border-radius:18px!important}body:not(.u3x) .tile b{font-size:17px!important}body:not(.u3x) .tile small{font-size:12px!important;line-height:1.5}body:not(.u3x) .tile em{font-size:11.5px!important;padding:2px 9px!important}body:not(.u3x) .tile svg{width:28px!important;height:28px!important}',
     '@media (min-width:900px){body:not(.u3x) .tiles{grid-template-columns:repeat(4,1fr)!important}}',
     
-    '@media print{.u3-bar,.u3-cam,.u3-ban{display:none!important}}'
+    '@media print{.u3-bar,.u3-cam{display:none!important}}'
   ].join('');
   document.head.appendChild(css);
 
@@ -201,88 +197,7 @@
     });
   }
   setInterval(camWatch, 900);
-  /* ================= 9) تنبيه ارتفاع السعر في فاتورة الشراء ================= */
   function riseTh() { return Number(ls('u3_rise') || 10); }
-  function rises() {
-    var out = [];
-    Array.prototype.forEach.call(document.querySelectorAll('.line'), function (d) {
-      var pa = d.querySelector('.pa'), m = pa && pa.textContent.match(/أعلى بنسبة ([\d.]+)%/), n = d.querySelector('.n');
-      var p = m ? +m[1] : 0, big = p >= riseTh();
-      d.classList.toggle('u3-rise', big);
-      var bd = pa && pa.querySelector('.u3-rb');
-      if (big && pa && !bd) pa.insertAdjacentHTML('afterbegin', '<span class="u3-rb">⚠ ارتفاع كبير</span> ');
-      if (big) out.push((n ? n.value.trim() : '') + ' (+' + p.toFixed(1) + '%)');
-    });
-    return out;
-  }
-  if (!GH) {
-    setInterval(function () { if (g('CUR') === 'inv') rises(); }, 800);
-    var siTry = setInterval(function () {
-      var si = g('saveInv'); if (!si || W.__u3si) return;
-      W.__u3si = 1; clearInterval(siTry);
-      W.saveInv = function (again) {
-        if (again) return si.apply(this, arguments);
-        var r = rises();
-        if (r.length && !confirm('⚠ ارتفاع في السعر أكثر من ' + riseTh() + '% عن آخر سعر شراء:\n\n• ' + r.join('\n• ') + '\n\nهل تريد حفظ الفاتورة؟')) return;
-        return si.apply(this, arguments);
-      };
-    }, 500);
-  }
-
-  /* ================= 10) مقارنة بنفس الشهر من العام الماضي + 1) تذكير اليومية (الصفاء) ================= */
-  var MNS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-  function homeExtras() {
-    if (GH || g('CUR') !== 'home') return;
-    var d = g('DASH'), k = document.getElementById('kpis'); if (!d || !k) return;
-    var view = document.getElementById('view');
-    if (d.lastJ !== undefined && d.today && d.lastJ !== d.today && !document.getElementById('u3-jban') && ls('u3_jban') !== d.today) {
-      var bn = el('<div class="u3-ban" id="u3-jban"><span>📒 لم تُدخل يومية اليوم بعد' + (d.lastJ ? ' — آخر يومية ' + E(d.lastJ) : '') + '</span><span style="display:flex;gap:6px"><button>إدخال الآن</button><button style="background:transparent;color:inherit;border:1px solid currentColor">لاحقًا</button></span></div>');
-      var bs = bn.querySelectorAll('button');
-      bs[0].onclick = function () { W.go('jentry'); };
-      bs[1].onclick = function () { ls('u3_jban', d.today); bn.remove(); };
-      var hero = view && view.querySelector('.hero'); if (hero) hero.insertAdjacentElement('afterend', bn);
-    }
-    if (d.ly && !document.getElementById('u3-ly')) {
-      var L = d.ly, mo = MNS[(L.m || 1) - 1] + ' ' + L.y, ch = L.ptd ? (d.pMonth - L.ptd) / L.ptd * 100 : null;
-      var c = function (t, v, s) { return '<div class="c"><small>' + t + '</small><b>' + v + '</b>' + (s ? '<small>' + s + '</small>' : '') + '</div>'; };
-      var box = el('<div class="card u3-ly" id="u3-ly"><h2>مقارنة بـ ' + E(mo) + '</h2><div class="g">' +
-        c('مشتريات هذا الشهر حتى اليوم', fmt(d.pMonth), ch === null ? 'لا توجد مشتريات في نفس الفترة من العام الماضي' : (ch >= 0 ? '⬆ ' : '⬇ ') + Math.abs(ch).toFixed(0) + '% عن نفس الفترة (' + fmt(L.ptd) + ')') +
-        c('مشتريات ' + E(mo) + ' كاملًا', fmt(L.p), L.n + ' فاتورة') +
-        c('مقبوضات ' + E(mo), fmt(L.inn), 'هذا الشهر: ' + fmt(d.jin)) +
-        c('مدفوعات ' + E(mo), fmt(L.out), 'هذا الشهر: ' + fmt(d.jout)) + '</div></div>');
-      k.insertAdjacentElement('afterend', box);
-    }
-  }
-  setInterval(homeExtras, 700);
-
-  /* ================= 12) كشف مورد مختصر للإرسال على واتساب ================= */
-  function supShortText() {
-    var sel = document.getElementById('k-sup'), name = sel ? sel.value : '';
-    var from = (document.getElementById('k-from') || {}).value || '', to = (document.getElementById('k-to') || {}).value || '';
-    var tb = document.querySelector('#k-tbl table'); if (!name || !tb) return '';
-    var stats = {}; Array.prototype.forEach.call(document.querySelectorAll('#k-stats > div'), function (s) { var a = s.querySelector('small,span'), b = s.querySelector('b'); if (a && b) stats[a.textContent.trim()] = b.textContent.trim(); });
-    var rows = Array.prototype.slice.call(tb.querySelectorAll('tbody tr')).filter(function (r) { return !r.classList.contains('detail'); }).map(function (r) {
-      var c = r.querySelectorAll('td'); return { d: c[0].textContent.trim(), b: c[1].textContent.replace(/\s+/g, ' ').trim(), i: c[3].textContent.trim(), o: c[4].textContent.trim(), bal: c[5].textContent.trim() };
-    });
-    var last = rows.slice(-15), B = g('B'), shop = (B && B.set && B.set.shop) || 'مكتبة الصفاء';
-    var out = ['*كشف حساب مختصر — ' + name + '*', shop, 'الفترة: ' + (from || 'من البداية') + ' إلى ' + (to || 'اليوم'), ''];
-    if (stats['الرصيد المرحّل']) out.push('الرصيد المرحّل: ' + stats['الرصيد المرحّل']);
-    if (rows.length > last.length) out.push('… ' + (rows.length - last.length) + ' حركة سابقة غير معروضة');
-    last.forEach(function (x) { out.push('▫️ ' + x.d + ' | ' + x.b + ' | ' + (x.i ? 'وارد ' + x.i : '') + (x.i && x.o ? ' / ' : '') + (x.o ? 'صادر ' + x.o : '') + ' | الرصيد ' + x.bal); });
-    out.push('');
-    if (stats['إجمالي الوارد']) out.push('إجمالي الوارد: ' + stats['إجمالي الوارد']);
-    if (stats['إجمالي الصادر']) out.push('إجمالي الصادر: ' + stats['إجمالي الصادر']);
-    if (stats['الرصيد الختامي']) out.push('*الرصيد الختامي: ' + stats['الرصيد الختامي'] + '*');
-    return out.join('\n').slice(0, 6000);
-  }
-  function supShortWatch() {
-    if (GH || g('CUR') !== 'sstmt') return;
-    var tb = document.getElementById('k-tbl'); if (!tb || !tb.querySelector('table') || document.getElementById('u3-wa')) return;
-    var b = el('<div class="u3-bar" id="u3-wa"><button type="button">🟢 إرسال كشف مختصر للمورد (واتساب)</button></div>');
-    b.querySelector('button').onclick = function () { var t = supShortText(); if (!t) { msg('اختر المورد أولًا', 1); return; } W.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank'); };
-    tb.parentNode.insertBefore(b, tb);
-  }
-  setInterval(supShortWatch, 700);
 
   /* ================= 1) التذكير اليومي على الإيميل (من يومية غدق) ================= */
   function remSheet() {

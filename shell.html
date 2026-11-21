@@ -98,6 +98,12 @@ tr.tot td,tfoot td{background:#FFF1DE!important;font-weight:800}
 @media print{header,.noprint,#toast,.bar,.card:has(.grid){display:none!important}body{background:#fff}.tw,.stat,.st,.card{box-shadow:none}}
 </style>
 <style>
+/* تنبيه ارتفاع السعر، تذكير اليومية، مقارنة العام الماضي، زر واتساب */
+.line.rise{outline:2px solid #C62828;outline-offset:2px}.rb{display:inline-block;background:#C62828;color:#fff;border-radius:8px;padding:2px 8px;font-size:12.5px;font-weight:800;margin-inline-start:6px}
+.jban{display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between;background:#FFF4E5;border:1px solid #F5C58A;color:#7A4100;border-radius:14px;padding:10px 14px;margin:0 0 12px;font-weight:700}.jban button{white-space:nowrap;border:0;border-radius:10px;background:#EF6C00;color:#fff;min-height:38px;padding:4px 14px;font:800 14px inherit}.jban button.l{background:transparent;color:inherit;border:1px solid currentColor}
+.lyc{margin-top:12px}.lyc .g{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.lyc .c{background:#F4F8FC;border-radius:12px;padding:10px 12px}.lyc .c small{display:block;color:#637082}.lyc .c b{font-size:18px}
+html.ui-dark .jban{background:#33251a;border-color:#6b4a2c;color:#FFD9A8}html.ui-dark .lyc .c{background:#1E2A36}html.ui-dark .lyc .c small{color:#9AA7B4}
+.wab{display:flex;margin:0 0 12px}.wab button{flex:1;min-height:44px;border:1.5px dashed var(--ui,#1F4E79);border-radius:12px;background:transparent;color:var(--ui,#1F4E79);font:800 14.5px Cairo,-apple-system,sans-serif}
 /* اختيار الصنف في الفاتورة */
 .ipw{position:relative;display:block}.ipw .n{padding-left:40px}
 .iar{position:absolute;left:4px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;border-radius:9px;background:color-mix(in srgb,#E89B2D 16%,transparent);color:#B66A00;font-size:18px;line-height:1;padding:0;z-index:2}
@@ -600,7 +606,7 @@ var SUP = (function () {
       return '<h1>كشف حساب مورد</h1><p class="sub">اختر المورد والفترة: يظهر الرصيد المرحّل قبل الفترة ثم الحركات برصيد تراكمي.</p>' +
         '<div class="card"><div class="grid"><label class="f"><span>اسم المورد</span><select id="k-sup"></select></label>' +
         '<label class="f"><span>من تاريخ</span><input id="k-from" type="date"></label><label class="f"><span>إلى تاريخ</span><input id="k-to" type="date"></label></div></div>' +
-        '<div id="k-stats" class="stats"></div><div id="k-tbl"></div>';
+        '<div id="k-stats" class="stats"></div><div class="wab noprint"><button type="button" onclick="supShortWA()">🟢 إرسال كشف مختصر للمورد (واتساب)</button></div><div id="k-tbl"></div>';
     },
     init: function (d) {
       d.querySelector('#k-from').value = yearStart(); d.querySelector('#k-to').value = today();
@@ -920,6 +926,28 @@ function addInvLine(v) {
   if (v.qty !== undefined) $('.q', d).value = v.qty;
 }
 
+/* كشف مورد مختصر للإرسال على واتساب (آخر 15 حركة) */
+function supShortWA() {
+  var sel = $('#k-sup'), name = sel && sel.selectedIndex >= 0 && sel.value ? sel.options[sel.selectedIndex].text.trim() : '';
+  var from = ($('#k-from') || {}).value || '', to = ($('#k-to') || {}).value || '', tb = $('#k-tbl table');
+  if (!name || !tb) { toast('اختر المورد أولًا', 'err'); return; }
+  var st = {}; $$('#k-stats > div').forEach(function (x) { var a = $('small,span', x), b = $('b', x); if (a && b) st[a.textContent.trim()] = b.textContent.trim(); });
+  var rows = $$('tbody tr', tb).filter(function (r) { return !r.classList.contains('detail'); }).map(function (r) {
+    var c = r.querySelectorAll('td'); return { d: c[0].textContent.trim(), b: c[1].textContent.replace(/\s+/g, ' ').trim(), i: c[3].textContent.trim(), o: c[4].textContent.trim(), bal: c[5].textContent.trim() };
+  });
+  var last = rows.slice(-15), out = ['*كشف حساب مختصر — ' + name + '*', (B.set && B.set.shop) || 'مكتبة الصفاء', 'الفترة: ' + (from || 'من البداية') + ' إلى ' + (to || 'اليوم'), ''];
+  if (st['الرصيد المرحّل']) out.push('الرصيد المرحّل: ' + st['الرصيد المرحّل']);
+  if (rows.length > last.length) out.push('… ' + (rows.length - last.length) + ' حركة سابقة غير معروضة');
+  last.forEach(function (x) { out.push('▫️ ' + x.d + ' | ' + x.b + ' | ' + (x.i ? 'وارد ' + x.i : '') + (x.i && x.o ? ' / ' : '') + (x.o ? 'صادر ' + x.o : '') + ' | الرصيد ' + x.bal); });
+  out.push('');
+  if (st['إجمالي الوارد']) out.push('إجمالي الوارد: ' + st['إجمالي الوارد']);
+  if (st['إجمالي الصادر']) out.push('إجمالي الصادر: ' + st['إجمالي الصادر']);
+  if (st['الرصيد الختامي']) out.push('*الرصيد الختامي: ' + st['الرصيد الختامي'] + '*');
+  window.open('https://wa.me/?text=' + encodeURIComponent(out.join('\n').slice(0, 6000)), '_blank');
+}
+/* تنبيه ارتفاع السعر: الحد من الإعدادات (5 أو 10 أو 20%) */
+function riseTh() { return Number(localStorage.getItem('u3_rise') || 10); }
+function riseList() { return $$('.line').filter(function (d) { return d.dataset.rise; }).map(function (d) { return $('.n', d).value.trim() + ' (+' + d.dataset.rise + '%)'; }); }
 function calcInv() {
   var t = 0, rate = curRateOf($('#icur'), $('#irate'));
   $$('.line').forEach(function (d) {
@@ -931,10 +959,13 @@ function calcInv() {
     if (hit && hit.last > 0 && p > 0) {
       var diff = (p * rate - hit.last) / hit.last * 100;
       var info = ' آخر سعر ' + fmt(hit.last) + (hit.lastSup ? ' من ' + esc(hit.lastSup) : '') + (hit.lastDate ? ' بتاريخ ' + esc(hit.lastDate) : '') + (hit.min > 0 && hit.min < hit.last ? ' · أقل سعر سابق ' + fmt(hit.min) : '');
+      var big = diff >= riseTh();
+      d.classList.toggle('rise', big);
       pa.innerHTML = Math.abs(diff) < 0.01 ? 'نفس آخر سعر.' + info
-        : diff > 0 ? '<b class="neg">⬆ أعلى بنسبة ' + diff.toFixed(1) + '%</b> —' + info
+        : diff > 0 ? (big ? '<span class="rb">⚠ ارتفاع كبير</span> ' : '') + '<b class="neg">⬆ أعلى بنسبة ' + diff.toFixed(1) + '%</b> —' + info
         : '<b class="pos">⬇ أقل بنسبة ' + Math.abs(diff).toFixed(1) + '%</b> —' + info;
-    } else pa.innerHTML = '';
+      d.dataset.rise = big ? diff.toFixed(1) : '';
+    } else { pa.innerHTML = ''; d.classList.remove('rise'); d.dataset.rise = ''; }
   });
   $('#itot').textContent = fmt(t);
   var ib = $('#ibase');
@@ -942,6 +973,7 @@ function calcInv() {
 }
 
 function saveInv(confirmDup) {
+  if (!confirmDup) { calcInv(); var rl = riseList(); if (rl.length && !confirm('⚠ ارتفاع في السعر أكثر من ' + riseTh() + '% عن آخر سعر شراء:\n\n• ' + rl.join('\n• ') + '\n\nهل تريد حفظ الفاتورة؟')) return; }
   var btn = $('#isave'), E = INVEDIT;
   var p = { supplier: $('#isup').value, invoice: $('#iinv').value, date: $('#idate').value, pay: $('#ipay').value, method: $('#imethod').value,
     cur: $('#icur').value, rate: $('#irate').value, confirmDup: !!confirmDup,
@@ -1372,6 +1404,24 @@ function vHome() {
   if (DASH) renderDash();
   call('webDash').then(function (d) { DASH = d; if (CUR === 'home') renderDash(); }).catch(function () { var k = $('#kpis'); if (k && CUR === 'home' && !DASH) k.innerHTML = ''; });
 }
+/* الرئيسية: تذكير اليومية + مقارنة بنفس الشهر من العام الماضي */
+var MNS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+function homeExtras(d) {
+  var old = $('#jban'); if (old) old.remove(); old = $('#lyc'); if (old) old.remove();
+  if (d.lastJ !== undefined && d.today && d.lastJ !== d.today && localStorage.getItem('u3_jban') !== d.today) {
+    var hero = $('#view .hero');
+    if (hero) hero.insertAdjacentHTML('afterend', '<div class="jban noprint" id="jban"><span>📒 لم تُدخل يومية اليوم بعد' + (d.lastJ ? ' — آخر يومية ' + esc(d.lastJ) : '') + '</span><span style="display:flex;gap:6px"><button onclick="go(\'jentry\')">إدخال الآن</button><button class="l" onclick="localStorage.setItem(\'u3_jban\', DASH.today); this.closest(\'.jban\').remove()">لاحقًا</button></span></div>');
+  }
+  if (d.ly) {
+    var L = d.ly, mo = MNS[(L.m || 1) - 1] + ' ' + L.y, ch = L.ptd ? (d.pMonth - L.ptd) / L.ptd * 100 : null;
+    var c = function (t, v, s2) { return '<div class="c"><small>' + t + '</small><b>' + v + '</b>' + (s2 ? '<small>' + s2 + '</small>' : '') + '</div>'; };
+    $('#kpis').insertAdjacentHTML('afterend', '<div class="card lyc" id="lyc"><h2>مقارنة بـ ' + esc(mo) + '</h2><div class="g">' +
+      c('مشتريات هذا الشهر حتى اليوم', fmt(d.pMonth), ch === null ? 'لا توجد مشتريات في نفس الفترة من العام الماضي' : (ch >= 0 ? '⬆ ' : '⬇ ') + Math.abs(ch).toFixed(0) + '% عن نفس الفترة (' + fmt(L.ptd) + ')') +
+      c('مشتريات ' + esc(mo) + ' كاملًا', fmt(L.p), L.n + ' فاتورة') +
+      c('مقبوضات ' + esc(mo), fmt(L.inn), 'هذا الشهر: ' + fmt(d.jin)) +
+      c('مدفوعات ' + esc(mo), fmt(L.out), 'هذا الشهر: ' + fmt(d.jout)) + '</div></div>');
+  }
+}
 function renderDash() {
   var d = DASH, ch = d.pPrev ? (d.pMonth - d.pPrev) / d.pPrev * 100 : null;
   var K = function (c, t, v, s) { return '<div class="kpi" style="--k:' + c + '"><span>' + t + '</span><b>' + v + '</b>' + (s ? '<small>' + s + '</small>' : '') + '</div>'; };
@@ -1380,6 +1430,7 @@ function renderDash() {
     K('#00695C', 'رصيد الصندوق', '<span class="' + (d.cash < 0 ? 'neg' : '') + '">' + fmt(d.cash) + '</span>', 'الذمم: ' + fmt(d.due)) +
     K('#2E7D32', 'مقبوضات الشهر', fmt(d.jin), 'مدفوعات الشهر: ' + fmt(d.jout)) +
     K('#6D2E5B', 'أرصدة الموردين', fmt(d.supTotal), d.supCount + ' مورد');
+  homeExtras(d);
   $('#dash2').innerHTML =
     '<div class="card" style="margin-top:16px"><h2>آخر 12 شهرًا</h2>' + chartSvg(d.months.map(function (m) { return MN[+m.k.slice(5) - 1]; }), SER(d.months)) + '</div>' +
     '<div class="two"><div class="card"><h2>أعلى الموردين رصيدًا</h2>' + (d.topSup.length ? '<ul class="lst">' + d.topSup.map(function (s, i) {
