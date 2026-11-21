@@ -1085,7 +1085,10 @@
       });
       if (rows) rows.forEach(function (r) { if (!ctrls(r).length && !r.textContent.trim()) r.style.display = 'none'; });
     }
-    setInterval(function () { fix(); place(); }, 600);
+    /* التطبيق فور إضافة العناصر (قبل أن ترسم الشاشة) حتى لا يظهر التصميم القديم لحظة */
+    var pgRun = function () { try { fix(); place(); } catch (e) { /* */ } };
+    new MutationObserver(pgRun).observe(document.documentElement, { childList: true, subtree: true });
+    pgRun(); setInterval(pgRun, 1500);
   })();
   /* ================= خانة الحساب: برتقالي بخط أبيض عريض (مثل بطاقة صافي الرصيد) ================= */
   (function () {
@@ -1136,12 +1139,14 @@
         Array.prototype.forEach.call(bx.querySelectorAll('*'), function (k) { if (k !== x && k.tagName !== 'OPTION' && !/^(IMG|SVG|svg)$/.test(k.tagName)) set(k, { 'color': '#fff', '-webkit-text-fill-color': '#fff', 'background': 'transparent', 'border-color': 'transparent' }); });
       } else { set(x, { 'padding-right': '16px', 'padding-left': x.tagName === 'SELECT' ? '36px' : '16px' }); if (x.tagName === 'SELECT') x.classList.add('u3-acc'); }
     }
-    setInterval(function () {
+    var accRun = function () {
       Array.prototype.forEach.call(document.querySelectorAll('select,input'), function (x) {
         if (x.dataset.u3acc === '0') return;
         if (!x.dataset.u3acc) { x.dataset.u3acc = isAcc(x) ? '1' : '0'; if (x.dataset.u3acc === '0') return; }
         paint(x);
       });
-    }, 700);
+    };
+    new MutationObserver(function () { try { accRun(); } catch (e) { /* */ } }).observe(document.documentElement, { childList: true, subtree: true });
+    accRun(); setInterval(accRun, 1000);
   })();
 })();
