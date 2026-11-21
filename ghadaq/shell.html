@@ -35,6 +35,9 @@ h2{margin:4px 0 14px;font-size:20px;color:var(--p)}
 label{display:block;font-size:13px;color:var(--mut);margin-bottom:4px}
 input,select{width:100%;padding:10px 11px;border:1px solid #c9d6d9;border-radius:8px;font:inherit;background:#fffdf5;color:var(--txt)}
 input:focus,select:focus{outline:2px solid var(--h);border-color:var(--h)}
+/* شكل اليد عند المرور على كل ما يُضغط (مثل مكتبة الصفاء) */
+button,select,summary,a,label.chk,input[type=checkbox],input[type=radio],input[type=date],input[type=file],[onclick],[role=button],.ui-hbtn,.ui-bnav button{cursor:pointer}
+button:disabled{cursor:default}
 /* خانة الحساب: برتقالي بخط أبيض عريض مثل بطاقة «صافي الرصيد» */
 #na,#ma,#aa,#ka,#sa,#xa,#cba{-webkit-appearance:none;appearance:none;background:var(--a) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat left 14px center;color:#fff;border:0;border-radius:16px;font-size:17px;font-weight:700;min-height:52px;padding:10px 16px 10px 36px}
 #na:focus,#ma:focus,#aa:focus,#ka:focus,#sa:focus,#xa:focus,#cba:focus{outline:2px solid #b54d0c;outline-offset:2px}
