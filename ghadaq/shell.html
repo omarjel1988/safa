@@ -120,6 +120,7 @@ function entry() {
 }
 async function loadLast() {
   const rows = await call('account', S.cur);
+  if (!$('#curBal') || !$('#last')) return; /* انتقل المستخدم لصفحة أخرى أثناء التحميل */
   $('#curBal').innerHTML = 'الرصيد الحالي: <b>' + money(rows.length ? rows[rows.length - 1].bal : 0) + '</b>';
   $('#last').innerHTML = table(rows.slice(-10).reverse(), { bal: 1 });
   S.after = loadLast;
@@ -139,6 +140,7 @@ async function accts() {
 let ACC = [];
 async function loadAcc() { ACC = await call('account', S.cur); drawAcc(); S.after = loadAcc; }
 function drawAcc() {
+  if (!$('#ak') || !$('#at')) return; /* انتقل المستخدم لصفحة أخرى أثناء التحميل */
   let s = 0, w = 0; ACC.forEach(r => { s += num(r.s); w += num(r.w); });
   $('#ak').innerHTML = kpis([['إجمالي الصادر', s], ['إجمالي الوارد', w], ['الرصيد الحالي', w - s, 1], ['عدد القيود', ACC.length, 0, 'n']]);
   const q = v('af').trim().toLowerCase();
@@ -547,6 +549,7 @@ function chartKg(c) {
 async function loadCharts() {
   const box = document.getElementById('charts'); if (!box) return;
   const c = await call('charts'); S.charts = c;
+  if (!document.body.contains(box)) return; /* انتقل المستخدم لصفحة أخرى أثناء التحميل */
   const accs = c.bal.filter(b => b.s.some(v => v !== 0)).map(b => b.acc);
   if (!S.balAcc || accs.indexOf(S.balAcc) < 0) S.balAcc = accs.indexOf('التجارية') > -1 ? 'التجارية' : accs[0];
   box.innerHTML = `<div class='ch'><h3>المشتريات والدفعات شهرياً</h3><div class='sub'>آخر 12 شهراً • محوّلة إلى ${esc(c.base)} • بدون حساب «العام» حتى لا تُحسب الدفعات مرتين</div>
@@ -555,7 +558,7 @@ async function loadCharts() {
     <select id='cba' style='margin-bottom:8px;max-width:220px'>${accs.map(a => `<option${a === S.balAcc ? ' selected' : ''}>${esc(a)}</option>`).join('')}</select><div id='c2'></div></div>
     <div class='ch'><h3>أكثر الأنواع شراءً بالكيلو</h3><div class='sub'>آخر 12 شهراً • من تفاصيل الورق المسجلة</div><div id='c3'>${chartKg(c)}</div></div></div>`;
   drawCharts();
-  $('#cba').onchange = e => { S.balAcc = e.target.value; drawCharts(); };
+  if ($('#cba')) $('#cba').onchange = e => { S.balAcc = e.target.value; drawCharts(); };
 }
 function drawCharts() {
   const c = S.charts, a = document.getElementById('c1'), b = document.getElementById('c2'); if (!c || !a || !b) return;
@@ -809,6 +812,7 @@ function chg(a, b) {
 }
 async function runYear() {
   const r = await call('yearly', { year: S.yr, same: S.ysame });
+  if (!$('#yr')) return; /* انتقل المستخدم لصفحة أخرى أثناء التحميل */
   const sel = $('#yy'); if (sel && !sel.options.length) { const ys = r.years.length ? r.years : [r.y]; sel.innerHTML = ys.map(y => `<option${y === r.y ? ' selected' : ''}>${y}</option>`).join(''); }
   if ($('#ymd')) $('#ymd').textContent = r.md.slice(3) + '/' + r.md.slice(0, 2);
   const y1 = r.y, y0 = r.y - 1, per = r.same ? ` (حتى ${r.md.slice(3)}/${r.md.slice(0, 2)})` : '';
@@ -2156,7 +2160,7 @@ window.onDom = (function () {
     } }
     function unlockNow(o) { locked = false; o.remove(); touch(); }
     function showIdleLock() {
-        if (locked || !bioInfo() || document.getElementById('bio-idle'))
+        if (!document.body || locked || !bioInfo() || document.getElementById('bio-idle'))
             return;
         locked = true;
         var o = el('<div id="bio-idle" style="position:fixed;inset:0;z-index:2147483000;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;font-family:Cairo,system-ui,sans-serif;direction:rtl">' +
