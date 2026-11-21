@@ -313,16 +313,41 @@ async function stmt() {
     <div class='btns'><button class='btn' onclick='runStmt()'>عرض الكشف</button><button class='btn sec' onclick='window.print()'>طباعة</button><button class='btn org' onclick='pdfM()'>PDF / واتساب</button></div></div></div><div id='kr'></div>`;
 }
 
+/* مطابقة حساب العام: حسب السنة، مع اختلاف رقم السند، وتصحيح أسماء الحسابات الناقصة في «العام» */
 async function match() {
-  $('#view').innerHTML = `<h2>مطابقة حساب العام مع الحسابات</h2><p class='mut'>يقارن دفعات «العام» بقيود كل حساب: نفس المبلغ، والتاريخ بفرق 3 أيام أو أقل، ورقم السند إن وجد.</p><div id='mr2'><div class='empty'>جاري المطابقة…</div></div>`;
-  const r = await call('match');
+  const cy = String(new Date().getFullYear());
+  let y = localStorage.getItem('u3_my'); if (y == null) y = cy;
+  const opt = ys => `<option value='0'${y === '0' ? ' selected' : ''}>كل السنوات</option>` + ys.map(k => { k = String(k); return `<option value='${k}'${k === y ? ' selected' : ''}>${k}</option>`; }).join('');
+  $('#view').innerHTML = `<h2>مطابقة حساب العام مع الحسابات</h2><p class='mut'>يقارن دفعات «العام» بقيود كل حساب: نفس المبلغ، والتاريخ بفرق 3 أيام أو أقل، ورقم السند إن وجد.</p>` +
+    `<div class='card noprint' style='display:flex;align-items:center;gap:10px'><label style='margin:0;font-weight:700'>السنة</label><select id='my2' style='flex:1' onchange='localStorage.setItem("u3_my", this.value); match()'>${opt(y !== '0' && y !== cy ? [cy, y] : [cy])}</select></div><div id='mr2'><div class='empty'>جاري المطابقة…</div></div>`;
+  S.after = match;
+  let r;
+  try { r = await call('match2', { y: Number(y) || 0 }); } catch (e) { const bx = $('#mr2'); if (bx) bx.innerHTML = `<div class='warn'>${esc((e && e.message) || 'تعذّرت المطابقة')}</div>`; return; }
+  const box = $('#mr2'); if (!box || S.page !== 'match') return;
+  if (r.years) { const ys = r.years.map(String); if (y !== '0' && ys.indexOf(y) < 0) ys.unshift(y); $('#my2').innerHTML = opt(ys); }
   const off = r.onlyGen.length;
   const tA = table(r.onlyAcc, { acc: 1 }).replace(/(editM|delM)[(]([0-9]+)[)]/g, (m, f, i) => f + '(' + (+i + off) + ')');
   const tG = table(r.onlyGen, { acc: 1 });
   S.rows = r.onlyGen.concat(r.onlyAcc);
-  $('#mr2').innerHTML = kpis([['في العام وغير موجود في الحساب', r.onlyGen.length, 0, 'n'], ['دفعات في الحساب وغير موجودة في العام', r.onlyAcc.length, 0, 'n']]) +
+  const rd = r.rcDiff || [];
+  const rc = rd.map(q => `<div style='padding:8px 0;border-bottom:1px solid rgba(0,0,0,.08)'><div><b>${esc(q.g.b)}</b> <small class='mut'>• <bdi dir='ltr'>${esc(q.g.d)}</bdi> • ${fmt(Number(q.g.s) || Number(q.g.w) || 0)}</small></div>` +
+    `<div style='margin-top:4px'>في «العام»: <b style='color:#C62828'>#${esc(q.g.rc)}</b> &nbsp; في حساب ${esc(q.a.acc || '')}: <b style='color:#1565C0'>#${esc(q.a.rc)}</b> <small class='mut'>(<bdi dir='ltr'>${esc(q.a.d)}</bdi>)</small></div></div>`).join('');
+  box.innerHTML = `<div id='mfx'></div>` + kpis([['في العام وغير موجود في الحساب', r.onlyGen.length, 0, 'n'], ['دفعات في الحساب وغير موجودة في العام', r.onlyAcc.length, 0, 'n'], ['رقم السند مختلف', rd.length, 0, 'n']]) +
+    (rd.length ? `<div class='sec2'>رقم السند مختلف (نفس المبلغ والتاريخ)</div><div class='card'>${rc}</div>` : '') +
     `<div class='sec2'>في «العام» ولم أجد مقابلها في الحساب</div>` + tG + `<div class='sec2'>في الحسابات ولم أجد مقابلها في «العام»</div>` + tA;
-  S.after = match;
+  /* أسماء الحسابات الناقصة أو المختلفة في «العام» */
+  let fx = [];
+  try { fx = ((await call('matchFixList', {})) || {}).fixes || []; } catch (e) { return; }
+  const fb = $('#mfx'); if (!fb || !fx.length || S.page !== 'match') return;
+  fb.innerHTML = `<div class='card' style='border:2px solid #E89B2D;background:color-mix(in srgb,#E89B2D 8%,transparent)'><b>✏️ أسماء حسابات ناقصة أو مختلفة في «العام» (${fx.length})</b>` +
+    `<div class='mut' style='margin:4px 0 8px'>هذه القيود في «العام» يقابلها قيد بنفس المبلغ والتاريخ في الحساب، لكن اسم الحساب فيها مختلف. التصحيح يجعل الاسم مطابقًا لاسم الحساب.</div>` +
+    `<div style='max-height:40vh;overflow:auto'>` + fx.map(f => `<div style='padding:6px 0;border-bottom:1px solid rgba(0,0,0,.08)'><small class='mut'>${esc(f.d || '')} • ${esc(fmt(Number(f.s) || Number(f.w) || 0))}</small><div><s style='color:#C62828'>${esc(f.old)}</s> ← <b style='color:#2E7D32'>${esc(f.nb)}</b></div></div>`).join('') +
+    `</div><button class='btn' style='width:100%;margin-top:10px' onclick='matchFix(this)'>تصحيح الأسماء (${fx.length})</button></div>`;
+}
+async function matchFix(b) {
+  b.disabled = true; b.textContent = 'جارٍ التصحيح…';
+  try { const x = await call('matchFixApply', {}); toast('تم تصحيح ' + ((x && x.fixes && x.fixes.length) || 0) + ' قيد'); S.cache = {}; match(); }
+  catch (e) { b.disabled = false; b.textContent = 'تصحيح الأسماء'; }
 }
 async function rcpt() {
   $('#view').innerHTML = `<h2>أرقام السندات</h2><div id='rr'><div class='empty'>جاري الفحص…</div></div>`;
