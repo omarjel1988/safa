@@ -503,62 +503,6 @@
     };
   }, 400);
 
-  /* مطابقة العام: تصحيح اسم الحساب الناقص أو المختلف في قيود «العام» */
-  if (GH) {
-    var mfTry = setInterval(function () {
-      if (typeof W.match !== 'function' || W.match._u3) return; clearInterval(mfTry);
-      var om = function () {
-        var v = document.getElementById('view'), S0 = g('S'); if (!v) return Promise.resolve();
-        var cy = String(new Date().getFullYear()), y = ls('u3_my'); if (y == null) y = cy;
-        var opt = function (ys) { return "<option value='0'" + (y === '0' ? ' selected' : '') + '>كل السنوات</option>' + ys.map(function (k) { k = String(k); return "<option value='" + k + "'" + (k === y ? ' selected' : '') + '>' + k + '</option>'; }).join(''); };
-        v.innerHTML = "<h2>مطابقة حساب العام مع الحسابات</h2><p class='mut'>يقارن دفعات «العام» بقيود كل حساب: نفس المبلغ، والتاريخ بفرق 3 أيام أو أقل، ورقم السند إن وجد.</p>" +
-          "<div class='card noprint' style='display:flex;align-items:center;gap:10px'><label style='margin:0;font-weight:700'>السنة</label><select id='u3-my' style='flex:1'>" + opt(y !== '0' && y !== cy ? [cy, y] : [cy]) + "</select></div><div id='mr2'><div class='empty'>جاري المطابقة…</div></div>";
-        document.getElementById('u3-my').onchange = function () { ls('u3_my', this.value); W.match(); };
-        if (S0) S0.after = function () { W.match(); };
-        return api('match2', [{ y: Number(y) || 0 }]).then(function (r) {
-          var box = document.getElementById('mr2'); if (!box) return;
-          var sel = document.getElementById('u3-my'); if (sel && r.years) { var ys = r.years.map(String); if (y !== '0' && ys.indexOf(y) < 0) ys.unshift(y); sel.innerHTML = opt(ys); }
-          var T = g('table'), KP = g('kpis'), E = function (t) { var f = g('esc'); return f ? f(t) : String(t); };
-          var off = r.onlyGen.length;
-          var tA = T(r.onlyAcc, { acc: 1 }).replace(/(editM|delM)[(]([0-9]+)[)]/g, function (m, f, i) { return f + '(' + (+i + off) + ')'; });
-          var tG = T(r.onlyGen, { acc: 1 });
-          var S1 = g('S'); if (S1) S1.rows = r.onlyGen.concat(r.onlyAcc);
-          var rc = (r.rcDiff || []).map(function (q) {
-            return "<div style='padding:8px 0;border-bottom:1px solid rgba(0,0,0,.08)'><div><b>" + E(q.g.b) + "</b> <small class='mut'>• <bdi dir='ltr'>" + E(q.g.d) + '</bdi> • ' + fmt(Number(q.g.s) || Number(q.g.w) || 0) + '</small></div>' +
-              "<div style='margin-top:4px'>في «العام»: <b style='color:#C62828'>#" + E(q.g.rc) + "</b> &nbsp; في حساب " + E(q.a.acc || '') + ": <b style='color:#1565C0'>#" + E(q.a.rc) + "</b> <small class='mut'>(<bdi dir='ltr'>" + E(q.a.d) + '</bdi>)</small></div></div>';
-          }).join('');
-          box.innerHTML = KP([['في العام وغير موجود في الحساب', r.onlyGen.length, 0, 'n'], ['دفعات في الحساب وغير موجودة في العام', r.onlyAcc.length, 0, 'n'], ['رقم السند مختلف', (r.rcDiff || []).length, 0, 'n']]) +
-            ((r.rcDiff || []).length ? "<div class='sec2'>رقم السند مختلف (نفس المبلغ والتاريخ)</div><div class='card'>" + rc + '</div>' : '') +
-            "<div class='sec2'>في «العام» ولم أجد مقابلها في الحساب</div>" + tG + "<div class='sec2'>في الحسابات ولم أجد مقابلها في «العام»</div>" + tA;
-        }).catch(function (e) { var box = document.getElementById('mr2'); if (box) box.innerHTML = "<div class='warn'>" + ((e && e.message) || 'تعذّرت المطابقة') + '</div>'; });
-      };
-      var esc = function (t) { var f = g('esc'); return f ? f(t) : String(t); };
-      var nm = function () {
-        var res = om.apply(this, arguments);
-        Promise.resolve(res).then(function () { return api('matchFixList', [{}]); }).then(function (r) {
-          var box = document.getElementById('mr2'), S = g('S'); if (!box || !S || S.page !== 'match') return;
-          var old = document.getElementById('u3-mf'); if (old) old.remove();
-          var fx = (r && r.fixes) || []; if (!fx.length) return;
-          var c = el("<div class='card' id='u3-mf' style='border:2px solid #E89B2D;background:color-mix(in srgb,#E89B2D 8%,transparent)'><b>✏️ أسماء حسابات ناقصة أو مختلفة في «العام» (" + fx.length + ")</b>" +
-            "<div class='mut' style='margin:4px 0 8px'>هذه القيود في «العام» يقابلها قيد بنفس المبلغ والتاريخ في الحساب، لكن اسم الحساب فيها مختلف. التصحيح يجعل الاسم مطابقًا لاسم الحساب.</div>" +
-            "<div style='max-height:40vh;overflow:auto'>" + fx.map(function (f) {
-              return "<div style='padding:6px 0;border-bottom:1px solid rgba(0,0,0,.08)'><small class='mut'>" + esc(f.d || '') + ' • ' + esc(fmt(Number(f.s) || Number(f.w) || 0)) + "</small><div><s style='color:#C62828'>" + esc(f.old) + "</s> ← <b style='color:#2E7D32'>" + esc(f.nb) + '</b></div></div>';
-            }).join('') + "</div><button class='btn' id='u3-mfgo' style='width:100%;margin-top:10px'>تصحيح الأسماء (" + fx.length + ')</button></div>');
-          box.insertBefore(c, box.firstChild);
-          c.querySelector('#u3-mfgo').onclick = function () {
-            var b = this; b.disabled = true; b.textContent = 'جارٍ التصحيح…';
-            api('matchFixApply', [{}]).then(function (x) {
-              var t = g('toast'); if (t) t('تم تصحيح ' + ((x && x.fixes && x.fixes.length) || 0) + ' قيد');
-              var S2 = g('S'); if (S2) S2.cache = {};
-              W.match();
-            }).catch(function (e) { b.disabled = false; b.textContent = 'تصحيح الأسماء'; var t = g('toast'); if (t) t((e && e.message) || 'تعذّر التصحيح', 1); });
-          };
-        }).catch(function () { /* */ });
-        return res;
-      };
-      nm._u3 = 1; W.match = nm;
-    }, 300);
-  }
   if (GH) { var agTry = setInterval(function () { if (document.getElementById('nav') && W.go && g('S')) { clearInterval(agTry); agingSetup(); } }, 300); }
 
 })();
