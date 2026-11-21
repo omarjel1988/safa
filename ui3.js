@@ -1106,28 +1106,41 @@
       var ts = [x.placeholder || '', x.getAttribute('aria-label') || ''], w = x;
       if (x.id) { var l = document.querySelector('label[for="' + x.id + '"]'); if (l) ts.push(l.textContent); }
       for (var k = 0; k < 3 && w.parentNode && w.parentNode !== document.body; k++) {
-        var p = w.previousElementSibling; if (p && !cs(p)) ts.push(p.textContent);
-        if (cs(w.parentNode) > 1) break; w = w.parentNode;
+        var p = w.previousElementSibling; while (p && /^(DATALIST|SCRIPT|STYLE)$/.test(p.tagName)) p = p.previousElementSibling; if (p && !vis(p)) ts.push(p.textContent);
+        if (vis(w.parentNode) > 1) break; w = w.parentNode;
       }
       return ts.some(function (t) { return LBL.test(t.replace(/[★⭐*]/g, '').trim()); }) ? x : null;
     }
-    /* إذا كان الإطار المرئي عنصرًا يغلّف الخانة (مثل قائمة الحسابات مع النجمة) نلوّن الإطار */
+    /* الإطار المرئي: الخانة نفسها أو غلاف بنفس حجمها تقريبًا (مثل قائمة الحسابات مع النجمة) */
+    function vis(n) { return Array.prototype.filter.call(n.querySelectorAll('input,select,textarea'), function (y) { return y.type !== 'hidden'; }).length; }
+    function painted(n) { var c = getComputedStyle(n); return parseFloat(c.borderTopWidth) > 0 || (c.backgroundColor !== 'rgba(0, 0, 0, 0)' && c.backgroundColor !== 'transparent'); }
     function box(x) {
-      var b = x;
-      for (var k = 0; k < 3; k++) {
-        var p = b.parentNode; if (!p || p === document.body || cs(p) > 1) break;
-        var c = getComputedStyle(p); if (parseFloat(c.borderTopWidth) > 0 || (c.backgroundColor !== 'rgba(0, 0, 0, 0)' && c.backgroundColor !== 'transparent')) return p;
+      var h = x.getBoundingClientRect().height, best = painted(x) ? x : null, b = x;
+      for (var k = 0; k < 4; k++) {
+        var p = b.parentNode; if (!p || p === document.body || vis(p) > 1) break;
+        var r = p.getBoundingClientRect(); if (r.height > h + 40 || /الحساب/.test(Array.prototype.filter.call(p.childNodes, function (c) { return c.nodeType === 1 && !vis(c) && c.tagName === 'LABEL'; }).map(function (c) { return c.textContent; }).join(''))) break;
+        if (painted(p)) best = p;
         b = p;
       }
-      return null;
+      return best || x;
+    }
+    /* أنماط مضمّنة بـ important حتى تتغلّب على أي تنسيق في الصفحة */
+    function set(n, o) { for (var k in o) n.style.setProperty(k, o[k], 'important'); }
+    var BOX = { 'background': '#E16414', 'border': '0', 'border-radius': '16px', 'box-shadow': 'none', 'outline': '0' };
+    var TXT = { 'color': '#fff', '-webkit-text-fill-color': '#fff', 'font-weight': '700', 'font-size': '17px' };
+    function paint(x) {
+      var bx = box(x);
+      set(bx, BOX); set(x, TXT);
+      if (bx !== x) {
+        set(x, { 'background': 'transparent', 'border': '0', 'box-shadow': 'none', 'outline': '0' });
+        Array.prototype.forEach.call(bx.querySelectorAll('*'), function (k) { if (k !== x && k.tagName !== 'OPTION' && !/^(IMG|SVG|svg)$/.test(k.tagName)) set(k, { 'color': '#fff', '-webkit-text-fill-color': '#fff', 'background': 'transparent', 'border-color': 'transparent' }); });
+      } else { set(x, { 'padding-right': '16px', 'padding-left': x.tagName === 'SELECT' ? '36px' : '16px' }); if (x.tagName === 'SELECT') x.classList.add('u3-acc'); }
     }
     setInterval(function () {
       Array.prototype.forEach.call(document.querySelectorAll('select,input'), function (x) {
-        if (x.dataset.u3acc) return;
-        if (!isAcc(x)) return;
-        x.dataset.u3acc = '1';
-        var bx = box(x);
-        if (bx) bx.classList.add('u3-accb'); else x.classList.add('u3-acc');
+        if (x.dataset.u3acc === '0') return;
+        if (!x.dataset.u3acc) { x.dataset.u3acc = isAcc(x) ? '1' : '0'; if (x.dataset.u3acc === '0') return; }
+        paint(x);
       });
     }, 700);
   })();
