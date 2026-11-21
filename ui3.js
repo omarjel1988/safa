@@ -46,7 +46,7 @@
     '.u3-ban{display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between;background:#FFF4E5;border:1px solid #F5C58A;color:#7A4100;border-radius:14px;padding:10px 14px;margin:0 0 12px;font-weight:700}.u3-ban button{white-space:nowrap;border:0;border-radius:10px;background:#EF6C00;color:#fff;min-height:38px;padding:4px 14px;font:800 14px inherit}',
     '.u3-ly{margin-top:12px}.u3-ly .g{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.u3-ly .c{background:#F4F8FC;border-radius:12px;padding:10px 12px}.u3-ly .c small{display:block;color:#637082}.u3-ly .c b{font-size:18px}',
     '.u3-rise{outline:2px solid #C62828;outline-offset:2px}.u3-rb{display:inline-block;background:#C62828;color:#fff;border-radius:8px;padding:2px 8px;font-size:12.5px;font-weight:800;margin-inline-start:6px}',
-    '.u3-age td.t{text-align:right}.u3-chip{display:inline-block;border-radius:10px;padding:2px 9px;font-weight:800;font-size:12.5px}.u3-chip.r{background:#fdecec;color:#9b1c1c}.u3-chip.o{background:#fff1e0;color:#9a4d00}.u3-chip.g{background:#e9f6ee;color:#1d5b33}',
+    '.u3-chip{display:inline-block;border-radius:10px;padding:2px 9px;font-weight:800;font-size:12.5px}.u3-chip.r{background:#fdecec;color:#9b1c1c}.u3-chip.o{background:#fff1e0;color:#9a4d00}.u3-chip.g{background:#e9f6ee;color:#1d5b33}',
     'html.ui-dark .u3-in,body.dark .u3-in{background:#0F1720;color:#E6EDF3;border-color:#2A3644}html.ui-dark .u3-row,body.dark .u3-row{border-color:#243140}html.ui-dark .u3-row button,body.dark .u3-row button{background:#1E2A36}',
     'html.ui-dark .u3-ban,body.dark .u3-ban{background:#33251a;border-color:#6b4a2c;color:#FFD9A8}html.ui-dark .u3-ly .c{background:#1E2A36}html.ui-dark .u3-ly .c small{color:#9AA7B4}',
     'body.dark .u3-chip.r{background:#3a1c1f;color:#f5c2c2}body.dark .u3-chip.o{background:#382d14;color:#f3dca0}body.dark .u3-chip.g{background:#16301f;color:#b8e6c6}body.dark .u3-thumb{border-color:#34494f}',
@@ -183,54 +183,6 @@
         var t0 = Date.now(), iv = setInterval(function () { var f = document.getElementById('af'); if (f || Date.now() - t0 > 6000) { clearInterval(iv); if (f) setTimeout(function () { setVal(f, q); }, 300); } }, 150);
       }
     };
-  }
-
-  /* ================= 6) أعمار الأرصدة (يومية غدق) ================= */
-  function agingSetup() {
-    var nav = document.getElementById('nav'); if (!nav || nav.querySelector('[data-p="aging"]')) return;
-    var after = nav.querySelector('[data-p="year"]') || nav.querySelector('[data-p="month"]');
-    var b = el('<button data-p="aging">أعمار الأرصدة</button>');
-    b.onclick = function () { W.go('aging'); };
-    if (after) after.insertAdjacentElement('afterend', b); else nav.appendChild(b);
-    var og = W.go;
-    W.go = function (p) {
-      if (p === 'entry') { var S0 = g('S'); if (S0 && S0.acc && S0.acc.some(function (a) { return a.name === 'العام'; })) S0.cur = 'العام'; }
-      if (p !== 'aging') return og.apply(this, arguments);
-      var S = g('S'); if (S) { S.page = 'aging'; S.after = null; }
-      Array.prototype.forEach.call(document.querySelectorAll('#nav button'), function (x) { x.classList.toggle('on', x.dataset.p === 'aging'); });
-      W.scrollTo(0, 0);
-      agingPage();
-    };
-  }
-  function agingPage() {
-    var v = document.getElementById('view'); if (!v) return;
-    var hz = ls('u3_age_z') !== '0', gen = ls('u3_age_g') === '1';
-    v.innerHTML = "<h2>أعمار الأرصدة</h2><div class='card noprint'><div class='mut' style='margin-bottom:8px'>كم مضى على آخر دفعة (صادر) لكل حساب، مرتّبة من الأقدم. اضغط أي حساب لفتحه.</div>" +
-      "<label class='chk'><input type='checkbox' id='u3-az'" + (hz ? ' checked' : '') + "> إخفاء الحسابات ذات الرصيد صفر</label>" +
-      "<label class='chk' style='margin-top:6px'><input type='checkbox' id='u3-ag'" + (gen ? ' checked' : '') + "> إظهار حساب «العام»</label></div><div id='u3-ar'><div class='empty'>جارٍ التحميل…</div></div>";
-    document.getElementById('u3-az').onchange = function () { ls('u3_age_z', this.checked ? '1' : '0'); agingPage(); };
-    document.getElementById('u3-ag').onchange = function () { ls('u3_age_g', this.checked ? '1' : '0'); agingPage(); };
-    var draw = function () {
-      var S = g('S'), box = document.getElementById('u3-ar'); if (!S || !box || S.page !== 'aging') return;
-      var today = new Date(String(S.today || '').replace(/-/g, '/')), list = (S.acc || []).map(function (a, i) {
-        var days = a.lastPay ? Math.round((today - new Date(String(a.lastPay).replace(/-/g, '/'))) / 864e5) : null;
-        return { a: a, i: i, days: days };
-      }).filter(function (x) { return (!hz || Math.abs(x.a.bal) >= 0.005) && (gen || x.a.name !== 'العام'); });
-      list.sort(function (x, y) { return (y.days == null ? 1e9 : y.days) - (x.days == null ? 1e9 : x.days); });
-      if (!list.length) { box.innerHTML = "<div class='card empty'>لا توجد حسابات</div>"; return; }
-      var chip = function (d) { if (d == null) return "<span class='u3-chip r'>لا توجد دفعات</span>"; return "<span class='u3-chip " + (d > 60 ? 'r' : d > 30 ? 'o' : 'g') + "'>" + d + ' يوم</span>'; };
-      var c60 = list.filter(function (x) { return x.days == null || x.days > 60; }).length, c30 = list.filter(function (x) { return x.days != null && x.days > 30 && x.days <= 60; }).length;
-      box.innerHTML = "<div class='kpis'><div class='kpi'><span>أكثر من 60 يومًا</span><b>" + c60 + "</b></div><div class='kpi'><span>من 31 إلى 60 يومًا</span><b>" + c30 + "</b></div><div class='kpi'><span>30 يومًا أو أقل</span><b>" + (list.length - c60 - c30) + '</b></div></div>' +
-        "<div class='tw'><table class='u3-age'><tr><th>الحساب</th><th>منذ آخر دفعة</th><th>آخر دفعة</th><th>الرصيد</th><th>آخر حركة</th></tr>" +
-        list.map(function (x) {
-          return "<tr style='cursor:pointer' data-i='" + x.i + "'><td class='t'><b>" + E(x.a.name) + '</b></td><td>' + chip(x.days) + '</td><td>' + E(x.a.lastPay || '—') + "</td><td><b class='" + (x.a.bal < 0 ? 'neg' : '') + "'>" + fmt(x.a.bal) + '</b> ' + E(x.a.cur || '') + '</td><td>' + E(x.a.last || '—') + '</td></tr>';
-        }).join('') + '</table></div>';
-      box.querySelector('table').onclick = function (e) { var r = e.target.closest('[data-i]'); if (r) { var oa = g('openAcc'); if (oa) oa(+r.dataset.i); } };
-    };
-    var S = g('S');
-    if (S && S.acc && S.acc.length) draw();
-    var boot = g('boot');
-    if (boot) Promise.resolve(boot()).then(draw).catch(function () { /* */ });
   }
 
   /* ================= 8) تصوير المرفقات مباشرة + معاينة ================= */
@@ -503,6 +455,5 @@
     };
   }, 400);
 
-  if (GH) { var agTry = setInterval(function () { if (document.getElementById('nav') && W.go && g('S')) { clearInterval(agTry); agingSetup(); } }, 300); }
 
 })();
