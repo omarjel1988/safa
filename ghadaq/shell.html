@@ -273,7 +273,8 @@ async function boot() {
   syncBar();
   S.acc = b.accounts; S.today = todayLocal(); S.alerts = b.alerts || []; S.base = b.base || 'دولار';
   $('#sub').textContent = b.accounts.length + ' حساب';
-  if (!S.cur && S.acc.length) S.cur = S.acc[0].name;
+  /* الحساب المحفوظ قد يكون حُذف أو تغيّر اسمه أو أُخفي → أول حساب (كان يسبب «الحساب غير موجود») */
+  if (S.acc.length && !S.acc.some(a => a.name === S.cur)) S.cur = S.acc[0].name;
 }
 const accOf = n => S.acc.find(a => a.name === n) || {};
 const curOf = n => accOf(n).cur || S.base;
@@ -966,6 +967,7 @@ function go(p) {
   if (p === 'dash') NAVH = [];
   else if (!NAVBACK && S.page && S.page !== p) { NAVH.push({ p: S.page, cur: S.cur }); if (NAVH.length > 30) NAVH.shift(); if (window.RT && RT.navPush) RT.navPush(); }
   NAVBACK = false;
+  S.nav = (S.nav || 0) + 1; /* رقم الصفحة الحالية: قراءات الصفحة السابقة تُهمل (انظر call) */
   /* إدخال قيد جديد يبدأ بحساب «العام» */
   if (p === 'entry' && S.acc.some(a => a.name === 'العام')) S.cur = 'العام';
   S.page = p; S.after = null;
@@ -1155,11 +1157,14 @@ function call(n, ...a) {
   const k = n + '|' + JSON.stringify(a), rd = READS10.indexOf(n) > -1;
   if (rd) { const c = S.cache[k]; if (c && Date.now() - c.t < 300000) return Promise.resolve(JSON.parse(c.v)); }
   $('#load').style.display = 'block';
+  const nv = S.nav;
   return new Promise((res, rej) => google.script.run
     .withSuccessHandler(r => {
       $('#load').style.display = 'none';
       if (rd) S.cache[k] = { t: Date.now(), v: r };
       if (WRITES10.indexOf(n) > -1) { S.cache = {}; S.pidx = null; }
+      /* قراءة وصلت بعد انتقال المستخدم لصفحة أخرى: تُحفظ في الذاكرة فقط ولا تُرسم (عناصر الصفحة القديمة لم تعد موجودة) */
+      if (rd && n !== 'bootstrap' && nv !== S.nav) return;
       res(JSON.parse(r));
     })
     .withFailureHandler(e => {
