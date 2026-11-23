@@ -456,6 +456,7 @@ var SUP = (function () {
     D.entries = d.entries || []; D.audit = d.audit || [];
     loaded = true;
     var h = document.getElementById('supHome'); if (h) h.textContent = homeStat();
+    if (CUR === 'home') supCards();
     if (pageEl && cur && MAP[CUR]) P[cur].fill(pageEl);
   }
   function ensure() {
@@ -794,7 +795,13 @@ var SUP = (function () {
   });
   document.addEventListener('visibilitychange', function () { if (!document.hidden && loaded && MAP[CUR]) reload(true); });
 
-  return { openStmt: function (name) { stmtSup = name; go('sstmt'); }, show: show, quiet: function () { if (loaded) reload(true); }, reload: function () { return reload(false); }, prefetch: function () { ensure().catch(function () {}); }, homeStat: homeStat };
+  return { openStmt: function (name) { stmtSup = name; go('sstmt'); }, show: show, quiet: function () { if (loaded) reload(true); }, reload: function () { return reload(false); }, prefetch: function () { ensure().catch(function () {}); }, homeStat: homeStat, ensure: ensure, isLoaded: function () { return loaded; },
+    /* خلاصة كل مورد لبطاقات الرئيسية */
+    cards: function () {
+      var t = totals(), lp = {}, le = {};
+      D.entries.forEach(function (e) { var d = e.date || ''; if (d > (le[e.sid] || '')) le[e.sid] = d; if (n(e.out) > 0 && d > (lp[e.sid] || '')) lp[e.sid] = d; });
+      return D.suppliers.map(function (s) { var r = t[s.id] || { inc: 0, out: 0, n: 0 }; return { name: s.name, acur: s.acur || '', bal: n(s.opening) + r.inc - r.out, base: baseOf(s.id), inc: r.inc, out: r.out, n: r.n, lastPay: lp[s.id] || '', last: le[s.id] || '' }; });
+    } };
 })();
 
 
@@ -1291,6 +1298,12 @@ document.head.insertAdjacentHTML('beforeend', '<style>' +
   '.chips2{display:flex;flex-wrap:wrap;gap:8px}.chips2 button{border:1px solid var(--bd);background:#fff;border-radius:99px;padding:6px 14px;font-weight:700;color:var(--c)}' +
   '#pin{position:fixed;inset:0;z-index:100;background:linear-gradient(135deg,#1F4E79,#6D2E5B);display:flex;align-items:center;justify-content:center;padding:20px}' +
   '#pin .card{width:100%;max-width:340px;text-align:center}#pin input{text-align:center;font-size:26px;letter-spacing:8px}' +
+  /* بطاقات الموردين في الرئيسية (مثل بطاقات الحسابات في غدق) */
+  '.sbar{display:flex;gap:10px;margin:16px 0 12px;flex-wrap:wrap}.sbar input{flex:1;min-width:180px}.sbar select{width:auto;min-width:170px}' +
+  '.scards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}' +
+  '.sacc{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:14px;cursor:pointer;border-top:4px solid #6D2E5B;box-shadow:var(--sh)}.sacc:hover{border-color:#6D2E5B}' +
+  '.sacc .n{font-weight:700;font-size:16px}.sacc .bal{font-size:21px;font-weight:700;margin:6px 0;font-variant-numeric:tabular-nums}.sacc .m{display:flex;justify-content:space-between;color:var(--mut);font-size:12px}' +
+  'body.dark .sacc{background:var(--card,#1b2530);border-color:#2b3a48}' +
   '</style>');
 $('#homeBtn').insertAdjacentHTML('beforebegin', '<button onclick="go(\'settings\')" title="الإعدادات">⚙︎</button>');
 
@@ -1428,10 +1441,41 @@ function vHome() {
     tile('s', 'sentry', 'قيود الموردين', 'إدخال قيد، كشف حساب، ملخص الأرصدة، السجل', SUP.homeStat()) +
     tile('r', 'rmon', 'التقارير', 'تقارير شهرية وسنوية للمشتريات واليومية والموردين', 'شهريًا وسنويًا') + '</div>' +
     '<div id="kpis" class="kpis" style="margin-top:14px"><div class="muted" style="grid-column:1/-1"><span class="spin"></span>جارٍ تجهيز اللوحة…</div></div>' +
-    '<div id="dash2"></div>';
+    '<div id="supc"></div><div id="dash2"></div>';
+  supCards();
   if (DASH) renderDash();
   call('webDash').then(function (d) { DASH = d; if (CUR === 'home') renderDash(); }).catch(function () { var k = $('#kpis'); if (k && CUR === 'home' && !DASH) k.innerHTML = ''; });
 }
+/* الرئيسية: بطاقات الموردين مع بحث وترتيب (الضغط على البطاقة يفتح كشف المورد) */
+function supCards() {
+  var box = $('#supc'); if (!box) return;
+  if (!SUP.isLoaded()) { box.innerHTML = '<div class="muted" style="margin-top:14px"><span class="spin"></span>جارٍ تحميل الموردين…</div>'; SUP.ensure().catch(function () { box.innerHTML = ''; }); return; }
+  if (!$('#sq2')) {
+    var so = localStorage.getItem('safa_supsort') || 'bal';
+    box.innerHTML = '<h2 style="margin:18px 2px 0">الموردون</h2><div class="sbar"><input id="sq2" placeholder="بحث سريع في الموردين…" oninput="supCardsDraw()">' +
+      '<select id="ss2" onchange="localStorage.setItem(\'safa_supsort\', this.value); supCardsDraw()">' +
+      [['bal', 'ترتيب: الرصيد من الأكبر'], ['last', 'ترتيب: آخر حركة'], ['name', 'ترتيب: الاسم']].map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === so ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') +
+      '</select></div><div id="scards" class="scards"></div>';
+  }
+  supCardsDraw();
+}
+function supCardsDraw() {
+  var box = $('#scards'); if (!box) return;
+  var q = ($('#sq2').value || '').trim().toLowerCase(), so = $('#ss2').value;
+  var L = SUP.cards().filter(function (x) { return !q || x.name.toLowerCase().indexOf(q) > -1; });
+  if (so === 'bal') L.sort(function (a, b) { return b.base - a.base; });
+  else if (so === 'last') L.sort(function (a, b) { return (b.last || '').localeCompare(a.last || ''); });
+  else L.sort(function (a, b) { return a.name.localeCompare(b.name, 'ar'); });
+  SUPC = L;
+  box.innerHTML = L.length ? L.map(function (x, i) {
+    var u = x.acur ? ' <small style="color:var(--mut);font-weight:500">' + esc(x.acur) + '</small>' : '';
+    return '<div class="sacc" onclick="SUP.openStmt(SUPC[' + i + '].name)"><div class="n">' + esc(x.name) + '</div>' +
+      '<div class="bal' + (x.bal < 0 ? ' neg' : '') + '">' + fmt(x.bal) + u + '</div>' +
+      '<div class="m"><span>وارد ' + fmt(x.inc) + '</span><span>صادر ' + fmt(x.out) + '</span></div>' +
+      '<div class="m" style="margin-top:4px"><span>' + x.n + ' قيد</span><span>آخر دفعة ' + (x.lastPay || '—') + '</span></div></div>';
+  }).join('') : '<div class="card muted">لا يوجد مورد بهذا الاسم</div>';
+}
+var SUPC = [];
 /* الرئيسية: تذكير اليومية + مقارنة بنفس الشهر من العام الماضي */
 var MNS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 function homeExtras(d) {
