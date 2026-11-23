@@ -276,6 +276,18 @@ async function boot() {
   /* الحساب المحفوظ قد يكون حُذف أو تغيّر اسمه أو أُخفي → أول حساب (كان يسبب «الحساب غير موجود») */
   if (S.acc.length && !S.acc.some(a => a.name === S.cur)) S.cur = S.acc[0].name;
 }
+/* فتح سريع: core.js يعرض آخر بيانات محفوظة فورًا ثم يرسل الحديثة هنا إن اختلفت */
+window.addEventListener('rt-fresh', e => {
+  const d = e.detail || {};
+  Object.keys(S.cache).forEach(k => { if (k.indexOf(d.fn + '|') === 0) delete S.cache[k]; });
+  if (d.fn === 'bootstrap') { try { const b = JSON.parse(d.v); S.acc = b.accounts; S.alerts = b.alerts || []; S.base = b.base || S.base; $('#sub').textContent = b.accounts.length + ' حساب'; } catch (x) {} }
+  clearTimeout(S.freshT);
+  S.freshT = setTimeout(() => {
+    const t = document.activeElement, ov = document.getElementById('ov');
+    if (S.page === 'dash' && !(t && /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName)) && !(ov && getComputedStyle(ov).display !== 'none')) dash();
+  }, 300);
+});
+window.addEventListener('rt-fresh-err', e => { if (((e.detail || {}).msg || '').indexOf('LOCKED|') > -1) { setTok('', false); showLock(); } });
 const accOf = n => S.acc.find(a => a.name === n) || {};
 const curOf = n => accOf(n).cur || S.base;
 

@@ -56,6 +56,7 @@
     writes: ['add', 'update', 'remove', 'newAccount', 'archive', 'unarchive', 'saveSettings', 'upload', 'undo', 'flush', 'renameAcc', 'closeAcc',
       'saveOrder', 'mergeAcc', 'savePT', 'rescanPT', 'coSave', 'pinSet', 'pinOff', 'lockNow', 'backupNow', 'mailNow'],
     nocache: ['devPing', 'devList', 'devOut', 'remGet', 'remTest', 'matchFixList', 'matchFixApply', 'match2'],
+    swr: ['bootstrap', 'charts', 'account'],
     prefetch: function () { var S = gS(); return ((S && S.acc) || []).map(function (x) { return ['account', [x.name]]; }); },
     offline: {
       add: function (e) { return JSON.stringify({ ok: true, offline: true, mirror: !!(e && e.mirror) }); }
@@ -72,6 +73,7 @@
       'webSupSaveEntry', 'webSupDeleteEntry', 'webSupSaveSupplier', 'webSupDeleteSupplier', 'webInvReplace', 'webInvDelete', 'webInvAttach',
       'webSaveSettings', 'webSetPin', 'webBackupNow', 'webAutoBackup', 'webSetRate', 'webSetGeminiKey'],
     nocache: ['webDevPing', 'webDevList', 'webDevOut', 'webPdf', 'webInvPdf', 'webSupPdf', 'webInvExtract', 'webAiState', 'webPFindPdf'],
+    swr: ['webBoot', 'webDash'],
     offline: {
       webSaveJournal: function (p) {
         return { ok: true, offline: true, msg: '📴 حُفظت دون اتصال، وستُرسل تلقائيًا عند عودة الإنترنت', bal: (W.B && W.B.bal) || { cash: 0, due: 0 } };
@@ -106,6 +108,7 @@
     if (c.tok) LASTTOK = c.tok;
     var keyP = sha(c.fn + '|' + JSON.stringify(c.args));
     if (isWrite(c.fn)) {
+      SWROFF = true;
       if (c.args[0] && typeof c.args[0] === 'object' && M.offline[c.fn] && !c.args[0].__oid) c.args[0].__oid = APP.id + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
       var a2 = a; /* الكائن نفسه داخل a صار يحمل __oid لمنع التكرار عند إعادة الإرسال */
       if (!navigator.onLine && M.offline[c.fn]) return queue(c, a2);
@@ -127,13 +130,33 @@
       });
     };
     if (!navigator.onLine) return fromCache(new TypeError('offline'));
-    return post(M.body(c, a)).then(function (v) {
-      offline(false);
-      keyP.then(function (k) { kset('c|' + k, JSON.stringify(v === undefined ? null : v)); });
-      if (c.fn === 'webSupLoad') kset('lastSup', JSON.stringify(v));
-      return v;
-    }, function (e) { if (!netErr(e)) throw e; return fromCache(e); });
+    var net = function () {
+      return post(M.body(c, a)).then(function (v) {
+        offline(false);
+        keyP.then(function (k) { kset('c|' + k, JSON.stringify(v === undefined ? null : v)); });
+        if (c.fn === 'webSupLoad') kset('lastSup', JSON.stringify(v));
+        return v;
+      }, function (e) { if (!netErr(e)) throw e; return fromCache(e); });
+    };
+    /* فتح سريع: أول قراءة لبيانات الصفحة الأولى بعد فتح التطبيق تُعرض فورًا من آخر نسخة محفوظة في الجهاز،
+       وتُجلب الحديثة في الخلفية؛ إن اختلفت يُطلق حدث rt-fresh لتعيد الصفحة رسم نفسها (وإن رفض الخادم: rt-fresh-err) */
+    return keyP.then(function (k) {
+      var f = FRESH[k];
+      if (f && Date.now() - f.t < 60000) { delete FRESH[k]; return f.v; }
+      if (SWROFF || !M.swr || M.swr.indexOf(c.fn) < 0 || SWRUSED[c.fn] || Date.now() - T0 > 20000) return net();
+      SWRUSED[c.fn] = 1;
+      return kget('c|' + k).then(function (cv) {
+        if (cv === undefined) return net();
+        net().then(function (v) {
+          if (JSON.stringify(v === undefined ? null : v) === cv) return;
+          FRESH[k] = { v: v, t: Date.now() };
+          W.dispatchEvent(new CustomEvent('rt-fresh', { detail: { fn: c.fn, v: v } }));
+        }, function (e) { W.dispatchEvent(new CustomEvent('rt-fresh-err', { detail: { fn: c.fn, msg: String((e && e.message) || e) } })); });
+        return JSON.parse(cv);
+      });
+    });
   }
+  var T0 = Date.now(), SWRUSED = {}, FRESH = {}, SWROFF = false;
   function afterWrite(fn, v) {
     if (fn.indexOf('webSup') === 0 && v && v.entries) kset('lastSup', JSON.stringify(v));
   }

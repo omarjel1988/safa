@@ -171,6 +171,15 @@ function fillLists() {
   $('#dl-sup').innerHTML = B.suppliers.map(function (s) { return '<option value="' + esc(s) + '">'; }).join('');
 }
 function reboot(cb) { return call('webBoot').then(function (b) { B = b; fillLists(); if (cb) cb(); }); }
+/* فتح سريع: core.js يعرض آخر بيانات محفوظة فورًا ثم يرسل الحديثة هنا إن اختلفت */
+window.addEventListener('rt-fresh', function (e) {
+  var d = e.detail || {}, t = document.activeElement, typing = t && /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName);
+  if (d.fn === 'webBoot') { B = d.v; fillLists(); if (CUR === 'home' && !typing) vHome(); }
+  else if (d.fn === 'webDash') { DASH = d.v; if (CUR === 'home' && $('#kpis')) renderDash(); }
+});
+window.addEventListener('rt-fresh-err', function (e) {
+  if (/PIN_REQUIRED/.test((e.detail || {}).msg || '')) pinGate().then(function () { reboot(function () { go(CUR); }); });
+});
 
 /* ---------- الرئيسية ---------- */
 var ICON = {
