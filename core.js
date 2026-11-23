@@ -374,15 +374,25 @@
       '<button id="rt-go" style="flex:1;min-height:46px;border:1px solid #ccc;border-radius:11px;background:#fff;color:#B00020;font:700 16px inherit">خروج</button></div></div>';
     document.body.appendChild(o);
     document.getElementById('rt-stay').onclick = function () { o.remove(); arm(); };
-    document.getElementById('rt-go').onclick = function () { LEAVING = true; o.remove(); history.back(); setTimeout(function () { try { window.close(); } catch (e) { /* */ } }, 300); };
+    document.getElementById('rt-go').onclick = function () {
+      LEAVING = true; o.remove();
+      /* الرجوع فوق كل خانات التطبيق ثم خطوة أخيرة للخروج */
+      if (DEPTH > 0) { var n = DEPTH; DEPTH = 0; LEAVE2 = true; history.go(-n); }
+      else { history.back(); setTimeout(function () { try { window.close(); } catch (e) { /* */ } }, 300); }
+    };
   }
   /* المتصفحات تتجاهل خانة الرجوع إن لم تُنشأ بعد لمسة من المستخدم، لذلك نُنشئها عند أول لمسة */
-  var ARMED = false;
-  function arm() { if (!live() || ARMED || LEAVING) return; try { history.pushState({ rt: 1 }, ''); ARMED = true; } catch (e) { /* */ } }
+  /* DEPTH: عدد خانات الرجوع التي أضافها التطبيق فوق الصفحة الأصلية.
+     كل انتقال لصفحة جديدة (navPush من go) يضيف خانة، فيبقى لكل خطوة رجوع خانة ولا يخرج التطبيق قبل الرئيسية */
+  var DEPTH = 0, LEAVE2 = false;
+  function push() { try { history.pushState({ rt: 1 }, ''); DEPTH++; } catch (e) { /* */ } }
+  function arm() { if (!live() || DEPTH > 0 || LEAVING) return; push(); }
+  function navPush() { if (!live() || LEAVING) return; push(); }
   ['pointerdown', 'keydown', 'touchstart'].forEach(function (t) { W.addEventListener(t, arm, true); });
   W.addEventListener('popstate', function () {
-    if (!live() || LEAVING || !document.body) return;
-    ARMED = false;
+    if (LEAVING) { if (LEAVE2) { LEAVE2 = false; history.back(); setTimeout(function () { try { window.close(); } catch (e) { /* */ } }, 300); } return; }
+    if (!live() || !document.body) return;
+    if (DEPTH > 0) DEPTH--;
     /* نافذة مفتوحة: الرجوع يغلقها */
     var ov = document.querySelector('.ui-sheet,#dpop,#aikey,#rt-exit');
     if (ov) { ov.remove(); document.body.style.overflow = ''; return; }
@@ -409,5 +419,5 @@
   function countCache() {
     return db().then(function (d) { return new Promise(function (res) { var q = d.transaction('kv').objectStore('kv').count(); q.onsuccess = function () { res(q.result); }; q.onerror = function () { res(0); }; }); }).catch(function () { return 0; });
   }
-  W.RT = { call: call, sync: sync, kget: kget, kset: kset, post: post, M: M, out: function () { return OUT.slice(); }, clearCache: clearCache, countCache: countCache };
+  W.RT = { navPush: navPush, call: call, sync: sync, kget: kget, kset: kset, post: post, M: M, out: function () { return OUT.slice(); }, clearCache: clearCache, countCache: countCache };
 })();

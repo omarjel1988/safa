@@ -1058,8 +1058,9 @@ function doPInv() {
     $('#vres').innerHTML = h;
   }).catch(function (e) { $('#vres').innerHTML = ''; toast(errMsg(e), 'err'); });
 }
-function openInvIdx(i) { var x = INVROWS[i]; if (x) { showInv(x.key); NAVSUB = 'pinv'; } }
-function openInv(key) { if (CUR !== 'pinv') { PENDINV = key; go('pinv'); } else { showInv(key); NAVSUB = 'pinv'; } }
+function invSub() { if (!NAVSUB && window.RT && RT.navPush) RT.navPush(); NAVSUB = 'pinv'; }
+function openInvIdx(i) { var x = INVROWS[i]; if (x) { showInv(x.key); invSub(); } }
+function openInv(key) { if (CUR !== 'pinv') { PENDINV = key; go('pinv'); } else { showInv(key); invSub(); } }
 function showInv(key) {
   window.scrollTo(0, 0);
   $('#view').innerHTML = '<div class="muted"><span class="spin"></span>جارٍ فتح الفاتورة…</div>';
@@ -1303,7 +1304,7 @@ function navBack() {
 function go(v) {
   var prevSec = VIEW_SEC[CUR] || '';
   if (v === 'home') NAVH = [];
-  else if (!NAVBACK && CUR !== v) { NAVH.push(CUR); if (NAVH.length > 30) NAVH.shift(); }
+  else if (!NAVBACK && CUR !== v) { NAVH.push(CUR); if (NAVH.length > 30) NAVH.shift(); if (window.RT && RT.navPush) RT.navPush(); }
   NAVBACK = false; NAVSUB = null;
   if (v !== 'inv') INVEDIT = null;
   CUR = v;

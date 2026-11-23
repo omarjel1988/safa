@@ -964,7 +964,7 @@ function navBack() {
 }
 function go(p) {
   if (p === 'dash') NAVH = [];
-  else if (!NAVBACK && S.page && S.page !== p) { NAVH.push({ p: S.page, cur: S.cur }); if (NAVH.length > 30) NAVH.shift(); }
+  else if (!NAVBACK && S.page && S.page !== p) { NAVH.push({ p: S.page, cur: S.cur }); if (NAVH.length > 30) NAVH.shift(); if (window.RT && RT.navPush) RT.navPush(); }
   NAVBACK = false;
   /* إدخال قيد جديد يبدأ بحساب «العام» */
   if (p === 'entry' && S.acc.some(a => a.name === 'العام')) S.cur = 'العام';
