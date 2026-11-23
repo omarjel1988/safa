@@ -26,6 +26,8 @@ h2{margin:4px 0 14px;font-size:20px;color:var(--p)}
 .kpi.o{background:var(--a);border-color:var(--a);color:#fff}
 .kpi.o>span{color:#ffe7d6}.kpi.o .neg{color:#fff}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.hero{margin:4px 2px 16px}.hero h2{margin:0;font-size:24px;font-weight:800;color:var(--txt)}.hero p{margin:2px 0 0;color:var(--mut)}
+html.ui-dark .hero h2,body.dark .hero h2{color:#E6EDF3}
 .acc{background:linear-gradient(180deg,color-mix(in srgb,var(--h) 10%,#fff),color-mix(in srgb,var(--h) 3%,#fff));border:1px solid color-mix(in srgb,var(--h) 22%,var(--line));border-radius:12px;padding:14px;cursor:pointer;border-top:4px solid var(--h);box-shadow:0 2px 8px color-mix(in srgb,var(--h) 12%,transparent)}
 html.ui-dark .acc,body.dark .acc{background:linear-gradient(180deg,color-mix(in srgb,var(--h) 26%,#16212c),#16212c);border-color:color-mix(in srgb,var(--h) 40%,#2A3644)}
 .acc:hover{border-color:var(--h)}
@@ -277,6 +279,7 @@ async function boot() {
   /* الحساب المحفوظ قد يكون حُذف أو تغيّر اسمه أو أُخفي → أول حساب (كان يسبب «الحساب غير موجود») */
   if (S.acc.length && !S.acc.some(a => a.name === S.cur)) S.cur = S.acc[0].name;
 }
+window.addEventListener('rt-uname', () => { const h = document.getElementById('hello'); if (h) h.innerHTML = RT.greet(); });
 /* فتح سريع: core.js يعرض آخر بيانات محفوظة فورًا ثم يرسل الحديثة هنا إن اختلفت */
 window.addEventListener('rt-fresh', e => {
   const d = e.detail || {};
@@ -612,7 +615,8 @@ async function dash() {
   /* التنبيهات ومجاميع كل عملة مخفية بطلب المستخدم؛ هنا مجموع كل الحسابات محوّلاً إلى العملة الأساسية */
   let S0 = 0, W0 = 0, N0 = 0; S.acc.filter(a => a.name !== 'العام').forEach(a => { S0 += a.s / (a.rate || 1); W0 += a.w / (a.rate || 1); N0 += a.n; });
 
-  let h = '<h2>ملخص الأرصدة</h2>';
+  let dl = ''; try { dl = new Date().toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { dl = S.today; }
+  let h = `<div class='hero'><h2 id='hello'>${RT.greet()}</h2><p>${esc(dl)}</p></div><h2>ملخص الأرصدة</h2>`;
   h += kpis([['إجمالي الصادر', S0], ['إجمالي الوارد', W0], ['صافي الرصيد', W0 - S0, 1], ['عدد القيود', N0.toLocaleString('en-US'), 0, 'n']]);
   h += `<div class='mut' style='font-size:11.5px;margin:-8px 2px 14px'>* المجاميع أعلاه لا تشمل حساب «العام»</div>`;
 
@@ -2849,6 +2853,7 @@ window.onDom = (function () {
             return;
         var h = '<div class="u3-rows">' +
             '<div class="rw"><b>✨ طلب تعديل من Claude</b><a class="ui-hbtn" href="https://claude.ai/project/01a1fb54-a249-7381-9d01-9e00d43c4c82" target="_blank" rel="noopener" style="background:var(--ui);text-decoration:none">فتح</a></div>' +
+            '<div class="rw"><b>👤 الاسم على هذا الجهاز: ' + E(RT.userName() || '—') + '</b><button class="ui-hbtn" data-u3="uname" style="background:var(--ui)">تغيير</button></div>' +
             '<div class="rw"><b>⭐ المفضلة</b><button class="ui-hbtn" data-u3="fav" style="background:var(--ui)">تعديل</button></div>' +
             '<div class="rw"><b>🛠 حالة النظام</b><button class="ui-hbtn" data-u3="sys" style="background:var(--ui)">فتح</button></div>' +
             '<div class="rw"><b>📱 الأجهزة المتصلة</b><button class="ui-hbtn" data-u3="dev" style="background:var(--ui)">عرض</button></div>' +
@@ -2864,6 +2869,10 @@ window.onDom = (function () {
                     favSheet();
                 else if (k === 'sys')
                     sysSheet();
+                else if (k === 'uname') {
+                    var nv = prompt('الاسم الذي يظهر في التحية على هذا الجهاز (اتركه فارغًا لإخفائه):', RT.userName());
+                    if (nv !== null) RT.setUserName(nv);
+                }
                 else if (k === 'dev')
                     devSheet();
                 else

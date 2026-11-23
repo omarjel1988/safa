@@ -459,8 +459,34 @@
       '.lgate .lerr{color:#C62828;font-weight:700;min-height:20px;margin-top:10px;font-size:14px}.lgate .lerr .msg,.lgate .lerr .warn{margin:0}';
     (document.head || document.documentElement).appendChild(st);
   })();
+  /* ---------- اسم مستخدم الجهاز (للتحية) ---------- */
+  /* الآيباد وهواوي: محمد — سامسونج والكمبيوتر: عمر. يمكن تغييره من «المظهر والإعدادات» (rt_uname) */
+  function lsg(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lss(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { /* */ } }
+  function userName() { var o = lsg('rt_uname'); return o !== null ? o : (lsg('rt_uname_auto') || ''); }
+  function setUserName(v) { lss('rt_uname', v === null ? null : String(v).trim()); W.dispatchEvent(new Event('rt-uname')); }
+  function greet() {
+    var h = new Date().getHours(), n = userName();
+    return (h >= 4 && h < 12 ? 'صباح الخير' : 'مساء الخير') + (n ? ' ' + n.replace(/</g, '&lt;') : '') + (h >= 4 && h < 12 ? ' ☀️' : ' 🌙');
+  }
+  (function () {
+    var ua = navigator.userAgent || '', n = '';
+    var byModel = function (m) { return /^SM-|samsung/i.test(m) ? 'عمر' : (/huawei|honor|^[A-Z]{3}-[A-Z]{1,2}\d/i.test(m) ? 'محمد' : ''); };
+    if (/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) n = 'محمد';
+    else if (/SamsungBrowser|SM-[A-Z0-9]/i.test(ua)) n = 'عمر';
+    else if (/HUAWEI|HuaweiBrowser|HarmonyOS|HONOR/i.test(ua)) n = 'محمد';
+    else if (!/Android|iPhone|iPod|Mobile/i.test(ua)) n = 'عمر';
+    if (n) lss('rt_uname_auto', n);
+    /* أندرويد يخفي اسم الجهاز في userAgent؛ نطلبه من userAgentData */
+    if (!n && /Android/.test(ua) && navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+      navigator.userAgentData.getHighEntropyValues(['model']).then(function (v) {
+        var x = byModel((v && v.model) || '');
+        if (x && x !== lsg('rt_uname_auto')) { lss('rt_uname_auto', x); W.dispatchEvent(new Event('rt-uname')); }
+      }).catch(function () {});
+    }
+  })();
   function gateHead(sub) {
     return '<div class="lcard"><img class="lic" src="' + (APP.icon || 'icon-180.png') + '" alt=""><h2>' + String(APP.short || '').replace(/</g, '&lt;') + '</h2><div class="lsub">' + sub + '</div>';
   }
-  W.RT = { navPush: navPush, gateHead: gateHead, call: call, sync: sync, kget: kget, kset: kset, post: post, M: M, out: function () { return OUT.slice(); }, clearCache: clearCache, countCache: countCache };
+  W.RT = { navPush: navPush, gateHead: gateHead, greet: greet, userName: userName, setUserName: setUserName, call: call, sync: sync, kget: kget, kset: kset, post: post, M: M, out: function () { return OUT.slice(); }, clearCache: clearCache, countCache: countCache };
 })();

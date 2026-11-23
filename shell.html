@@ -1431,10 +1431,11 @@ var SER = function (rows) {
 
 /* ---------- الرئيسية: لوحة المؤشرات والبحث ---------- */
 var DASH = null, GQ = '', GR = null;
+window.addEventListener('rt-uname', function () { var h = document.getElementById('hello'); if (h) h.innerHTML = RT.greet(); });
 function dateLine() { try { return new Date().toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return B.today; } }
 function vHome() {
   $('#view').innerHTML =
-    '<div class="hero"><h2>' + (new Date().getHours() >= 4 && new Date().getHours() < 12 ? 'صباح الخير ☀️' : 'مساء الخير 🌙') + '</h2><p>' + esc(dateLine()) + '</p></div>' +
+    '<div class="hero"><h2 id="hello">' + RT.greet() + '</h2><p>' + esc(dateLine()) + '</p></div>' +
     '<div class="tiles">' +
     tile('p', 'inv', 'فواتير الشراء', 'إدخال فاتورة، الفواتير، البحث، الأصناف، مقارنة الأسعار', B.items.length + ' صنف · ' + B.suppliers.length + ' مورد') +
     tile('j', 'jentry', 'اليومية', 'إدخال اليومية، الملخص اليومي، البحث والتقارير', 'الرصيد الحالي: ' + fmt(B.bal.cash)) +
@@ -3497,6 +3498,7 @@ window.onDom = (function () {
             return;
         var h = '<div class="u3-rows">' +
             '<div class="rw"><b>✨ طلب تعديل من Claude</b><a class="ui-hbtn" href="https://claude.ai/project/01a1fb54-a249-7381-9d01-9e00d43c4c82" target="_blank" rel="noopener" style="background:var(--ui);text-decoration:none">فتح</a></div>' +
+            '<div class="rw"><b>👤 الاسم على هذا الجهاز: ' + E(RT.userName() || '—') + '</b><button class="ui-hbtn" data-u3="uname" style="background:var(--ui)">تغيير</button></div>' +
             '<div class="rw"><b>⭐ المفضلة</b><button class="ui-hbtn" data-u3="fav" style="background:var(--ui)">تعديل</button></div>' +
             '<div class="rw"><b>🛠 حالة النظام</b><button class="ui-hbtn" data-u3="sys" style="background:var(--ui)">فتح</button></div>' +
             '<div class="rw"><b>📱 الأجهزة المتصلة</b><button class="ui-hbtn" data-u3="dev" style="background:var(--ui)">عرض</button></div>' +
@@ -3512,6 +3514,10 @@ window.onDom = (function () {
                     favSheet();
                 else if (k === 'sys')
                     sysSheet();
+                else if (k === 'uname') {
+                    var nv = prompt('الاسم الذي يظهر في التحية على هذا الجهاز (اتركه فارغًا لإخفائه):', RT.userName());
+                    if (nv !== null) RT.setUserName(nv);
+                }
                 else if (k === 'dev')
                     devSheet();
                 else
