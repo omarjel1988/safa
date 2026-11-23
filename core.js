@@ -72,7 +72,7 @@
     writes: ['webSaveInvoice', 'webSaveJournal', 'webJUpdate', 'webJDelete', 'webPUpdate', 'webPDelete', 'webAddItem', 'webFillCodes', 'webAddSupplier',
       'webSupSaveEntry', 'webSupDeleteEntry', 'webSupSaveSupplier', 'webSupDeleteSupplier', 'webInvReplace', 'webInvDelete', 'webInvAttach',
       'webSaveSettings', 'webSetPin', 'webBackupNow', 'webAutoBackup', 'webSetRate', 'webSetGeminiKey'],
-    nocache: ['webDevPing', 'webDevList', 'webDevOut', 'webPdf', 'webInvPdf', 'webSupPdf', 'webInvExtract', 'webAiState', 'webPFindPdf'],
+    nocache: ['webDevPing', 'webDevList', 'webDevOut', 'webPdf', 'webInvPdf', 'webSupPdf', 'webInvExtract', 'webAiState', 'webAiCfg', 'webStmtImport', 'webPFindPdf'],
     swr: ['webBoot', 'webDash'],
     offline: {
       webSaveJournal: function (p) {

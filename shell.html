@@ -98,6 +98,21 @@ tr.tot td,tfoot td{background:#FFF1DE!important;font-weight:800}
 @media (min-width:720px){.grid.l4{grid-template-columns:2fr 1fr 1fr 1fr}.grid.i5{grid-template-columns:2fr 1fr 1fr 1fr}}
 /* سطر الصنف في الجوال: الصنف بعرض كامل، ثم الكود والسعر والكمية بجانب بعض بحجم أصغر */
 @media (max-width:719px){.line .grid.l4{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.line .grid.l4>.f.wide{grid-column:1/-1}.line .grid.l4>.f:not(.wide) label{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.line .grid.l4>.f:not(.wide) label small{display:none}.line .grid.l4>.f:not(.wide) input{min-height:40px;padding:6px 8px;font-size:15px;text-align:center}.line .grid.l4>.f.nw{grid-column:span 1}.line .cmsg{font-size:11px}}
+/* استيراد كشف المورد */
+.stsum{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;margin:6px 0}
+.stsum>div{background:#F2F6FB;border-radius:10px;padding:8px;text-align:center}.stsum small{display:block;color:#6B7C8F;font-size:11.5px}.stsum b{font-size:18px}.stsum i{display:block;font-style:normal;font-size:11px;color:#8A6D1F}
+.stbal{background:#FFF8EC;border:1px solid #F2D9B0;border-radius:10px;padding:9px 12px;margin:8px 0;line-height:1.9}
+.sth{margin:12px 0 6px;font-size:15px}
+.stinv{border:1px solid #DCE6F0;border-radius:10px;margin-bottom:6px;background:#fff}.stinv.ex,.stent.ex{opacity:.55}
+.stinv summary{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:8px 10px;cursor:pointer;font-size:13.5px}
+.stinv summary .stam{margin-inline-start:auto}
+.stb{font-style:normal;font-size:11px;background:#EEF1F4;color:#55606B;border-radius:6px;padding:1px 6px}.stb.w{background:#FFF1DA;color:#8A5A00}.stb.n{background:#E3F2E6;color:#1E6B34}
+.stinv input[type=checkbox],.stent input[type=checkbox],.stround input[type=checkbox]{width:20px!important;height:20px!important;min-height:0!important;flex:none;margin:0;padding:0;accent-color:#1F4E79}
+.stround{display:block;padding:4px 12px;font-size:12.5px;color:#8A5A00}
+.stl{padding:0 10px 8px}.stl>div{display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:4px 0;border-top:1px dashed #E8EDF2;font-size:12.5px}
+.stent{display:grid;grid-template-columns:auto auto 1fr auto;gap:8px;align-items:center;padding:7px 10px;border:1px solid #DCE6F0;border-radius:10px;margin-bottom:5px;font-size:13px;background:#fff}
+html.ui-dark .stsum>div,body.dark .stsum>div,html.ui-dark .stinv,body.dark .stinv,html.ui-dark .stent,body.dark .stent{background:#1d2633;border-color:#2c3a4d}
+html.ui-dark .stbal,body.dark .stbal{background:#2A2216;border-color:#4a3a20}
 /* جدول الأصناف على الجوال: بطاقات بدل الجدول */
 .icards{display:none}
 .icon .itbl{display:none!important}.icon .icards{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
@@ -1932,6 +1947,222 @@ function loadDay() {
 }
 
 
+/* ======================= استيراد كشف حساب مورد (PDF / صورة / Excel) — عدة فواتير + دفعات ومرتجعات ======================= */
+var ST = null;
+function stOpen() {
+  if (!navigator.onLine) { toast('الاستيراد يحتاج اتصالًا بالإنترنت', 'err'); return; }
+  stClose();
+  var o = document.createElement('div'); o.className = 'dpop'; o.id = 'stpop';
+  o.innerHTML = '<div class="dbox" style="max-width:900px"><div class="dhd" style="background:linear-gradient(135deg,var(--c,#1F4E79),#2E6DA4)"><button onclick="stClose()">✕</button><b>استيراد كشف حساب مورد</b><span style="min-width:40px"></span></div>' +
+    '<div class="dbd" id="stbd"><div class="grid"><div class="f wide"><label>المورد</label><select id="stsup"><option value="">— يُحدَّد من الكشف، أو اختره —</option>' +
+    (B.suppliers || []).slice().sort(function (a, b) { return String(a).localeCompare(String(b), 'ar'); }).map(function (n) { return '<option>' + esc(n) + '</option>'; }).join('') + '</select></div></div>' +
+    '<div class="note">ارفع كشف الحساب كما أرسله المورد: PDF أو صورة أو Excel. يقرأ التطبيق كل الفواتير وأصنافها والدفعات والمرتجعات، ثم يعرضها عليك للمراجعة قبل الحفظ.</div>' +
+    '<button class="btn" style="width:100%;margin-top:10px" onclick="stPickFile()">📎 اختيار ملف الكشف</button>' +
+    '<input type="file" id="stfile" accept="application/pdf,image/*,.xlsx,.xls,.csv" style="display:none" onchange="stRead(this.files[0])">' +
+    '<div id="stst" class="note" style="margin-top:10px"></div><div id="stpv"></div></div></div>';
+  o.onclick = function (e) { if (e.target === o && !(ST && ST.busy)) stClose(); };
+  document.body.appendChild(o); document.body.style.overflow = 'hidden';
+}
+function stClose() { var p = $('#stpop'); if (p) p.remove(); document.body.style.overflow = ''; ST = null; }
+function stPickFile() {
+  call('webAiCfg').then(function (c) {
+    if (!c.ok) { aiKeyBox(stPickFile); return; }
+    ST = { cfg: c }; $('#stfile').value = ''; $('#stfile').click();
+  }, function (e) { toast(errMsg(e), 'err'); });
+}
+function stXlsxLib() {
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+  return new Promise(function (res, rej) {
+    var sc = document.createElement('script'); sc.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+    sc.onload = function () { res(window.XLSX); }; sc.onerror = function () { rej(new Error('تعذّر تحميل قارئ ملفات Excel')); };
+    document.head.appendChild(sc);
+  });
+}
+/* يجهّز الملف كجزء يُرسل للقراءة: Excel/CSV نصًا، وPDF/صورة كملف */
+function stPart(f) {
+  if (/\.(xlsx|xls)$/i.test(f.name) || /spreadsheet|excel/.test(f.type)) {
+    return f.arrayBuffer().then(function (buf) {
+      return stXlsxLib().then(function (X) {
+        var wb = X.read(buf, { type: 'array', cellDates: true });
+        return { text: wb.SheetNames.map(function (n) { return '### ورقة: ' + n + '\n' + X.utils.sheet_to_csv(wb.Sheets[n], { blankrows: false }); }).join('\n\n') };
+      });
+    });
+  }
+  if (/\.csv$/i.test(f.name) || /csv|text\/plain/.test(f.type)) return f.text().then(function (t) { return { text: t }; });
+  return aiShrink(f).then(function (g) {
+    if (g.size > 18 * 1024 * 1024) throw new Error('الملف كبير جدًا (الحد 18 ميغابايت)');
+    return new Promise(function (res) {
+      var fr = new FileReader();
+      fr.onload = function () { res({ inline_data: { mime_type: g.type || (/\.pdf$/i.test(g.name) ? 'application/pdf' : 'image/jpeg'), data: String(fr.result).split(',')[1] } }); };
+      fr.readAsDataURL(g);
+    });
+  });
+}
+var ST_PROMPT = 'أنت محاسب دقيق. هذا كشف حساب من مورد (فواتير شراء ودفعات ومرتجعات)، بالعربية أو الإنجليزية، PDF أو صورة أو جدول. استخرج كل ما فيه بدقة كاملة دون إسقاط أي سطر.\n' +
+  'أعد JSON فقط بهذا الشكل:\n' +
+  '{"supplier":"اسم المورد","currency":"العملة كما تظهر","opening":0,"closing":0,"has_closing":false,' +
+  '"invoices":[{"no":"رقم الفاتورة","date":"YYYY-MM-DD","total":0,"items":[{"name":"اسم الصنف كاملًا","code":"كود الصنف/الموديل إن وُجد","unit":"الوحدة","qty":0,"price":0}]}],' +
+  '"entries":[{"date":"YYYY-MM-DD","type":"payment|return|discount|other","desc":"البيان كما في الكشف","ref":"رقم الفاتورة المرتبطة إن وُجد","amount":0,"dir":"out|in"}]}\n' +
+  'القواعد:\n- supplier هو الجهة التي أصدرت الكشف وباعت البضاعة (المورد)، وليس اسم العميل المذكور في الكشف (العميل هو مكتبتنا).\n- opening الرصيد الافتتاحي/السابق المستحق للمورد في أول الكشف (0 إن لم يوجد، وسالب إن كان لنا عنده). closing الرصيد الختامي المستحق للمورد في آخر الكشف كما هو مكتوب، وhas_closing=true إن كان مذكورًا في الكشف (حتى لو كان صفرًا).\n' +
+  '- كل فاتورة شراء بكل أصنافها. price سعر الوحدة الصافي بعد أي حسم على السطر أو حسم نسبة على الفاتورة كلها (طبّق النسبة على السعر). الهدية أو البونص بسعر 0. total إجمالي الفاتورة النهائي كما في الكشف.\n' +
+  '- إن لم يكن للفاتورة رقم اترك no فارغًا "".\n' +
+  '- entries: كل حركة ليست فاتورة شراء: دفعة/سند قبض (payment)، مرتجع (return)، حسم أو خصم مستقل (discount)، أخرى (other). amount موجب دائمًا. dir="out" إذا كانت تُنقص المستحق للمورد (دفعة، مرتجع، حسم)، و"in" إذا كانت تزيده.\n' +
+  '- لا تضع سطور المجاميع أو الرصيد المتراكم كفواتير أو حركات. لا تكرر الفاتورة إن ظهرت في أكثر من مكان.\n' +
+  '- الأرقام إنجليزية بلا فواصل آلاف، وحوّل الأرقام العربية. التواريخ ميلادية YYYY-MM-DD. لا تخترع بيانات غير موجودة.';
+function stGemini(part) {
+  var c = ST.cfg, models = c.models || [], i = 0, last = '';
+  var sups = (B.suppliers || []).join('، ');
+  function body(m) {
+    var gc = { temperature: 0, responseMimeType: 'application/json', maxOutputTokens: 65536 };
+    if (/gemini-[3-9]/.test(m)) gc.thinkingConfig = { thinkingLevel: 'low' };
+    return JSON.stringify({ contents: [{ role: 'user', parts: [part, { text: ST_PROMPT + (sups ? '\n- أسماء الموردين المسجّلين عندنا: ' + sups + '. إن كان مورد الكشف أحدهم فاكتب الاسم كما هو في هذه القائمة.' : '') }] }], generationConfig: gc });
+  }
+  function one(t) {
+    if (i >= models.length) return Promise.reject(new Error((/quota|demand|overload|unavailable|exhausted/i.test(last) ? 'خدمة القراءة مزدحمة الآن من جهة Google، حاول بعد دقيقة. ' : 'تعذّرت القراءة: ') + last));
+    var m = models[i];
+    return fetch('https://generativelanguage.googleapis.com/v1beta/models/' + m + ':generateContent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': c.key }, body: body(m) })
+      .then(function (r) { return r.json().then(function (j) { return { code: r.status, j: j }; }); })
+      .then(function (x) {
+        if (x.code === 200) {
+          var txt = ((((x.j.candidates || [])[0] || {}).content || {}).parts || []).map(function (q) { return q.text || ''; }).join('');
+          try { var jj = JSON.parse(txt.replace(/^```(?:json)?|```$/g, '').trim()); return Array.isArray(jj) ? jj[0] || {} : jj; } catch (e) { last = 'الرد غير مكتمل'; i++; return one(0); }
+        }
+        last = (x.j.error && x.j.error.message) || ('HTTP ' + x.code);
+        if ((x.code === 400 && !/thinking/i.test(last)) || x.code === 401 || x.code === 403) throw new Error('تعذّرت القراءة: ' + last);
+        if (x.code === 503 && t < 1) return new Promise(function (r) { setTimeout(r, 2000); }).then(function () { return one(t + 1); });
+        i++; return one(0);
+      });
+  }
+  return one(0);
+}
+function stNum(v) { var x = Number(String(v == null ? '' : v).replace(/[٠-٩]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); }).replace(/[^\d.\-]/g, '')); return isFinite(x) ? x : 0; }
+function stR(x) { return Math.round(x * 1000) / 1000; }
+function stRead(f) {
+  if (!f || !ST) return;
+  var st = $('#stst'), t0 = Date.now(); ST.busy = 1; $('#stpv').innerHTML = '';
+  st.innerHTML = '<span class="spin"></span> جارٍ قراءة الكشف… <span id="stsec"></span><br><small>الكشوف الطويلة قد تحتاج دقيقة أو دقيقتين، اترك النافذة مفتوحة.</small>';
+  var tick = setInterval(function () { var el = $('#stsec'); if (!el) return clearInterval(tick); el.textContent = Math.round((Date.now() - t0) / 1000) + ' ث'; }, 1000);
+  stPart(f).then(function (part) { return stGemini(part); }).then(function (j) {
+    clearInterval(tick); if (!ST) return;
+    var sup = $('#stsup').value;
+    if (!sup && j.supplier) {
+      var n = aiNorm(j.supplier);
+      sup = (B.suppliers || []).filter(function (x) { return aiNorm(x) === n; })[0] || (B.suppliers || []).filter(function (x) { var a = aiNorm(x); return a.length > 2 && (n.indexOf(a) > -1 || a.indexOf(n) > -1); })[0] || '';
+      if (sup) $('#stsup').value = sup;
+    }
+    ST.raw = j; ST.busy = 0;
+    stBuild();
+  }).catch(function (e) { clearInterval(tick); if (ST) ST.busy = 0; st.innerHTML = '<b class="neg">' + esc(e.message || e) + '</b>'; });
+}
+/* يحوّل الرد إلى فواتير وقيود جاهزة، ثم يفحص الموجود في الخادم ويعرض المعاينة */
+function stBuild() {
+  var j = ST.raw, sup = $('#stsup').value, st = $('#stst');
+  $('#stsup').onchange = stBuild;
+  if (!sup) { st.innerHTML = '<b class="neg">المورد في الكشف «' + esc(j.supplier || '؟') + '» غير موجود في قائمتك — اختره من القائمة أعلاه.</b>'; return; }
+  var byName = {}, byCode = {};
+  (B.items || []).forEach(function (x) { byName[aiNorm(x.name)] = x; if (x.code) byCode[String(x.code).toLowerCase()] = x; });
+  var seenNo = {};
+  var invs = (j.invoices || []).map(function (v) {
+    var no = String(v.no || '').replace(/[٠-٩]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); }).trim(), date = /^\d{4}-\d{2}-\d{2}$/.test(v.date || '') ? v.date : '';
+    if (!no) no = date || 'بلا-رقم';
+    var base = no, k = 2; while (seenNo[no]) no = base + '-' + (k++); seenNo[no] = 1;
+    var lines = (v.items || []).map(function (l) {
+      var name = String(l.name || '').trim(), code = String(l.code || '').trim(), bc = code && byCode[code.toLowerCase()];
+      var hit = byName[aiNorm(name)] || (bc && aiNorm(bc.name) === aiNorm(name) ? bc : null);
+      return { name: hit ? hit.name : name, code: hit ? '' : code, unit: String(l.unit || '').trim(), qty: stNum(l.qty), price: stNum(l.price), isNew: !hit };
+    }).filter(function (l) { return l.name && l.qty > 0; });
+    var sum = stR(lines.reduce(function (a, l) { return a + l.price * l.qty; }, 0)), tot = stNum(v.total);
+    return { no: no, date: date, lines: lines, sum: sum, total: tot, diff: tot ? stR(tot - sum) : 0, on: true };
+  }).filter(function (v) { return v.lines.length; });
+  var ents = [], op = stNum(j.opening);
+  if (op) ents.push({ date: (invs[0] && invs[0].date) || '', desc: 'رصيد افتتاحي (حسب كشف المورد)', inc: op > 0 ? op : 0, out: op < 0 ? -op : 0, on: true });
+  (j.entries || []).forEach(function (e) {
+    var a = Math.abs(stNum(e.amount)); if (!a) return;
+    var tp = { payment: 'دفعة', 'return': 'مرتجع', discount: 'حسم' }[e.type] || '', d = String(e.desc || '').trim();
+    if (e.type === 'return' && e.ref && d.indexOf(e.ref) < 0) d = 'مرتجع لفاتورة رقم ' + e.ref + (d ? ' — ' + d : '');
+    else if (tp && d.indexOf(tp) < 0) d = tp + (d ? ' — ' + d : '');
+    ents.push({ date: /^\d{4}-\d{2}-\d{2}$/.test(e.date || '') ? e.date : '', desc: d || 'حركة', inc: e.dir === 'in' ? a : 0, out: e.dir === 'in' ? 0 : a, on: true });
+  });
+  ST.invs = invs; ST.ents = ents; ST.closing = j.has_closing || stNum(j.closing) ? stNum(j.closing) : null; ST.sup = sup;
+  st.innerHTML = '<span class="spin"></span> جارٍ مقارنة الكشف بما هو مسجّل…';
+  call('webStmtImport', { sup: sup, dry: true }).then(function (d) {
+    if (!ST) return;
+    var have = {}; (d.have || []).forEach(function (n) { have[n] = 1; });
+    var ds = d.descs || [];
+    invs.forEach(function (v) { v.exists = !!have[v.no]; if (v.exists) v.on = false; v.round = !!v.diff && Math.abs(v.diff) <= Math.max(1, v.total * 0.02); });
+    ents.forEach(function (e) { e.exists = ds.indexOf(e.desc) > -1; if (e.exists) e.on = false; });
+    ST.bal0 = d.bal || 0; st.innerHTML = ''; stView();
+  }, function (e) { st.innerHTML = '<b class="neg">' + esc(errMsg(e)) + '</b>'; });
+}
+function stEstimate() {
+  var b = ST.bal0;
+  ST.invs.forEach(function (v) { if (v.on) b += v.sum + (v.round ? v.diff : 0); });
+  ST.ents.forEach(function (e) { if (e.on) b += e.inc - e.out; });
+  return stR(b);
+}
+function stMatch(est, cl) { var d = stR(est - cl); return Math.abs(d) < 0.02 ? '<b style="color:#1E8E3E">✓ مطابق</b>' : '<b class="neg">فرق ' + fmt(d) + '</b>'; }
+function stUpd() { var est = stEstimate(); $('#stest').textContent = fmt(est); if ($('#stmatch') && ST.closing != null) $('#stmatch').innerHTML = stMatch(est, ST.closing); }
+function stView() {
+  var I = ST.invs, E = ST.ents, items = {};
+  I.forEach(function (v) { v.lines.forEach(function (l) { if (l.isNew) items[aiNorm(l.name)] = 1; }); });
+  var nNew = Object.keys(items).length, sumI = stR(I.reduce(function (a, v) { return a + v.sum; }, 0)), ex = I.filter(function (v) { return v.exists; }).length;
+  var est = stEstimate(), cl = ST.closing;
+  var h = '<div class="stsum"><div><small>الفواتير</small><b>' + I.length + '</b>' + (ex ? '<i>' + ex + ' مسجّلة مسبقًا</i>' : '') + '</div>' +
+    '<div><small>الأسطر</small><b>' + I.reduce(function (a, v) { return a + v.lines.length; }, 0) + '</b>' + (nNew ? '<i>' + nNew + ' صنف جديد</i>' : '') + '</div>' +
+    '<div><small>مجموع الفواتير</small><b>' + fmt(sumI) + '</b></div><div><small>حركات أخرى</small><b>' + E.length + '</b></div></div>' +
+    '<div class="stbal">الرصيد الحالي للمورد: <b>' + fmt(ST.bal0) + '</b> ← بعد الاستيراد: <b id="stest">' + fmt(est) + '</b>' +
+    (cl != null ? '<br>الرصيد الختامي في الكشف: <b>' + fmt(cl) + '</b> <span id="stmatch">' + stMatch(est, cl) + '</span>' : '') + '</div>';
+  h += '<h4 class="sth">الفواتير</h4>' + I.map(function (v, i) {
+    return '<details class="stinv' + (v.exists ? ' ex' : '') + '"><summary><input type="checkbox" ' + (v.on ? 'checked' : '') + (v.exists ? ' disabled' : '') + ' onclick="event.stopPropagation()" onchange="ST.invs[' + i + '].on=this.checked;stUpd()">' +
+      '<b>' + esc(v.no) + '</b><span>' + esc(v.date || '⚠︎ بلا تاريخ') + '</span><span>' + v.lines.length + ' صنف</span><b class="stam">' + fmt(v.sum) + '</b>' +
+      (v.exists ? '<em class="stb">مسجّلة — تُتخطى</em>' : '') +
+      (v.diff ? '<em class="stb w">الكشف ' + fmt(v.total) + ' (فرق ' + fmt(v.diff) + ')</em>' : '') + '</summary>' +
+      (v.diff && !v.exists ? '<label class="stround"><input type="checkbox" ' + (v.round ? 'checked' : '') + ' onchange="ST.invs[' + i + '].round=this.checked;stUpd()"> إضافة قيد «فرق تقريب» بـ ' + fmt(v.diff) + ' ليطابق إجمالي الكشف</label>' : '') +
+      '<div class="stl">' + v.lines.map(function (l) {
+        return '<div><span>' + esc(l.name) + (l.isNew ? ' <em class="stb n">جديد' + (l.code ? ' · ' + esc(l.code) : '') + '</em>' : '') + '</span><span>' + fmt(l.qty) + ' × ' + fmt(l.price) + '</span><b>' + fmt(l.price * l.qty) + '</b></div>';
+      }).join('') + '</div></details>';
+  }).join('');
+  if (E.length) h += '<h4 class="sth">الدفعات والمرتجعات والحركات الأخرى</h4>' + E.map(function (e, i) {
+    return '<label class="stent' + (e.exists ? ' ex' : '') + '"><input type="checkbox" ' + (e.on ? 'checked' : '') + (e.exists ? ' disabled' : '') + ' onchange="ST.ents[' + i + '].on=this.checked;stUpd()">' +
+      '<span>' + esc(e.date || '⚠︎ بلا تاريخ') + '</span><span class="sd">' + esc(e.desc) + (e.exists ? ' <em class="stb">مسجّل</em>' : '') + '</span><b class="' + (e.out ? 'neg' : '') + '">' + (e.out ? '−' + fmt(e.out) : '+' + fmt(e.inc)) + '</b></label>';
+  }).join('');
+  h += '<div class="note">راجع الفواتير (اضغط على أي فاتورة لعرض أصنافها). الأصناف الجديدة تُضاف لقائمة الأصناف، والمسجّل مسبقًا لا يتكرر.</div>' +
+    '<button class="btn grn" id="stgo" style="width:100%;margin-top:8px" onclick="stSave()">✅ حفظ في الصفاء</button>';
+  $('#stpv').innerHTML = h;
+}
+function stSave() {
+  var I = ST.invs.filter(function (v) { return v.on && !v.exists; });
+  var bad = I.filter(function (v) { return !v.date; }).concat(ST.ents.filter(function (e) { return e.on && !e.exists && !e.date; }));
+  if (bad.length) { toast('يوجد ' + bad.length + ' عنصر بلا تاريخ — ألغِ تحديده أو أعد القراءة', 'err'); return; }
+  var E = ST.ents.filter(function (e) { return e.on && !e.exists; }).map(function (e) { return { date: e.date, desc: e.desc, inc: e.inc, out: e.out }; });
+  I.forEach(function (v) { if (v.round && v.diff) E.push({ date: v.date, desc: 'فرق تقريب فاتورة رقم ' + v.no + ' (حسب كشف المورد)', inc: v.diff > 0 ? v.diff : 0, out: v.diff < 0 ? -v.diff : 0 }); });
+  if (!I.length && !E.length) { toast('لا يوجد شيء جديد للحفظ', 'err'); return; }
+  var b = $('#stgo'), st = $('#stst'), done = { inv: 0, ent: 0 }, k = 0, N = 8;
+  busy(b, true); ST.busy = 1;
+  function step() {
+    var batch = I.slice(k, k + N), last = k + N >= I.length;
+    st.innerHTML = '<span class="spin"></span> جارٍ الحفظ… ' + Math.min(k, I.length) + ' / ' + I.length + ' فاتورة';
+    return call('webStmtImport', { sup: ST.sup, invoices: batch.map(function (v) { return { no: v.no, date: v.date, lines: v.lines }; }), entries: last ? E : [] }).then(function (r) {
+      if (!r.ok) throw new Error(r.msg);
+      done.inv += (r.saved || []).length; done.ent += r.ents || 0; done.bal = r.bal;
+      if (r.errs && r.errs.length) throw new Error(r.errs.join(' | '));
+      if (r.left) throw new Error('انتهى وقت الخادم قبل إكمال الدفعة — اضغط حفظ مرة أخرى لإكمال الباقي (المحفوظ لا يتكرر)');
+      k += N;
+      if (!last) return step();
+    });
+  }
+  step().then(function () {
+    ST.busy = 0;
+    var cl = ST.closing;
+    $('#stpv').innerHTML = '<div class="stbal" style="font-size:16px">✅ تم الحفظ: ' + done.inv + ' فاتورة و' + done.ent + ' قيد.<br>رصيد المورد الآن: <b>' + fmt(done.bal) + '</b>' +
+      (cl != null ? ' — الكشف: <b>' + fmt(cl) + '</b> ' + stMatch(done.bal, cl) : '') + '</div><button class="btn" style="width:100%;margin-top:10px" onclick="stClose()">إغلاق</button>';
+    st.innerHTML = '';
+    reboot(function () { if (CUR === 'items') vItems(); });
+  }).catch(function (e) {
+    ST.busy = 0; busy(b, false);
+    st.innerHTML = '<b class="neg">' + esc(e.message || errMsg(e)) + '</b>' + (done.inv || done.ent ? '<br>حُفظ حتى الآن: ' + done.inv + ' فاتورة و' + done.ent + ' قيد.' : '');
+  });
+}
 /* ======================= قراءة فاتورة المورد (PDF أو صورة) وتعبئة الجدول ======================= */
 var AION = null;
 function aiNorm(s) { return String(s || '').toLowerCase().replace(/[ً-ْـ]/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/[^\w؀-ۿ]+/g, ' ').trim(); }
@@ -2060,7 +2291,7 @@ vInv = (function (orig) {
     if (INVEDIT && INVEDIT.data) return;
     $('#view').insertAdjacentHTML('afterbegin', '<div class="card" style="border:2px dashed var(--p2);background:#F4F8FC"><div class="row" style="justify-content:space-between;gap:10px;flex-wrap:wrap">' +
       '<div><b>📄 قراءة فاتورة المورد تلقائيًا</b><div class="note" style="margin:2px 0 0">اختر ملف PDF أو صورة للفاتورة، وتُعبّأ الأصناف والأسعار والكميات تلقائيًا.</div></div>' +
-      '<button class="btn" type="button" onclick="aiPick()">اختيار ملف الفاتورة</button></div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" type="button" onclick="aiPick()">اختيار ملف الفاتورة</button><button class="btn sec" type="button" onclick="stOpen()">📥 استيراد كشف حساب مورد</button></div></div>' +
       '<input type="file" id="aifile" accept="application/pdf,image/*" style="display:none" onchange="aiRead(this.files[0])"><div class="note" id="aist" style="margin-top:8px"></div></div>');
   };
 })(vInv);
