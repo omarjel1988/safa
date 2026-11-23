@@ -485,8 +485,16 @@
       }).catch(function () {});
     }
   })();
+  /* التاريخ الميلادي + الهجري (أم القرى) للتحية */
+  function dateLine() {
+    var d = new Date(), g = '', h = '';
+    try { g = d.toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { g = d.toDateString(); }
+    try { h = d.toLocaleDateString('ar-SA-u-ca-islamic-umalqura-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { h = ''; }
+    return g + (h ? ' · ' + h : '');
+  }
+  function dateHtml() { var p = dateLine().split(' · '); return '<span>' + p[0] + '</span>' + (p[1] ? '<span>' + p[1] + '</span>' : ''); }
   function gateHead(sub) {
     return '<div class="lcard"><img class="lic" src="' + (APP.icon || 'icon-180.png') + '" alt=""><h2>' + String(APP.short || '').replace(/</g, '&lt;') + '</h2><div class="lsub">' + sub + '</div>';
   }
-  W.RT = { navPush: navPush, gateHead: gateHead, greet: greet, userName: userName, setUserName: setUserName, call: call, sync: sync, kget: kget, kset: kset, post: post, M: M, out: function () { return OUT.slice(); }, clearCache: clearCache, countCache: countCache };
+  W.RT = { navPush: navPush, gateHead: gateHead, greet: greet, dateLine: dateLine, dateHtml: dateHtml, userName: userName, setUserName: setUserName, call: call, sync: sync, kget: kget, kset: kset, post: post, M: M, out: function () { return OUT.slice(); }, clearCache: clearCache, countCache: countCache };
 })();

@@ -51,7 +51,7 @@ input[readonly]{background:var(--cl);color:var(--mut)}
 .btn:disabled{opacity:.55}
 .x{background:none;border:0;color:var(--red);font-size:14px;padding:6px;font-weight:700}
 .hide{display:none!important}
-.hero{margin:4px 2px 16px}.hero h2{margin:0;font-size:24px;font-weight:800}.hero p{margin:2px 0 0;color:var(--mut)}
+.hero{margin:4px 2px 16px;display:flex;align-items:center;gap:12px}.hero h2{margin:0;font-size:24px;font-weight:800}.hero h2{white-space:nowrap}.hero p{margin:0;color:var(--mut);font-size:13px;line-height:1.45;border-inline-start:2px solid var(--bd,#dfe7e9);padding-inline-start:12px}.hero p span{display:block}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
 .tile{position:relative;overflow:hidden;border:0;border-radius:20px;padding:20px;color:#fff;text-align:right;min-height:175px;display:flex;flex-direction:column;gap:3px;box-shadow:0 8px 24px rgba(16,24,40,.15)}
 .tile:active{transform:scale(.985)}
@@ -1432,10 +1432,10 @@ var SER = function (rows) {
 /* ---------- الرئيسية: لوحة المؤشرات والبحث ---------- */
 var DASH = null, GQ = '', GR = null;
 window.addEventListener('rt-uname', function () { var h = document.getElementById('hello'); if (h) h.innerHTML = RT.greet(); });
-function dateLine() { try { return new Date().toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return B.today; } }
+function dateLine() { return RT.dateLine(); }
 function vHome() {
   $('#view').innerHTML =
-    '<div class="hero"><h2 id="hello">' + RT.greet() + '</h2><p>' + esc(dateLine()) + '</p></div>' +
+    '<div class="hero"><h2 id="hello">' + RT.greet() + '</h2><p>' + RT.dateHtml() + '</p></div>' +
     '<div class="tiles">' +
     tile('p', 'inv', 'فواتير الشراء', 'إدخال فاتورة، الفواتير، البحث، الأصناف، مقارنة الأسعار', B.items.length + ' صنف · ' + B.suppliers.length + ' مورد') +
     tile('j', 'jentry', 'اليومية', 'إدخال اليومية، الملخص اليومي، البحث والتقارير', 'الرصيد الحالي: ' + fmt(B.bal.cash)) +

@@ -26,7 +26,7 @@ h2{margin:4px 0 14px;font-size:20px;color:var(--p)}
 .kpi.o{background:var(--a);border-color:var(--a);color:#fff}
 .kpi.o>span{color:#ffe7d6}.kpi.o .neg{color:#fff}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
-.hero{margin:4px 2px 16px}.hero h2{margin:0;font-size:24px;font-weight:800;color:var(--txt)}.hero p{margin:2px 0 0;color:var(--mut)}
+.hero{margin:4px 2px 16px;display:flex;align-items:center;gap:12px}.hero h2{margin:0;font-size:24px;font-weight:800;color:var(--txt)}.hero h2{white-space:nowrap}.hero p{margin:0;color:var(--mut);font-size:13px;line-height:1.45;border-inline-start:2px solid var(--bd,#dfe7e9);padding-inline-start:12px}.hero p span{display:block}
 html.ui-dark .hero h2,body.dark .hero h2{color:#E6EDF3}
 .acc{background:linear-gradient(180deg,color-mix(in srgb,var(--h) 10%,#fff),color-mix(in srgb,var(--h) 3%,#fff));border:1px solid color-mix(in srgb,var(--h) 22%,var(--line));border-radius:12px;padding:14px;cursor:pointer;border-top:4px solid var(--h);box-shadow:0 2px 8px color-mix(in srgb,var(--h) 12%,transparent)}
 html.ui-dark .acc,body.dark .acc{background:linear-gradient(180deg,color-mix(in srgb,var(--h) 26%,#16212c),#16212c);border-color:color-mix(in srgb,var(--h) 40%,#2A3644)}
@@ -615,8 +615,7 @@ async function dash() {
   /* التنبيهات ومجاميع كل عملة مخفية بطلب المستخدم؛ هنا مجموع كل الحسابات محوّلاً إلى العملة الأساسية */
   let S0 = 0, W0 = 0, N0 = 0; S.acc.filter(a => a.name !== 'العام').forEach(a => { S0 += a.s / (a.rate || 1); W0 += a.w / (a.rate || 1); N0 += a.n; });
 
-  let dl = ''; try { dl = new Date().toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { dl = S.today; }
-  let h = `<div class='hero'><h2 id='hello'>${RT.greet()}</h2><p>${esc(dl)}</p></div><h2>ملخص الأرصدة</h2>`;
+  let h = `<div class='hero'><h2 id='hello'>${RT.greet()}</h2><p>${RT.dateHtml()}</p></div><h2>ملخص الأرصدة</h2>`;
   h += kpis([['إجمالي الصادر', S0], ['إجمالي الوارد', W0], ['صافي الرصيد', W0 - S0, 1], ['عدد القيود', N0.toLocaleString('en-US'), 0, 'n']]);
   h += `<div class='mut' style='font-size:11.5px;margin:-8px 2px 14px'>* المجاميع أعلاه لا تشمل حساب «العام»</div>`;
 
