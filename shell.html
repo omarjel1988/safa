@@ -98,6 +98,20 @@ tr.tot td,tfoot td{background:#FFF1DE!important;font-weight:800}
 @media (min-width:720px){.grid.l4{grid-template-columns:2fr 1fr 1fr 1fr}.grid.i5{grid-template-columns:2fr 1fr 1fr 1fr}}
 /* سطر الصنف في الجوال: الصنف بعرض كامل، ثم الكود والسعر والكمية بجانب بعض بحجم أصغر */
 @media (max-width:719px){.line .grid.l4{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.line .grid.l4>.f.wide{grid-column:1/-1}.line .grid.l4>.f:not(.wide) label{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.line .grid.l4>.f:not(.wide) label small{display:none}.line .grid.l4>.f:not(.wide) input{min-height:40px;padding:6px 8px;font-size:15px;text-align:center}.line .grid.l4>.f.nw{grid-column:span 1}.line .cmsg{font-size:11px}}
+/* جدول الأصناف على الجوال: بطاقات بدل الجدول */
+.icards{display:none}
+@media (max-width:719px){.itbl{display:none}.icards{display:grid;gap:8px}
+.icard{background:#fff;border:1px solid #DCE6F0;border-radius:12px;padding:10px 12px;box-shadow:0 1px 3px rgba(31,78,121,.07)}
+.icard .ih{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.icard .ih b{font-size:14.5px;line-height:1.45;flex:1}
+.icard .ic{background:#EAF1F8;color:#1F4E79;border-radius:7px;padding:2px 7px;font-size:12px;font-weight:700;white-space:nowrap;direction:ltr}
+.icard .ip{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:8px 0 6px;text-align:center}
+.icard .ip div{background:#F6F9FC;border-radius:8px;padding:4px 2px}
+.icard .ip small{display:block;font-size:10.5px;color:#6B7C8F}
+.icard .ip span{font-size:13px;font-weight:700}
+.icard .im{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:#5A6B7D}
+.icard .in{font-size:12px;color:#8A6D1F;margin-top:4px}
+body.dark .icard,html.ui-dark .icard{background:#1d2633;border-color:#2c3a4d}body.dark .icard .ip div,html.ui-dark .icard .ip div{background:#243042}body.dark .icard .ic,html.ui-dark .icard .ic{background:#2c3a4d;color:#cfe0f2}}
 @media print{header,.noprint,#toast,.bar,.card:has(.grid){display:none!important}body{background:#fff}.tw,.stat,.st,.card{box-shadow:none}}
 </style>
 <style>
@@ -333,10 +347,22 @@ function renderItems() {
   var a = (window.ITEMS || []).filter(function (i) { return !q || (i.name + ' ' + i.code + ' ' + i.cat + ' ' + i.notes).toLowerCase().indexOf(q) > -1; });
   if (!a.length) { $('#itl').innerHTML = '<div class="muted">لا توجد أصناف</div>'; return; }
   function pr(v) { return (v === '' || v == null) ? '' : fmt(v); }
-  $('#itl').innerHTML = tbl(['كود الصنف', 'اسم الصنف', 'الوحدة', 'التصنيف', 'ملاحظات', 'آخر سعر شراء', 'أقل سعر', 'أعلى سعر', 'متوسط السعر', 'مرات الشراء', 'تاريخ آخر شراء', 'آخر مورد'],
+  $('#itl').innerHTML = '<div class="itbl">' + tbl(['كود الصنف', 'اسم الصنف', 'الوحدة', 'التصنيف', 'ملاحظات', 'آخر سعر شراء', 'أقل سعر', 'أعلى سعر', 'متوسط السعر', 'مرات الشراء', 'تاريخ آخر شراء', 'آخر مورد'],
     a.map(function (i) {
       return '<tr>' + td(esc(i.code)) + td(esc(i.name), 'l') + td(esc(i.unit)) + td(esc(i.cat)) + td(esc(i.notes), 'l') + td(pr(i.last)) + td(pr(i.min)) + td(pr(i.max)) + td(pr(i.avg)) + td(i.n == null ? '' : i.n) + td(esc(i.date)) + td(esc(i.sup)) + '</tr>';
-    })) + '<div class="note">' + a.length + ' صنف</div>';
+    })) + '</div><div class="icards">' + a.map(function (i) {
+      function pc(l, v) { return '<div><small>' + l + '</small><span>' + (pr(v) || '—') + '</span></div>'; }
+      var m = [];
+      if (i.unit) m.push('📦 ' + esc(i.unit));
+      if (i.cat) m.push('🏷️ ' + esc(i.cat));
+      if (i.n != null && i.n !== '') m.push('🛒 ' + i.n + ' مرة');
+      if (i.sup) m.push('🏪 ' + esc(i.sup));
+      if (i.date) m.push('📅 ' + esc(i.date));
+      return '<div class="icard"><div class="ih"><b>' + esc(i.name) + '</b><span class="ic">' + esc(i.code) + '</span></div>' +
+        '<div class="ip">' + pc('آخر سعر', i.last) + pc('أقل', i.min) + pc('أعلى', i.max) + pc('متوسط', i.avg) + '</div>' +
+        (m.length ? '<div class="im">' + m.map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div>' : '') +
+        (i.notes ? '<div class="in">📝 ' + esc(i.notes) + '</div>' : '') + '</div>';
+    }).join('') + '</div><div class="note">' + a.length + ' صنف</div>';
 }
 /* إضافة صنف في نافذة منبثقة (بنمط .dpop) */
 function itemPop() {
