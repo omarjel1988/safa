@@ -328,9 +328,9 @@ function renderItems() {
   var a = (window.ITEMS || []).filter(function (i) { return !q || (i.name + ' ' + i.code + ' ' + i.cat + ' ' + i.notes).toLowerCase().indexOf(q) > -1; });
   if (!a.length) { $('#itl').innerHTML = '<div class="muted">لا توجد أصناف</div>'; return; }
   function pr(v) { return (v === '' || v == null) ? '' : fmt(v); }
-  $('#itl').innerHTML = tbl(['كود الصنف', 'اسم الصنف', 'الوحدة', 'التصنيف', 'ملاحظات', 'آخر سعر شراء', 'أقل سعر', 'أعلى سعر', 'متوسط السعر', 'تاريخ آخر شراء', 'آخر مورد'],
+  $('#itl').innerHTML = tbl(['كود الصنف', 'اسم الصنف', 'الوحدة', 'التصنيف', 'ملاحظات', 'آخر سعر شراء', 'أقل سعر', 'أعلى سعر', 'متوسط السعر', 'مرات الشراء', 'تاريخ آخر شراء', 'آخر مورد'],
     a.map(function (i) {
-      return '<tr>' + td(esc(i.code)) + td(esc(i.name), 'l') + td(esc(i.unit)) + td(esc(i.cat)) + td(esc(i.notes), 'l') + td(pr(i.last)) + td(pr(i.min)) + td(pr(i.max)) + td(pr(i.avg)) + td(esc(i.date)) + td(esc(i.sup)) + '</tr>';
+      return '<tr>' + td(esc(i.code)) + td(esc(i.name), 'l') + td(esc(i.unit)) + td(esc(i.cat)) + td(esc(i.notes), 'l') + td(pr(i.last)) + td(pr(i.min)) + td(pr(i.max)) + td(pr(i.avg)) + td(i.n == null ? '' : i.n) + td(esc(i.date)) + td(esc(i.sup)) + '</tr>';
     })) + '<div class="note">' + a.length + ' صنف</div>';
 }
 function addItem() {
