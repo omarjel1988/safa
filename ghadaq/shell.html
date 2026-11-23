@@ -26,7 +26,8 @@ h2{margin:4px 0 14px;font-size:20px;color:var(--p)}
 .kpi.o{background:var(--a);border-color:var(--a);color:#fff}
 .kpi.o>span{color:#ffe7d6}.kpi.o .neg{color:#fff}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
-.acc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;border-top:4px solid var(--h)}
+.acc{background:linear-gradient(180deg,color-mix(in srgb,var(--h) 10%,#fff),color-mix(in srgb,var(--h) 3%,#fff));border:1px solid color-mix(in srgb,var(--h) 22%,var(--line));border-radius:12px;padding:14px;cursor:pointer;border-top:4px solid var(--h);box-shadow:0 2px 8px color-mix(in srgb,var(--h) 12%,transparent)}
+html.ui-dark .acc,body.dark .acc{background:linear-gradient(180deg,color-mix(in srgb,var(--h) 26%,#16212c),#16212c);border-color:color-mix(in srgb,var(--h) 40%,#2A3644)}
 .acc:hover{border-color:var(--h)}
 .acc .n{font-weight:700;font-size:16px}
 .acc .bal{font-size:21px;font-weight:700;margin:6px 0}

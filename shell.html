@@ -1299,9 +1299,9 @@ document.head.insertAdjacentHTML('beforeend', '<style>' +
   /* بطاقات الموردين في الرئيسية (مثل بطاقات الحسابات في غدق) */
   '.sbar{display:flex;gap:10px;margin:16px 0 12px;flex-wrap:wrap}.sbar input{flex:1;min-width:180px}.sbar select{width:auto;min-width:170px}' +
   '.scards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}' +
-  '.sacc{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:14px;cursor:pointer;border-top:4px solid #6D2E5B;box-shadow:var(--sh)}.sacc:hover{border-color:#6D2E5B}' +
+  '.sacc{background:linear-gradient(180deg,#F5EBF2,#FCF8FB);border:1px solid #E6D3E0;border-radius:12px;padding:14px;cursor:pointer;border-top:4px solid #6D2E5B;box-shadow:0 2px 8px rgba(109,46,91,.12)}.sacc:hover{border-color:#6D2E5B}' +
   '.sacc .n{font-weight:700;font-size:16px}.sacc .bal{font-size:21px;font-weight:700;margin:6px 0;font-variant-numeric:tabular-nums}.sacc .m{display:flex;justify-content:space-between;color:var(--mut);font-size:12px}' +
-  'body.dark .sacc{background:var(--card,#1b2530);border-color:#2b3a48}' +
+  'body.dark .sacc,html.ui-dark .sacc{background:linear-gradient(180deg,#3a2436,#1b2530);border-color:#4a3047}' +
   /* الجوال: بطاقتان في كل صف */
   '@media (max-width:600px){.scards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.sacc{padding:10px}.sacc .n{font-size:14px;overflow-wrap:anywhere}.sacc .bal{font-size:17px;margin:4px 0}.sacc .m{font-size:11px;flex-direction:column;gap:1px}}' +
   '</style>');
