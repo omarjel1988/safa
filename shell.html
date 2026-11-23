@@ -100,7 +100,8 @@ tr.tot td,tfoot td{background:#FFF1DE!important;font-weight:800}
 @media (max-width:719px){.line .grid.l4{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.line .grid.l4>.f.wide{grid-column:1/-1}.line .grid.l4>.f:not(.wide) label{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.line .grid.l4>.f:not(.wide) label small{display:none}.line .grid.l4>.f:not(.wide) input{min-height:40px;padding:6px 8px;font-size:15px;text-align:center}.line .grid.l4>.f.nw{grid-column:span 1}.line .cmsg{font-size:11px}}
 /* جدول الأصناف على الجوال: بطاقات بدل الجدول */
 .icards{display:none}
-@media (max-width:719px){.itbl{display:none}.icards{display:grid;gap:8px}
+.icon .itbl{display:none!important}.icon .icards{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+@media (max-width:719px){.itbl{display:none}.icards{display:grid;gap:8px}}
 .icard{background:#fff;border:1px solid #DCE6F0;border-radius:12px;padding:10px 12px;box-shadow:0 1px 3px rgba(31,78,121,.07)}
 .icard .ih{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .icard .ih b{font-size:14.5px;line-height:1.45;flex:1}
@@ -111,7 +112,7 @@ tr.tot td,tfoot td{background:#FFF1DE!important;font-weight:800}
 .icard .ip span{font-size:13px;font-weight:700}
 .icard .im{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:#5A6B7D}
 .icard .in{font-size:12px;color:#8A6D1F;margin-top:4px}
-body.dark .icard,html.ui-dark .icard{background:#1d2633;border-color:#2c3a4d}body.dark .icard .ip div,html.ui-dark .icard .ip div{background:#243042}body.dark .icard .ic,html.ui-dark .icard .ic{background:#2c3a4d;color:#cfe0f2}}
+body.dark .icard,html.ui-dark .icard{background:#1d2633;border-color:#2c3a4d}body.dark .icard .ip div,html.ui-dark .icard .ip div{background:#243042}body.dark .icard .ic,html.ui-dark .icard .ic{background:#2c3a4d;color:#cfe0f2}
 @media print{header,.noprint,#toast,.bar,.card:has(.grid){display:none!important}body{background:#fff}.tw,.stat,.st,.card{box-shadow:none}}
 </style>
 <style>
@@ -2319,19 +2320,36 @@ function tblCards(re) {
   var T = document.querySelectorAll('.tw > table, table.tcard');
   for (var k = 0; k < T.length; k++) {
     var t = T[k], w = t.parentElement;
-    if (re) { t.classList.remove('tcard'); w.classList.remove('tcw'); t.removeAttribute('data-tcd'); }
+    if (re) { t.classList.remove('tcard'); w.classList.remove('tcw'); t.removeAttribute('data-tcd'); var ib0 = t.closest('.itbl'); if (ib0) ib0.parentElement.classList.remove('icon'); }
     if (t.getAttribute('data-tcd') || !w || !w.clientWidth) continue;
     t.setAttribute('data-tcd', '1');
     if (t.scrollWidth <= w.clientWidth + 2) continue;
+    var ib = t.closest('.itbl');
+    if (ib) { ib.parentElement.classList.add('icon'); continue; }
     var rows = t.rows, hd = null, i, j;
     for (i = 0; i < rows.length; i++) if (rows[i].querySelector('th')) { hd = rows[i]; break; }
     var L = [];
     if (hd) for (i = 0; i < hd.cells.length; i++) { var c = hd.cells[i], s = c.colSpan || 1; for (j = 0; j < s; j++) L.push(c.textContent.trim()); }
+    var TI = 0;
+    var RX = [/^البيان$/, /اسم/, /^المورد$/, /^الحساب$/, /^الصنف$/, /البيان/];
+    for (var q = 0; q < RX.length && !TI; q++) for (i = 0; i < L.length; i++) if (RX[q].test(L[i])) { TI = i || -1; break; }
+    if (TI < 0) TI = 0;
     for (i = 0; i < rows.length; i++) {
       var r = rows[i];
       if (r === hd) { r.classList.add('tch'); continue; }
-      var x = 0;
-      for (j = 0; j < r.cells.length; j++) { var d = r.cells[j], sp = d.colSpan || 1; d.setAttribute('data-l', sp > 1 ? '' : (L[x] || '')); if (!d.textContent.trim() && !d.querySelector('button,input,select,a,img,svg,i')) d.classList.add('tce'); x += sp; }
+      var x = 0, tt = 0, cs = [], d, sp, tx;
+      for (j = 0; j < r.cells.length; j++) { d = r.cells[j]; sp = d.colSpan || 1; cs.push([d, x, sp]); x += sp; }
+      var ti = -1;
+      for (j = 0; j < cs.length; j++) if (cs[j][1] === TI && cs[j][2] === 1 && cs[j][0].textContent.trim()) ti = j;
+      for (j = 0; j < cs.length && ti < 0; j++) if (cs[j][0].textContent.trim() && !cs[j][0].querySelector('button,input,select')) ti = j;
+      for (j = 0; j < cs.length; j++) {
+        d = cs[j][0]; sp = cs[j][2]; tx = d.textContent.trim();
+        d.setAttribute('data-l', sp > 1 ? '' : (L[cs[j][1]] || ''));
+        if (j === ti) d.classList.add('tct');
+        else if (!tx && !d.querySelector('button,input,select,a,img,svg,i')) d.classList.add('tce');
+        else if (d.querySelector('button,input,select,details') || (sp > 1 && !tx)) d.classList.add('tca');
+        else if (tx.length > 22) d.classList.add('tcl');
+      }
     }
     t.classList.add('tcard'); w.classList.add('tcw');
   }
@@ -3680,22 +3698,26 @@ body.dark~.ui-bnav{background:rgba(21,36,42,.96);border-color:#28393f}body.dark 
 </style>
 <style id="tcard-css">
 @media screen{.tw.tcw{background:none!important;border:0!important;box-shadow:none!important;overflow:visible}
-table.tcard{min-width:0!important;width:100%!important;border:0}
-table.tcard,table.tcard>thead,table.tcard>tbody,table.tcard>tfoot,table.tcard tr,table.tcard td{display:block}
+table.tcard{min-width:0!important;width:100%!important;border:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px}
+table.tcard>thead,table.tcard>tbody,table.tcard>tfoot{display:contents}
 table.tcard tr.tch{display:none}
-table.tcard tr{background:#fff;border:1px solid #DCE4EC;border-radius:12px;padding:6px 12px;margin:0 0 8px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-table.tcard td{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 12px;border:0!important;padding:4px 0!important;background:none!important;text-align:start;white-space:normal;min-width:0!important;max-width:none!important}
-table.tcard td+td{border-top:1px dashed #E8EDF2!important}
-table.tcard td::before{content:attr(data-l);font-size:12px;font-weight:600;color:#6B7C8F;flex:none}
+table.tcard tr{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));grid-auto-flow:dense;gap:4px;align-content:start;background:#fff;border:1px solid #DCE6F0;border-radius:12px;padding:9px 11px;box-shadow:0 1px 3px rgba(31,78,121,.07)}
+table.tcard td{display:block;border:0!important;padding:4px 3px!important;background:#F6F9FC!important;border-radius:8px;text-align:center;font-size:13px;font-weight:700;line-height:1.35;white-space:normal;min-width:0!important;max-width:none!important;overflow-wrap:anywhere}
+table.tcard td:not(.tcl):not(.tct){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+table.tcard td::before{content:attr(data-l);display:block;font-size:10.5px;font-weight:400;color:#6B7C8F;margin-bottom:1px}
 table.tcard td[data-l=""]::before{display:none}
 table.tcard td:empty,table.tcard td.tce{display:none}
-table.tcard td:first-child{font-weight:700;font-size:14.5px}
+table.tcard td.tct{grid-column:1/-1;order:-1;background:none!important;text-align:start;font-size:14.5px;padding:0 0 3px!important}
+table.tcard td.tct::before{display:none}
+table.tcard td.tcl{grid-column:1/-1;order:5;text-align:start;font-weight:500}
+table.tcard td.tcl::before{display:inline;margin-inline-end:6px}
+table.tcard td.tca{grid-column:1/-1;order:9;background:none!important;text-align:start;font-weight:500;padding:2px 0 0!important}
+table.tcard td.tca::before{display:none}
 table.tcard tr.tot,table.tcard tfoot tr{background:#FFF6E8;border-color:#F2D9B0}
-html.ui-dark table.tcard tr,body.dark table.tcard tr{background:#16202B;border-color:#2A3644}
-html.ui-dark table.tcard td+td,body.dark table.tcard td+td{border-top-color:#243140!important}
-html.ui-dark table.tcard tr.tot,body.dark table.tcard tr.tot{background:#2A2216}
-@media (min-width:600px){table.tcard tr{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));column-gap:18px}table.tcard td:first-child{grid-column:1/-1}table.tcard td+td{border-top:0!important;border-bottom:1px dashed #E8EDF2!important}html.ui-dark table.tcard td+td,body.dark table.tcard td+td{border-bottom-color:#243140!important}}
-}
+html.ui-dark table.tcard tr,body.dark table.tcard tr{background:#1d2633;border-color:#2c3a4d}
+html.ui-dark table.tcard td,body.dark table.tcard td{background:#243042!important}
+html.ui-dark table.tcard td.tct,html.ui-dark table.tcard td.tca,body.dark table.tcard td.tct,body.dark table.tcard td.tca{background:none!important}
+html.ui-dark table.tcard tr.tot,body.dark table.tcard tr.tot{background:#2A2216}}
 </style>
 </body>
 </html>
