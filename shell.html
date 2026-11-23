@@ -1058,8 +1058,8 @@ function doPInv() {
     $('#vres').innerHTML = h;
   }).catch(function (e) { $('#vres').innerHTML = ''; toast(errMsg(e), 'err'); });
 }
-function openInvIdx(i) { var x = INVROWS[i]; if (x) showInv(x.key); }
-function openInv(key) { if (CUR !== 'pinv') { PENDINV = key; go('pinv'); } else showInv(key); }
+function openInvIdx(i) { var x = INVROWS[i]; if (x) { showInv(x.key); NAVSUB = 'pinv'; } }
+function openInv(key) { if (CUR !== 'pinv') { PENDINV = key; go('pinv'); } else { showInv(key); NAVSUB = 'pinv'; } }
 function showInv(key) {
   window.scrollTo(0, 0);
   $('#view').innerHTML = '<div class="muted"><span class="spin"></span>جارٍ فتح الفاتورة…</div>';
@@ -1292,8 +1292,19 @@ SECTIONS.x = { title: '', tabs: [] };
 VIEW_SEC.pinv = 'p'; VIEW_SEC.pprice = 'p'; VIEW_SEC.rmon = 'r'; VIEW_SEC.ryear = 'r'; VIEW_SEC.settings = 'x'; VIEW_SEC.gsearch = 'x';
 var XTITLE = { settings: 'الإعدادات', gsearch: 'البحث الشامل' };
 
+/* زر الرجوع: يعود خطوة للخلف (الصفحة السابقة، أو من الفاتورة المفتوحة إلى القائمة) — يستدعيه core.js */
+var NAVH = [], NAVSUB = null, NAVBACK = false;
+function navBack() {
+  if (NAVSUB) { var s = NAVSUB; NAVSUB = null; NAVBACK = true; go(s); return true; }
+  if (NAVH.length) { NAVBACK = true; go(NAVH.pop()); return true; }
+  if (CUR !== 'home') { go('home'); return true; }
+  return false;
+}
 function go(v) {
   var prevSec = VIEW_SEC[CUR] || '';
+  if (v === 'home') NAVH = [];
+  else if (!NAVBACK && CUR !== v) { NAVH.push(CUR); if (NAVH.length > 30) NAVH.shift(); }
+  NAVBACK = false; NAVSUB = null;
   if (v !== 'inv') INVEDIT = null;
   CUR = v;
   var sec = VIEW_SEC[v] || '';
