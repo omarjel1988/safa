@@ -1560,6 +1560,31 @@ window.onDom = (function () {
     new MutationObserver(function () { if (!q) { q = 1; Promise.resolve().then(run); } }).observe(document.documentElement, { childList: true, subtree: true });
     return function (f) { fns.push(f); try { f(); } catch (e) { } };
 })();
+/* الجداول التي تحتاج تمريرًا جانبيًا تُعرض كبطاقات (أي شاشة؛ الجدول الذي يتسع يبقى كما هو) */
+function tblCards(re) {
+  var T = document.querySelectorAll('.tw > table, table.tcard');
+  for (var k = 0; k < T.length; k++) {
+    var t = T[k], w = t.parentElement;
+    if (re) { t.classList.remove('tcard'); w.classList.remove('tcw'); t.removeAttribute('data-tcd'); }
+    if (t.getAttribute('data-tcd') || !w || !w.clientWidth) continue;
+    t.setAttribute('data-tcd', '1');
+    if (t.scrollWidth <= w.clientWidth + 2) continue;
+    var rows = t.rows, hd = null, i, j;
+    for (i = 0; i < rows.length; i++) if (rows[i].querySelector('th')) { hd = rows[i]; break; }
+    var L = [];
+    if (hd) for (i = 0; i < hd.cells.length; i++) { var c = hd.cells[i], s = c.colSpan || 1; for (j = 0; j < s; j++) L.push(c.textContent.trim()); }
+    for (i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      if (r === hd) { r.classList.add('tch'); continue; }
+      var x = 0;
+      for (j = 0; j < r.cells.length; j++) { var d = r.cells[j], sp = d.colSpan || 1; d.setAttribute('data-l', sp > 1 ? '' : (L[x] || '')); if (!d.textContent.trim() && !d.querySelector('button,input,select,a,img,svg,i')) d.classList.add('tce'); x += sp; }
+    }
+    t.classList.add('tcard'); w.classList.add('tcw');
+  }
+}
+onDom(function () { tblCards(); });
+(function () { var rw = window.innerWidth; window.addEventListener('resize', function () { if (window.innerWidth !== rw) { rw = window.innerWidth; tblCards(1); } }); })();
+
 /* واجهة موحّدة للتطبيقين: شريط تنقل سفلي/جانبي، زر إضافة سريع، المظهر (داكن + حجم الخط)،
    حركات انتقال، سحب السطر لإظهار أزراره، قفل تلقائي، تنزيل نسخة احتياطية */
 (function () {
@@ -2928,6 +2953,25 @@ body.dark .btn:not(.sec):not(.org):not(.red){background:#1F7A8C}body.dark detail
 html.ui-dark #kp{background:#1C2632}html.ui-dark #kp button{background:#2C3846;color:#E6EDF3}html.ui-dark #kp .f{background:#3A4756}
 body.dark~.ui-bnav{background:rgba(21,36,42,.96);border-color:#28393f}body.dark .ui-sheet .bx{background:#15242a;color:#e2edef}body.dark .ui-sheet .it{background:#1d3138}body.dark .ui-sheet .rw{border-color:#28393f}body.dark .ui-seg{background:#0e181b}body.dark .ui-seg button.on{background:#1d3138}body.dark~.ui-bnav button.on{color:#6cc3d3}body.dark~.ui-bnav button.on svg{background:rgba(108,195,211,.15)}
 body{font-family:Cairo,Tajawal,-apple-system,Tahoma,sans-serif!important}.btn{border-radius:12px}.card,.tw{border-radius:14px}
+</style>
+<style id="tcard-css">
+@media screen{.tw.tcw{background:none!important;border:0!important;box-shadow:none!important;overflow:visible}
+table.tcard{min-width:0!important;width:100%!important;border:0}
+table.tcard,table.tcard>thead,table.tcard>tbody,table.tcard>tfoot,table.tcard tr,table.tcard td{display:block}
+table.tcard tr.tch{display:none}
+table.tcard tr{background:#fff;border:1px solid #DCE4EC;border-radius:12px;padding:6px 12px;margin:0 0 8px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+table.tcard td{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 12px;border:0!important;padding:4px 0!important;background:none!important;text-align:start;white-space:normal;min-width:0!important;max-width:none!important}
+table.tcard td+td{border-top:1px dashed #E8EDF2!important}
+table.tcard td::before{content:attr(data-l);font-size:12px;font-weight:600;color:#6B7C8F;flex:none}
+table.tcard td[data-l=""]::before{display:none}
+table.tcard td:empty,table.tcard td.tce{display:none}
+table.tcard td:first-child{font-weight:700;font-size:14.5px}
+table.tcard tr.tot,table.tcard tfoot tr{background:#FFF6E8;border-color:#F2D9B0}
+html.ui-dark table.tcard tr,body.dark table.tcard tr{background:#16202B;border-color:#2A3644}
+html.ui-dark table.tcard td+td,body.dark table.tcard td+td{border-top-color:#243140!important}
+html.ui-dark table.tcard tr.tot,body.dark table.tcard tr.tot{background:#2A2216}
+@media (min-width:600px){table.tcard tr{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));column-gap:18px}table.tcard td:first-child{grid-column:1/-1}table.tcard td+td{border-top:0!important;border-bottom:1px dashed #E8EDF2!important}html.ui-dark table.tcard td+td,body.dark table.tcard td+td{border-bottom-color:#243140!important}}
+}
 </style>
 </body>
 </html>
