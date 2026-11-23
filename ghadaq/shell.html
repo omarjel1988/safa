@@ -991,23 +991,46 @@ function go(p) {
 
 window.addEventListener('beforeprint', () => document.querySelectorAll('details.pp').forEach(d => d.open = true));
 /* ---------- القيود المؤرشفة: للقراءة فقط ---------- */
+/* خيارات القيد (تعديل/تكرار/حذف) في نافذة عائمة عند الضغط على السطر أو البطاقة */
+function rowM(i, e) {
+  if (e && e.target.closest('a,details,button,input,select')) return;
+  rowMClose();
+  const r = S.rows[i]; if (!r) return;
+  const m = document.createElement('div'); m.id = 'rmenu';
+  m.innerHTML = `<div class='rmt'>${esc(String(r.b || '').slice(0, 50))}</div>` +
+    (r.ar ? `<div class='rmn'>قيد مؤرشف — يمكن تكراره فقط</div>` : `<button onclick='rowMClose();editM(${i})'>✏️ تعديل</button>`) +
+    `<button onclick='rowMClose();dupM(${i})'>📄 تكرار <small>(بتاريخ اليوم)</small></button>` +
+    (r.ar ? '' : `<button class='d' onclick='rowMClose();delM(${i})'>🗑️ حذف</button>`);
+  document.body.appendChild(m);
+  const tr = e && e.currentTarget; if (tr) tr.classList.add('rsel');
+  const W = innerWidth, H = innerHeight, w = m.offsetWidth, h = m.offsetHeight;
+  let x = e ? e.clientX - w / 2 : (W - w) / 2, y = e ? e.clientY + 10 : (H - h) / 2;
+  if (y + h > H - 70) y = (e ? e.clientY : H / 2) - h - 10;
+  m.style.left = Math.max(8, Math.min(W - w - 8, x)) + 'px'; m.style.top = Math.max(8, y) + 'px';
+  setTimeout(() => { document.addEventListener('click', rowMOut, true); addEventListener('scroll', rowMClose, { passive: true, once: true }); }, 0);
+}
+function rowMOut(e) { if (!e.target.closest('#rmenu')) { rowMClose(); if (e.target.closest('tr.rk')) { e.stopPropagation(); e.preventDefault(); } } }
+function rowMClose() {
+  const m = $('#rmenu'); if (m) m.remove();
+  document.querySelectorAll('tr.rsel').forEach(t => t.classList.remove('rsel'));
+  document.removeEventListener('click', rowMOut, true);
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') rowMClose(); });
 function table(rows, o) {
   S.rows = rows;
   if (!rows.length && o.open == null) return `<div class='tw'><div class='empty'>لا توجد قيود</div></div>`;
-  let h = `<div class='tw'><table><tr>${o.acc ? '<th>الحساب</th>' : ''}<th>البيان</th><th>الصادر</th><th>الوارد</th><th>التاريخ</th>${o.bal ? '<th>الرصيد</th>' : ''}<th class='noprint'></th></tr>`;
-  if (o.open != null) h += `<tr class='op'><td class='t'>رصيد سابق (منقول)</td><td></td><td></td><td>${esc(o.openDate || '')}</td><td>${money(o.open)}</td><td class='noprint'></td></tr>`;
+  let h = `<div class='tw'><table><tr>${o.acc ? '<th>الحساب</th>' : ''}<th>البيان</th><th>الصادر</th><th>الوارد</th><th>التاريخ</th>${o.bal ? '<th>الرصيد</th>' : ''}</tr>`;
+  if (o.open != null) h += `<tr class='op'><td class='t'>رصيد سابق (منقول)</td><td></td><td></td><td>${esc(o.openDate || '')}</td><td>${money(o.open)}</td></tr>`;
   rows.forEach((r, i) => {
     const x = r.x || [], pn = v => v === '' || v == null ? '' : isNaN(Number(v)) ? esc(v) : fmt(Number(v));
     /* تفاصيل الورق: قائمة مطوية فيها مربعات (النوع، الغرام، المقاس، الطبق، الكيلو، سعر الطن) */
     const pp = x[5] !== '' && x[5] != null ? `<details class='pp' onclick='event.stopPropagation()'><summary>تفاصيل الورق</summary><span class='ppr ppc'>${
       [esc(x[0] || ''), esc(x[1] || ''), esc(x[2] || ''), esc(x[3] == null ? '' : x[3]), pn(x[4]), pn(x[5])].filter(c => String(c).trim() !== '').map(c => `<i>${c}</i>`).join('')}</span></details>` : '';
     const im = r.img ? `<a class='clip noprint' href='${esc(r.img)}' target='_blank' title='صورة السند' onclick='event.stopPropagation()'>📎</a>` : '';
-    const btn = r.ar ? `<span class='arb'>مؤرشف</span><button class='ic c' onclick='dupM(${i})' title='قيد جديد بنفس البيانات وتاريخ اليوم'>تكرار</button>`
-      : `<button class='ic e' onclick='editM(${i})'>تعديل</button><button class='ic c' onclick='dupM(${i})' title='قيد جديد بنفس البيانات وتاريخ اليوم'>تكرار</button><button class='ic d' onclick='delM(${i})'>حذف</button>`;
-    h += `<tr>${o.acc ? `<td>${esc(r.acc)}</td>` : ''}<td class='t'>${esc(r.b)}${r.rc ? `<span class='rcn'>#${esc(r.rc)}</span>` : ''}${im}${pp}</td><td>${fmt(r.s)}</td><td>${fmt(r.w)}</td><td>${esc(r.d)}</td>${
-      o.bal ? `<td class='b'>${money(r.bal)}</td>` : ''}<td class='noprint'>${btn}</td></tr>`;
+    h += `<tr class='rk' onclick='rowM(${i},event)'>${o.acc ? `<td>${esc(r.acc)}</td>` : ''}<td class='t'>${esc(r.b)}${r.ar ? `<span class='arb'>مؤرشف</span>` : ''}${r.rc ? `<span class='rcn'>#${esc(r.rc)}</span>` : ''}${im}${pp}</td><td>${fmt(r.s)}</td><td>${fmt(r.w)}</td><td>${esc(r.d)}</td>${
+      o.bal ? `<td class='b'>${money(r.bal)}</td>` : ''}</tr>`;
   });
-  if (o.tot) h += `<tr class='tot'><td${o.acc ? ` colspan='2'` : ''} class='t'>الإجمالي</td><td>${fmt(o.tot[0])}</td><td>${fmt(o.tot[1])}</td><td></td>${o.bal ? `<td>${money(o.tot[2])}</td>` : ''}<td class='noprint'></td></tr>`;
+  if (o.tot) h += `<tr class='tot'><td${o.acc ? ` colspan='2'` : ''} class='t'>الإجمالي</td><td>${fmt(o.tot[0])}</td><td>${fmt(o.tot[1])}</td><td></td>${o.bal ? `<td>${money(o.tot[2])}</td>` : ''}</tr>`;
   return h + '</table></div>';
 }
 const editM9 = editM, delM9 = delM;
@@ -2986,6 +3009,15 @@ body.dark~.ui-bnav{background:rgba(21,36,42,.96);border-color:#28393f}body.dark 
 body{font-family:Cairo,Tajawal,-apple-system,Tahoma,sans-serif!important}.btn{border-radius:12px}.card,.tw{border-radius:14px}
 </style>
 <style id="tcard-css">
+tr.rk{cursor:pointer}tr.rk:hover td{background:color-mix(in srgb,var(--h) 7%,transparent)}tr.rsel td,table.tcard tr.rsel{outline:2px solid var(--h);outline-offset:-2px}
+#rmenu{position:fixed;z-index:9999;min-width:210px;max-width:290px;background:var(--card,#fff);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.22);padding:6px;animation:rmIn .12s ease-out}
+@keyframes rmIn{from{opacity:0;transform:scale(.95)}}
+#rmenu .rmt{font-size:12px;color:var(--mut);padding:6px 10px 4px;border-bottom:1px solid var(--line);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#rmenu .rmn{font-size:12px;color:var(--mut);padding:6px 10px}
+#rmenu button{display:block;width:100%;text-align:start;background:none;border:0;padding:11px 12px;border-radius:10px;font:inherit;font-size:15px;font-weight:600;color:inherit;cursor:pointer}
+#rmenu button:hover,#rmenu button:active{background:color-mix(in srgb,var(--h) 10%,transparent)}
+#rmenu button.d{color:var(--red)}#rmenu small{font-weight:400;color:var(--mut);font-size:12px}
+@media print{#rmenu{display:none}}
 @media screen{.tw.tcw{background:none!important;border:0!important;box-shadow:none!important;overflow:visible}
 table.tcard{min-width:0!important;width:100%!important;border:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px}
 table.tcard>thead,table.tcard>tbody,table.tcard>tfoot{display:contents}
