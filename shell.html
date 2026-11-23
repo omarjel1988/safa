@@ -94,6 +94,7 @@ tr.tot td,tfoot td{background:#FFF1DE!important;font-weight:800}
 .big{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;padding:3px 0}
 .spin{display:inline-block;width:22px;height:22px;border:3px solid var(--cl);border-top-color:var(--c);border-radius:50%;animation:sp .8s linear infinite;vertical-align:middle;margin-left:8px}
 @keyframes sp{to{transform:rotate(360deg)}}
+#loadbar{position:fixed;top:0;left:0;right:0;height:3px;background:#F5B041;display:none;z-index:9995;box-shadow:0 0 6px rgba(245,176,65,.6)}
 @media (min-width:720px){.grid.l4{grid-template-columns:2fr 1fr 1fr 1fr}.grid.i5{grid-template-columns:2fr 1fr 1fr 1fr}}
 /* سطر الصنف في الجوال: الصنف بعرض كامل، ثم الكود والسعر والكمية بجانب بعض بحجم أصغر */
 @media (max-width:719px){.line .grid.l4{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.line .grid.l4>.f.wide{grid-column:1/-1}.line .grid.l4>.f:not(.wide) label{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.line .grid.l4>.f:not(.wide) label small{display:none}.line .grid.l4>.f:not(.wide) input{min-height:40px;padding:6px 8px;font-size:15px;text-align:center}.line .grid.l4>.f.nw{grid-column:span 1}.line .cmsg{font-size:11px}}
@@ -1421,14 +1422,23 @@ function curNote(x) {
 var TOK = (function () { try { return localStorage.getItem('safa_tok') || ''; } catch (e) { return ''; } })();
 var PINP = null;
 function setTok(t) { TOK = t || ''; try { if (TOK) localStorage.setItem('safa_tok', TOK); else localStorage.removeItem('safa_tok'); } catch (e) { /* */ } }
+/* شريط التحميل أعلى الشاشة (مثل غدق) — يظهر ما دام هناك طلب جارٍ للخادم */
+var LOADN = 0;
+function loadBar(d) {
+  LOADN = Math.max(0, LOADN + d);
+  var el = document.getElementById('loadbar');
+  if (!el) { el = document.createElement('div'); el.id = 'loadbar'; document.body.appendChild(el); }
+  el.style.display = LOADN ? 'block' : 'none';
+}
 function call(fn) {
   var a = Array.prototype.slice.call(arguments, 1);
+  loadBar(1);
   return new Promise(function (res, rej) {
     google.script.run.withSuccessHandler(res).withFailureHandler(function (e) {
       if (/PIN_REQUIRED/.test(errMsg(e))) pinGate().then(function () { call.apply(null, [fn].concat(a)).then(res, rej); }, rej);
       else rej(e);
     }).api(fn, a.concat([TOK]));
-  });
+  }).then(function (v) { loadBar(-1); return v; }, function (e) { loadBar(-1); throw e; });
 }
 function pinGate() {
   if (PINP) return PINP;
