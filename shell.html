@@ -1302,6 +1302,8 @@ document.head.insertAdjacentHTML('beforeend', '<style>' +
   '.sacc{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:14px;cursor:pointer;border-top:4px solid #6D2E5B;box-shadow:var(--sh)}.sacc:hover{border-color:#6D2E5B}' +
   '.sacc .n{font-weight:700;font-size:16px}.sacc .bal{font-size:21px;font-weight:700;margin:6px 0;font-variant-numeric:tabular-nums}.sacc .m{display:flex;justify-content:space-between;color:var(--mut);font-size:12px}' +
   'body.dark .sacc{background:var(--card,#1b2530);border-color:#2b3a48}' +
+  /* الجوال: بطاقتان في كل صف */
+  '@media (max-width:600px){.scards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.sacc{padding:10px}.sacc .n{font-size:14px;overflow-wrap:anywhere}.sacc .bal{font-size:17px;margin:4px 0}.sacc .m{font-size:11px;flex-direction:column;gap:1px}}' +
   '</style>');
 $('#homeBtn').insertAdjacentHTML('beforebegin', '<button onclick="go(\'settings\')" title="الإعدادات">⚙︎</button>');
 
