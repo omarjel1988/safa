@@ -375,9 +375,8 @@ function fillCodes() {
 /* ---------- الموردون ---------- */
 function vSup() {
   $('#view').innerHTML =
-    '<div class="card"><h2>إضافة مورد</h2><div class="note" style="margin:-6px 0 10px">قائمة الموردين مشتركة مع قسم قيود الموردين: أي مورد تضيفه هنا يظهر هناك والعكس.</div><div class="grid"><div class="f wide"><label>اسم المورد</label><input id="sn"></div>' +
-    '<div class="f"><label>الجوال</label><input id="sp" inputmode="tel"></div><div class="f"><label>الرقم الضريبي</label><input id="st" inputmode="numeric"></div>' +
-    '<div class="f wide"><label>ملاحظات</label><input id="so"></div></div><br><button class="btn grn" id="sadd" onclick="addSup()">حفظ المورد</button></div><div id="sl"></div>';
+    '<div class="row" style="margin-bottom:12px"><button class="btn grn" onclick="supAddPop()">＋ إضافة مورد</button></div>' +
+    '<div class="note" style="margin:0 2px 10px">قائمة الموردين مشتركة مع قسم قيود الموردين: أي مورد تضيفه هنا يظهر هناك والعكس.</div><div id="sl"></div>';
   loadSup();
 }
 function loadSup() {
@@ -387,12 +386,26 @@ function loadSup() {
     })) : '<div class="muted">لا يوجد موردون بعد</div>';
   }).catch(function (e) { toast(errMsg(e), 'err'); });
 }
+/* إضافة مورد (فواتير الشراء) في نافذة منبثقة */
+function supAddPop() {
+  itemClose();
+  var o = document.createElement('div'); o.className = 'dpop'; o.id = 'ipop';
+  o.innerHTML = '<div class="dbox" style="max-width:560px"><div class="dhd" style="background:linear-gradient(135deg,var(--c,#1F4E79),#2E6DA4)"><button onclick="itemClose()">✕</button><b>إضافة مورد</b><span style="min-width:40px"></span></div>' +
+    '<div class="dbd"><div class="grid"><div class="f wide"><label>اسم المورد</label><input id="sn"></div>' +
+    '<div class="f"><label>الجوال</label><input id="sp" inputmode="tel"></div><div class="f"><label>الرقم الضريبي</label><input id="st" inputmode="numeric"></div>' +
+    '<div class="f wide"><label>ملاحظات</label><input id="so"></div></div><br>' +
+    '<div class="row"><button class="btn grn" id="sadd" onclick="addSup()">حفظ المورد</button><button class="btn sec" onclick="itemClose()">إلغاء</button></div></div></div>';
+  o.onclick = function (e) { if (e.target === o) itemClose(); };
+  document.body.appendChild(o); document.body.style.overflow = 'hidden';
+  document.addEventListener('keydown', itemKey);
+  setTimeout(function () { var n = $('#sn'); if (n) n.focus(); }, 50);
+}
 function addSup() {
   var b = $('#sadd'); busy(b, true);
   call('webAddSupplier', { name: $('#sn').value, phone: $('#sp').value, tax: $('#st').value, notes: $('#so').value }).then(function (r) {
     busy(b, false);
     if (!r.ok) { toast(r.msg, 'err'); return; }
-    toast(r.msg, 'ok'); reboot(function () { vSup(); });
+    toast(r.msg, 'ok'); itemClose(); reboot(function () { if ($('#sl')) vSup(); });
   }).catch(function (e) { busy(b, false); toast(errMsg(e), 'err'); });
 }
 
@@ -718,16 +731,19 @@ var SUP = (function () {
   P.suppliers = {
     html: function () {
       return '<h1>الموردون</h1><p class="sub">الرصيد الافتتاحي الموجب يُعامل كوارد، والسالب كصادر.</p>' +
-        '<div class="card"><h2 id="s-h">إضافة مورد</h2><div class="grid">' +
+        '<div class="row" style="margin-bottom:12px"><button class="btn grn" data-act="newsup">＋ إضافة مورد</button></div>' +
+        /* نموذج المورد في نافذة منبثقة (للإضافة والتعديل) */
+        '<div class="dpop" id="s-pop" style="display:none"><div class="dbox" style="max-width:560px"><div class="dhd" style="background:linear-gradient(135deg,#6D2E5B,#8E4A7C)"><button data-act="cancelsup">✕</button><b id="s-h">إضافة مورد</b><span style="min-width:40px"></span></div><div class="dbd"><div class="grid">' +
         '<label class="f"><span>اسم المورد</span><input id="s-name" autocomplete="off"></label><label class="f"><span>رصيد افتتاحي</span><input id="s-open" ' + IN + '></label>' +
         '<label class="f"><span>رقم الجوال</span><input id="s-phone" inputmode="tel"></label><label class="f"><span>الرقم الضريبي</span><input id="s-tax" inputmode="numeric"></label>' +
         '<label class="f"><span>عملة الحساب</span><select id="s-acur"></select></label>' +
         '<label class="f wide"><span>ملاحظات</span><input id="s-note"></label></div><div class="note">اختر الدولار لمورد تتعامل معه بالدولار: رصيده يُحسب بالدولار وكل قيد يُحوَّل بسعر يومه.</div><div id="s-err"></div>' +
-        '<div class="row" style="margin-top:12px"><button class="btn grn" data-act="savesup" id="s-save">إضافة المورد</button><button class="btn sec" data-act="cancelsup" id="s-cancel" hidden>إلغاء التعديل</button></div></div>' +
+        '<div class="row" style="margin-top:12px"><button class="btn grn" data-act="savesup" id="s-save">إضافة المورد</button><button class="btn sec" data-act="cancelsup" id="s-cancel">إلغاء</button></div></div></div></div>' +
         '<div id="s-tbl"></div>';
     },
     init: function (d) {
       d.addEventListener('click', function (e) {
+        if (e.target.id === 's-pop') { editSup = null; clearSup(d); return; } /* الضغط خارج النافذة يغلقها */
         var b = e.target.closest('[data-act]'); if (!b) return; var a = b.dataset.act;
         if (a === 'savesup') {
           var name = d.querySelector('#s-name').value.trim(), err = d.querySelector('#s-err'), show = function (t) { err.innerHTML = '<div class="msg">' + esc(t) + '</div>'; };
@@ -739,10 +755,11 @@ var SUP = (function () {
           put('suppliers', rec).then(function (r) { busy(b, false); if (r) { ok(old ? 'تم حفظ التعديل' : 'تمت إضافة المورد'); editSup = null; clearSup(d); } });
         }
         if (a === 'cancelsup') { editSup = null; clearSup(d); }
+        if (a === 'newsup') { editSup = null; clearSup(d); supPop(d, true); }
         if (a === 'editsup') {
           var s = supById(b.dataset.id); if (!s) return; editSup = s.id;
           d.querySelector('#s-name').value = s.name; d.querySelector('#s-open').value = s.opening || ''; d.querySelector('#s-phone').value = s.phone || ''; d.querySelector('#s-tax').value = s.tax || ''; d.querySelector('#s-note').value = s.note || ''; d.querySelector('#s-acur').value = s.acur || '';
-          d.querySelector('#s-h').textContent = 'تعديل مورد'; d.querySelector('#s-save').textContent = 'حفظ التعديل'; d.querySelector('#s-cancel').hidden = false; window.scrollTo({ top: 0, behavior: 'smooth' });
+          d.querySelector('#s-h').textContent = 'تعديل مورد'; d.querySelector('#s-save').textContent = 'حفظ التعديل'; supPop(d, true);
         }
         if (a === 'delsup') armDelete(b, function () {
           var s = supById(b.dataset.id); if (!s) return;
@@ -757,12 +774,18 @@ var SUP = (function () {
       EXP.suppliers = { name: 'الموردون', head: ['المورد', 'عملة الحساب', 'رصيد افتتاحي', 'الجوال', 'الرقم الضريبي', 'عدد القيود', 'الرصيد الحالي', 'ملاحظات'], rows: list.map(function (s) { return [s.name, s.acur || B.set.base, fmt(s.opening), s.phone || '', s.tax || '', t[s.id].n, fmt(balanceOf(s.id)), s.note || '']; }) };
       d.querySelector('#s-tbl').innerHTML = list.length ? '<div class="tw"><table><thead><tr><th class="l">المورد</th><th class="num">رصيد افتتاحي</th><th>الجوال</th><th>الرقم الضريبي</th><th>القيود</th><th class="num">الرصيد الحالي</th><th>ملاحظات</th><th class="noprint"></th></tr></thead><tbody>' +
         list.map(function (s) { var b = balanceOf(s.id); return '<tr><td class="l"><b>' + esc(s.name) + '</b>' + (s.acur ? ' <span class="badge">' + esc(s.acur) + '</span>' : '') + '</td><td class="num">' + fmt(s.opening) + '</td><td>' + esc(s.phone || '') + '</td><td>' + esc(s.tax || '') + '</td><td>' + t[s.id].n + '</td><td class="num ' + cls(b) + '"><b>' + fmt(b) + unitOf(s) + '</b></td><td class="wrapc">' + esc(s.note || '') + '</td><td class="noprint"><button class="btn sec sm" data-act="editsup" data-id="' + esc(s.id) + '">تعديل</button> <button class="btn warn sm" data-act="delsup" data-id="' + esc(s.id) + '">حذف</button></td></tr>'; }).join('') +
-        '</tbody></table></div>' + exportBar('suppliers') : empty('لا يوجد موردون بعد. أضف أول مورد من النموذج أعلاه.');
+        '</tbody></table></div>' + exportBar('suppliers') : empty('لا يوجد موردون بعد. أضف أول مورد من زر «إضافة مورد».');
     }
   };
   function clearSup(d) {
     ['#s-name', '#s-open', '#s-phone', '#s-tax', '#s-note', '#s-acur'].forEach(function (s) { d.querySelector(s).value = ''; });
-    d.querySelector('#s-h').textContent = 'إضافة مورد'; d.querySelector('#s-save').textContent = 'إضافة المورد'; d.querySelector('#s-cancel').hidden = true; d.querySelector('#s-err').innerHTML = '';
+    d.querySelector('#s-h').textContent = 'إضافة مورد'; d.querySelector('#s-save').textContent = 'إضافة المورد'; d.querySelector('#s-err').innerHTML = '';
+    supPop(d, false);
+  }
+  function supPop(d, on) {
+    var p = d.querySelector('#s-pop'); if (!p) return;
+    p.style.display = on ? 'flex' : 'none'; document.body.style.overflow = on ? 'hidden' : '';
+    if (on) setTimeout(function () { var i = d.querySelector('#s-name'); if (i) i.focus(); }, 50);
   }
 
   /* ---- سجل التعديلات ---- */
