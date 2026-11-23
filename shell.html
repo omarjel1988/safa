@@ -126,6 +126,13 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 <datalist id="dl-sup"></datalist>
 
 <script>
+/* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
+function syncBar() {
+  var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
+  if (!hd || !m) return;
+  var c = getComputedStyle(hd).backgroundColor;
+  if (c && c !== 'rgba(0, 0, 0, 0)' && m.content !== c) m.content = c;
+}
 var B = null;                       // بيانات التشغيل من الملف
 var CUR = 'home';
 var SECTIONS = {
@@ -1291,6 +1298,7 @@ function go(v) {
   CUR = v;
   var sec = VIEW_SEC[v] || '';
   document.body.setAttribute('data-sec', sec);
+  syncBar();
   $('#ttl').textContent = sec === 'x' ? XTITLE[v] : sec ? SECTIONS[sec].title : 'مكتبة الصفاء';
   $('#homeBtn').classList.toggle('hide', !sec);
   var nav = $('#tabs'), tabs = sec ? SECTIONS[sec].tabs : [];
@@ -2166,13 +2174,6 @@ window.onDom = (function () {
     new MutationObserver(function () { if (!q) { q = 1; Promise.resolve().then(run); } }).observe(document.documentElement, { childList: true, subtree: true });
     return function (f) { fns.push(f); try { f(); } catch (e) { } };
 })();
-/* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي، حتى لا يظهر شريطان بلونين مختلفين (الآيباد) */
-onDom(function () {
-    var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
-    if (!hd || !m) return;
-    var c = getComputedStyle(hd).backgroundColor;
-    if (c && c !== 'rgba(0, 0, 0, 0)' && m.content !== c) m.content = c;
-});
 /* واجهة موحّدة للتطبيقين: شريط تنقل سفلي/جانبي، زر إضافة سريع، المظهر (داكن + حجم الخط)،
    حركات انتقال، سحب السطر لإظهار أزراره، قفل تلقائي، تنزيل نسخة احتياطية */
 (function () {
@@ -2264,7 +2265,7 @@ onDom(function () {
         document.body.style.zoom = z === 1 ? '' : String(z);
         var m = document.querySelector('meta[name=theme-color]');
         if (m)
-            { var hd0 = document.querySelector('header'); m.content = (hd0 && getComputedStyle(hd0).backgroundColor) || (CFG.dark() ? '#0F1720' : APP.color); }
+            { m.content = CFG.dark() ? '#0F1720' : APP.color; syncBar(); }
     }
     /* ---------- الأنماط ---------- */
     /* ---------- ورقة سفلية عامة ---------- */
