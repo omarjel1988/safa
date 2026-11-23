@@ -317,15 +317,8 @@ function doPLog(off) {
 /* ---------- الأصناف: كل أعمدة الصفحة + إضافة صنف ---------- */
 function vItems() {
   $('#view').innerHTML =
-    '<div class="card"><h2>إضافة صنف</h2><div class="grid">' +
-    '<div class="f wide"><label>اسم الصنف</label><input id="an" autocomplete="off"></div>' +
-    '<div class="f"><label>كود الصنف <small>(اختياري)</small></label><input id="ac" autocomplete="off" placeholder="تلقائي"></div>' +
-    '<div class="f"><label>الوحدة</label><input id="au" autocomplete="off"></div>' +
-    '<div class="f"><label>التصنيف</label><input id="ag" autocomplete="off"></div>' +
-    '<div class="f wide"><label>ملاحظات</label><input id="ano" autocomplete="off"></div></div><br>' +
-    '<div class="row"><button class="btn grn" id="aadd" onclick="addItem()">حفظ الصنف</button>' +
+    '<div class="row" style="margin-bottom:12px"><button class="btn grn" onclick="itemPop()">＋ إضافة صنف</button>' +
     '<button class="btn sec" id="afill" onclick="fillCodes()">ترقيم الأصناف التي بلا كود</button></div>' +
-    '<div class="note">اترك الكود فارغًا لينشأ تلقائيًا (P0001…)، أو اكتب كودك الخاص. أعمدة الأسعار تُحسب تلقائيًا من السجل.</div></div>' +
     '<div class="card"><label>بحث في الأصناف</label><input id="iq" autocomplete="off" oninput="renderItems()"></div><div id="itl"><div class="muted">جارٍ التحميل…</div></div>';
   loadItems();
 }
@@ -342,13 +335,34 @@ function renderItems() {
       return '<tr>' + td(esc(i.code)) + td(esc(i.name), 'l') + td(esc(i.unit)) + td(esc(i.cat)) + td(esc(i.notes), 'l') + td(pr(i.last)) + td(pr(i.min)) + td(pr(i.max)) + td(pr(i.avg)) + td(i.n == null ? '' : i.n) + td(esc(i.date)) + td(esc(i.sup)) + '</tr>';
     })) + '<div class="note">' + a.length + ' صنف</div>';
 }
+/* إضافة صنف في نافذة منبثقة (بنمط .dpop) */
+function itemPop() {
+  itemClose();
+  var o = document.createElement('div'); o.className = 'dpop'; o.id = 'ipop';
+  o.innerHTML = '<div class="dbox" style="max-width:560px"><div class="dhd" style="background:linear-gradient(135deg,var(--c,#1F4E79),#2E6DA4)"><button onclick="itemClose()">✕</button><b>إضافة صنف</b><span style="min-width:40px"></span></div>' +
+    '<div class="dbd"><div class="grid">' +
+    '<div class="f wide"><label>اسم الصنف</label><input id="an" autocomplete="off"></div>' +
+    '<div class="f"><label>كود الصنف <small>(اختياري)</small></label><input id="ac" autocomplete="off" placeholder="تلقائي"></div>' +
+    '<div class="f"><label>الوحدة</label><input id="au" autocomplete="off"></div>' +
+    '<div class="f"><label>التصنيف</label><input id="ag" autocomplete="off"></div>' +
+    '<div class="f wide"><label>ملاحظات</label><input id="ano" autocomplete="off"></div></div><br>' +
+    '<div class="row"><button class="btn grn" id="aadd" onclick="addItem()">حفظ الصنف</button><button class="btn sec" onclick="itemClose()">إلغاء</button></div>' +
+    '<div class="note">اترك الكود فارغًا لينشأ تلقائيًا (P0001…)، أو اكتب كودك الخاص. أعمدة الأسعار تُحسب تلقائيًا من السجل.</div></div></div>';
+  o.onclick = function (e) { if (e.target === o) itemClose(); };
+  document.body.appendChild(o); document.body.style.overflow = 'hidden';
+  document.addEventListener('keydown', itemKey);
+  setTimeout(function () { var n = $('#an'); if (n) n.focus(); }, 50);
+}
+function itemClose() { var p = $('#ipop'); if (p) p.remove(); document.body.style.overflow = ''; document.removeEventListener('keydown', itemKey); }
+function itemKey(e) { if (e.key === 'Escape') itemClose(); }
 function addItem() {
   var b = $('#aadd'); busy(b, true);
   call('webAddItem', { name: $('#an').value, code: $('#ac').value, unit: $('#au').value, cat: $('#ag').value, notes: $('#ano').value }).then(function (r) {
     busy(b, false);
     if (!r.ok) { toast(r.msg, 'err'); return; }
     toast(r.msg, 'ok');
-    reboot(function () { vItems(); });
+    itemClose();
+    reboot(function () { if (CUR === 'items') vItems(); });
   }).catch(function (e) { busy(b, false); toast(errMsg(e), 'err'); });
 }
 function fillCodes() {
