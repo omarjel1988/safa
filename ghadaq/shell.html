@@ -81,7 +81,7 @@ tr.op td{background:#fdf0d5!important;font-weight:700}
 <body>
 <div id='load'></div>
 <header>
-<div class='top'><div class='brand'>يومية غدق<small id='sub'>جاري التحميل…</small></div><button class='btn org noprint' onclick='go(S.page)'>تحديث</button></div>
+<div class='top'><div class='brand'>يومية غدق</div><button class='btn org noprint' onclick='go(S.page)'>تحديث</button></div>
 <nav id='nav'>
 <button data-p='dash'>الرئيسية</button>
 <button data-p='entry'>إدخال قيد</button>
@@ -275,7 +275,6 @@ async function boot() {
   const b = await call('bootstrap');
   syncBar();
   S.acc = b.accounts; S.today = todayLocal(); S.alerts = b.alerts || []; S.base = b.base || 'دولار';
-  $('#sub').textContent = b.accounts.length + ' حساب';
   /* الحساب المحفوظ قد يكون حُذف أو تغيّر اسمه أو أُخفي → أول حساب (كان يسبب «الحساب غير موجود») */
   if (S.acc.length && !S.acc.some(a => a.name === S.cur)) S.cur = S.acc[0].name;
 }
@@ -284,7 +283,7 @@ window.addEventListener('rt-uname', () => { const h = document.getElementById('h
 window.addEventListener('rt-fresh', e => {
   const d = e.detail || {};
   Object.keys(S.cache).forEach(k => { if (k.indexOf(d.fn + '|') === 0) delete S.cache[k]; });
-  if (d.fn === 'bootstrap') { try { const b = JSON.parse(d.v); S.acc = b.accounts; S.alerts = b.alerts || []; S.base = b.base || S.base; $('#sub').textContent = b.accounts.length + ' حساب'; } catch (x) {} }
+  if (d.fn === 'bootstrap') { try { const b = JSON.parse(d.v); S.acc = b.accounts; S.alerts = b.alerts || []; S.base = b.base || S.base; } catch (x) {} }
   clearTimeout(S.freshT);
   S.freshT = setTimeout(() => {
     const t = document.activeElement, ov = document.getElementById('ov');
