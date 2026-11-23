@@ -1128,10 +1128,6 @@ sett = async function () {
 };
 /* ===== الإصدار 11: إدارة الحسابات + الترتيب + أنواع الورق + بيانات المنشأة + رمز الدخول + المظهر ===== */
 document.head.insertAdjacentHTML('beforeend', `<style>
-#lock{position:fixed;inset:0;background:var(--bg);z-index:90;display:flex;align-items:center;justify-content:center;padding:16px}
-#lock .lbox{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px 22px;max-width:340px;width:100%;text-align:center}
-#lock .lg{font-size:38px}#lock h2{margin:6px 0 2px}#lock input[type=password]{text-align:center;font-size:24px;letter-spacing:8px;margin:12px 0}
-#lock .btn{width:100%;margin-top:12px}#lock .chk{justify-content:center}#lerr{margin-top:10px}
 .acc.cl{opacity:.6;border-top-color:#94a3b8}.clb{display:inline-block;font-size:11px;background:#e2e8f0;color:#475569;padding:1px 7px;border-radius:10px;margin-right:6px;font-weight:500}
 .ord td{padding:6px 8px}.ord .ic{font-size:15px}.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{background:var(--soft);border-radius:14px;padding:4px 10px;font-size:13px}
 .chip small{color:var(--mut)}.lgp{max-height:70px;max-width:200px;border:1px solid var(--line);border-radius:8px;padding:4px;background:#fff;vertical-align:middle}
@@ -1194,10 +1190,10 @@ window.addEventListener('unhandledrejection', ev => { const m = ev.reason && (ev
 function showLock() {
   S.cache = {};
   if (document.getElementById('lock')) return;
-  document.body.insertAdjacentHTML('beforeend', `<div id='lock'><div class='lbox'><div class='lg'>🔒</div><h2>يومية غدق</h2><p class='mut'>أدخل رمز الدخول</p>
+  document.body.insertAdjacentHTML('beforeend', `<div id='lock' class='lgate'>${RT.gateHead('أدخل رمز الدخول')}
     <input id='lpin' type='password' inputmode='numeric' autocomplete='off' maxlength='8'>
-    <label class='chk'><input type='checkbox' id='lrem' checked> تذكّر هذا الجهاز 30 يوماً</label>
-    <button class='btn' onclick='doUnlock()'>دخول</button><div id='lerr'></div></div></div>`);
+    <button class='lbtn' onclick='doUnlock()'>دخول</button>
+    <label class='lchk'><input type='checkbox' id='lrem' checked> تذكّر هذا الجهاز 30 يوماً</label><div id='lerr' class='lerr'></div></div></div>`);
   $('#lpin').onkeydown = e => { if (e.key === 'Enter') doUnlock(); };
   setTimeout(() => { const i = $('#lpin'); if (i) i.focus(); }, 60);
 }
@@ -1209,7 +1205,7 @@ async function doUnlock() {
     setTok(r.token, rem);
     const L = $('#lock'); if (L) L.remove();
     S.cache = {}; go(S.page || 'dash');
-  } catch (e) { $('#lerr').innerHTML = `<div class='warn'>${esc(e.message || String(e))}</div>`; $('#lpin').value = ''; $('#lpin').focus(); }
+  } catch (e) { $('#lerr').textContent = e.message || String(e); $('#lpin').value = ''; $('#lpin').focus(); }
 }
 
 /* ---------- الحسابات المقفلة والترتيب في القوائم ---------- */
@@ -2098,6 +2094,7 @@ window.onDom = (function () {
     var rnd = function (n) { var u = new Uint8Array(n); crypto.getRandomValues(u); return u; };
     /* ================= 1) الدخول ببصمة الوجه / الإصبع ================= */
     var BK = 'bio_' + APP.id;
+    var BIOPEND = false, BIOOK = 0; /* وقت آخر تحقق ناجح بالبصمة: لمنع طلب البصمة مرتين متتاليتين */
     function bioInfo() { try {
         return JSON.parse(ls(BK) || 'null');
     }
@@ -2153,35 +2150,40 @@ window.onDom = (function () {
         if (!b)
             return;
         navigator.credentials.get({ publicKey: { challenge: rnd(32), rpId: location.hostname, allowCredentials: [{ type: 'public-key', id: unb64(b.id) }], userVerification: 'required', timeout: 60000 } })
-            .then(function (a) { if (a)
-            fill(decodeURIComponent(escape(atob(b.p)))); })
+            .then(function (a) { if (a) {
+            BIOOK = Date.now(); touch();
+            fill(decodeURIComponent(escape(atob(b.p))));
+        } })
             .catch(function (e) { if (!(e && e.name === 'NotAllowedError'))
             msg('تعذّر التحقق بالبصمة: ' + ((e && e.message) || e), true); });
     }
+    /* إدخال الرمز المحفوظ مع البصمة في شاشة الرمز وإرسالها */
+    function gateFill(pin) {
+        var i = document.getElementById('lpin');
+        if (!i || !pin || !W.doUnlock) return;
+        i.value = pin;
+        Promise.resolve(W.doUnlock()).then(function () { var er = document.getElementById('lerr'); if (er && /غير صحيح/.test(er.textContent)) {
+            ls(BK, null);
+            var bb = document.querySelector('#lock .bio-btn'); if (bb) bb.remove();
+            er.textContent = 'الرمز المحفوظ مع البصمة قديم. أدخل الرمز يدويًا، ثم فعّل البصمة من جديد من زر Aa.';
+        } });
+    }
+    /* شاشة الرمز: زر البصمة + طلب البصمة تلقائيًا مرة واحدة.
+       إن تحقق المستخدم ببصمة قبل قليل (من شاشة القفل التلقائي) يُستخدم الرمز المحفوظ مباشرة دون طلب بصمة ثانية */
     function lockWatch() {
         if (!bioInfo())
             return;
-        var box = document.querySelector('#lock .lbox');
+        var box = document.querySelector('#lock .lcard');
         if (!box || box.querySelector('.bio-btn'))
             return;
-        var btn = el('<button type="button" class="bio-btn" style="width:100%;min-height:50px;margin-top:12px;border:0;border-radius:12px;background:#111827;color:#fff;font:800 16px Cairo,system-ui,sans-serif">🔓 الدخول ببصمة الوجه</button>');
-        btn.onclick = function () {
-            bioUnlock(function (pin) {
-                {
-                    var i = document.getElementById('lpin');
-                    if (i) {
-                        i.value = pin;
-                        if (W.doUnlock)
-                            Promise.resolve(W.doUnlock()).then(function () { var er = document.getElementById('lerr'); if (er && /غير صحيح/.test(er.textContent)) {
-                                ls(BK, null);
-                                btn.remove();
-                                er.innerHTML = '<div class="warn">الرمز المحفوظ مع البصمة قديم. أدخل الرمز يدويًا، ثم فعّل البصمة من جديد من زر Aa.</div>';
-                            } });
-                    }
-                }
-            });
-        };
-        box.appendChild(btn);
+        var btn = el('<button type="button" class="bio-btn">🔓 الدخول ببصمة الوجه</button>');
+        btn.onclick = function () { bioUnlock(gateFill); };
+        var lb = box.querySelector('.lbtn'); if (lb) lb.insertAdjacentElement('afterend', btn); else box.appendChild(btn);
+        /* شاشة الرمز تغني عن القفل التلقائي: نزيله حتى لا يُطلب التحقق مرتين */
+        var idl = document.getElementById('bio-idle'); if (idl) { idl.remove(); locked = false; }
+        if (BIOPEND) return; /* طلب بصمة جارٍ من القفل التلقائي: نتيجته تملأ الرمز هنا */
+        if (Date.now() - BIOOK < 120000) gateFill(storedPin());
+        else if (!locked && document.visibilityState === 'visible') setTimeout(function () { if (document.querySelector('#lock .lcard')) bioUnlock(gateFill); }, 250);
     }
     onDom(lockWatch);
     /* ================= 1-ب) القفل التلقائي بالبصمة بعد مدة عدم الاستخدام ================= */
@@ -2196,25 +2198,25 @@ window.onDom = (function () {
     catch (e) {
         return '';
     } }
-    function unlockNow(o) { locked = false; o.remove(); touch(); }
+    function unlockNow(o) { locked = false; o.remove(); touch(); if (document.querySelector('#lock .lcard')) gateFill(storedPin()); }
     function showIdleLock() {
-        if (!document.body || locked || !bioInfo() || document.getElementById('bio-idle'))
-            return;
+        if (!document.body || locked || !bioInfo() || document.getElementById('bio-idle') || document.querySelector('#lock .lcard'))
+            return; /* شاشة الرمز ظاهرة: هي القفل، فلا قفل ثانٍ فوقها */
         locked = true;
-        var o = el('<div id="bio-idle" style="position:fixed;inset:0;z-index:2147483000;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;font-family:Cairo,system-ui,sans-serif;direction:rtl">' +
-            '<div style="width:min(340px,88vw);text-align:center"><div style="font-size:54px">🔒</div>' +
-            '<div style="font:800 20px Cairo,system-ui,sans-serif;margin:6px 0 4px">' + E(APP.short || 'التطبيق') + '</div>' +
-            '<div style="color:#94a3b8;font-size:14px;margin-bottom:18px">قُفل التطبيق بعد مدة من عدم الاستخدام</div>' +
-            '<button type="button" id="bi-go" style="width:100%;min-height:54px;border:0;border-radius:14px;background:#fff;color:#0f172a;font:800 17px Cairo,system-ui,sans-serif">🔓 فتح ببصمة الوجه</button>' +
-            '<input id="bi-pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="أو أدخل رمز الدخول" style="width:100%;min-height:48px;margin-top:14px;font-size:18px;text-align:center;border:1px solid #334155;background:#1e293b;color:#fff;border-radius:12px;box-sizing:border-box">' +
-            '<div id="bi-err" style="color:#f87171;font-weight:700;min-height:22px;margin-top:8px"></div></div></div>');
+        var o = el('<div id="bio-idle" class="lgate">' + RT.gateHead('قُفل التطبيق بعد مدة من عدم الاستخدام') +
+            '<button type="button" id="bi-go" class="bio-btn">🔓 فتح ببصمة الوجه</button>' +
+            '<input id="bi-pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="أو أدخل الرمز" style="margin-top:12px;font-size:20px;letter-spacing:4px">' +
+            '<div id="bi-err" class="lerr"></div></div></div>');
         document.body.appendChild(o);
         var b = bioInfo(), er = o.querySelector('#bi-err'), inp = o.querySelector('#bi-pin');
         function tryBio() {
+            BIOPEND = true;
             navigator.credentials.get({ publicKey: { challenge: rnd(32), rpId: location.hostname, allowCredentials: [{ type: 'public-key', id: unb64(b.id) }], userVerification: 'required', timeout: 60000 } })
-                .then(function (a) { if (a)
-                unlockNow(o); })
-                .catch(function (e) { er.textContent = (e && e.name === 'NotAllowedError') ? '' : 'تعذّر التحقق بالبصمة'; });
+                .then(function (a) { BIOPEND = false; if (a) {
+                BIOOK = Date.now();
+                unlockNow(o);
+            } })
+                .catch(function (e) { BIOPEND = false; er.textContent = (e && e.name === 'NotAllowedError') ? '' : 'تعذّر التحقق بالبصمة'; });
         }
         o.querySelector('#bi-go').onclick = tryBio;
         inp.oninput = function () {

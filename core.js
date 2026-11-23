@@ -442,5 +442,25 @@
   function countCache() {
     return db().then(function (d) { return new Promise(function (res) { var q = d.transaction('kv').objectStore('kv').count(); q.onsuccess = function () { res(q.result); }; q.onerror = function () { res(0); }; }); }).catch(function () { return 0; });
   }
-  W.RT = { navPush: navPush, call: call, sync: sync, kget: kget, kset: kset, post: post, M: M, out: function () { return OUT.slice(); }, clearCache: clearCache, countCache: countCache };
+  /* ---------- واجهة الدخول الموحّدة للتطبيقين (شاشة الرمز + القفل التلقائي) ---------- */
+  (function () {
+    var c = APP.color || '#1F4E79', st = document.createElement('style');
+    st.id = 'lgate-css';
+    st.textContent = '.lgate{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:20px;direction:rtl;' +
+      'background:linear-gradient(160deg,' + c + ',#0f172a);font-family:Cairo,system-ui,sans-serif}' +
+      '.lgate .lcard{width:100%;max-width:340px;background:#fff;color:#1f2937;border-radius:22px;padding:26px 22px 22px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.3)}' +
+      '.lgate .lic{width:64px;height:64px;border-radius:16px;display:block;margin:0 auto 10px;box-shadow:0 4px 14px rgba(0,0,0,.18)}' +
+      '.lgate h2{margin:0 0 2px;font:800 21px Cairo,system-ui,sans-serif;color:#1f2937}.lgate .lsub{margin:0 0 14px;color:#637082;font-size:14px}' +
+      '.lgate input[type=password]{width:100%;box-sizing:border-box;min-height:54px;margin:0;text-align:center;font-size:26px;letter-spacing:8px;border:1px solid #d5dbe3;border-radius:14px;background:#f8fafc;color:#1f2937}' +
+      '.lgate input[type=password]:focus{outline:none;border-color:' + c + ';box-shadow:0 0 0 3px ' + c + '33}' +
+      '.lgate .lbtn{display:block;width:100%;min-height:52px;margin-top:12px;border:0;border-radius:14px;background:' + c + ';color:#fff;font:800 17px Cairo,system-ui,sans-serif;cursor:pointer}' +
+      '.lgate .bio-btn{display:block;width:100%;min-height:52px;margin-top:10px;border:0;border-radius:14px;background:#111827;color:#fff;font:800 16px Cairo,system-ui,sans-serif;cursor:pointer}' +
+      '.lgate .lchk{display:flex;gap:6px;justify-content:center;align-items:center;margin-top:12px;font-size:13px;color:#637082}.lgate .lchk input{width:auto;min-height:0;accent-color:' + c + '}' +
+      '.lgate .lerr{color:#C62828;font-weight:700;min-height:20px;margin-top:10px;font-size:14px}.lgate .lerr .msg,.lgate .lerr .warn{margin:0}';
+    (document.head || document.documentElement).appendChild(st);
+  })();
+  function gateHead(sub) {
+    return '<div class="lcard"><img class="lic" src="' + (APP.icon || 'icon-180.png') + '" alt=""><h2>' + String(APP.short || '').replace(/</g, '&lt;') + '</h2><div class="lsub">' + sub + '</div>';
+  }
+  W.RT = { navPush: navPush, gateHead: gateHead, call: call, sync: sync, kget: kget, kset: kset, post: post, M: M, out: function () { return OUT.slice(); }, clearCache: clearCache, countCache: countCache };
 })();
