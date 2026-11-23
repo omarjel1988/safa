@@ -2354,8 +2354,22 @@ function tblCards(re) {
     t.classList.add('tcard'); w.classList.add('tcw');
   }
 }
-onDom(function () { tblCards(); });
-(function () { var rw = window.innerWidth; window.addEventListener('resize', function () { if (window.innerWidth !== rw) { rw = window.innerWidth; tblCards(1); } }); })();
+/* تباين البطاقات: غامقة/فاتحة بالتناوب (شطرنجي حسب عدد الأعمدة) */
+function zebraCards() {
+  var G = [], seen = [], i, j;
+  function add(box, items) { if (box && seen.indexOf(box) < 0) { seen.push(box); G.push([box, items]); } }
+  var T = document.querySelectorAll('table.tcard');
+  for (i = 0; i < T.length; i++) add(T[i], [].filter.call(T[i].rows, function (r) { return !r.classList.contains('tch'); }));
+  var C = document.querySelectorAll('.icard, .sacc, .acc');
+  for (i = 0; i < C.length; i++) { var b = C[i].parentElement; add(b, [].filter.call(b.children, function (e) { return e.matches('.icard, .sacc, .acc'); })); }
+  for (i = 0; i < G.length; i++) {
+    var box = G[i][0], it = G[i][1].filter(function (e) { return e.offsetParent !== null; });
+    var gt = getComputedStyle(box).gridTemplateColumns, cols = (gt && gt !== 'none') ? gt.trim().split(/\s+/).length : 1;
+    for (j = 0; j < it.length; j++) { var z = (Math.floor(j / cols) + j % cols) % 2 === 1; if (it[j].classList.contains('zd') !== z) it[j].classList.toggle('zd', z); }
+  }
+}
+onDom(function () { tblCards(); zebraCards(); });
+(function () { var rw = window.innerWidth; window.addEventListener('resize', function () { if (window.innerWidth !== rw) { rw = window.innerWidth; tblCards(1); zebraCards(); } }); })();
 
 /* واجهة موحّدة للتطبيقين: شريط تنقل سفلي/جانبي، زر إضافة سريع، المظهر (داكن + حجم الخط)،
    حركات انتقال، سحب السطر لإظهار أزراره، قفل تلقائي، تنزيل نسخة احتياطية */
@@ -3718,6 +3732,16 @@ html.ui-dark table.tcard tr,body.dark table.tcard tr{background:#1d2633;border-c
 html.ui-dark table.tcard td,body.dark table.tcard td{background:#243042!important}
 html.ui-dark table.tcard td.tct,html.ui-dark table.tcard td.tca,body.dark table.tcard td.tct,body.dark table.tcard td.tca{background:none!important}
 html.ui-dark table.tcard tr.tot,body.dark table.tcard tr.tot{background:#2A2216}}
+/* تباين البطاقات (zebraCards) */
+table.tcard tr.zd,.icard.zd{background:#DCE7F3;border-color:#BCCFE3}
+table.tcard tr.zd td:not(.tct):not(.tca){background:#fff!important}
+.icard.zd .ip div,.icard.zd .ic{background:#fff}
+.sacc.zd{background:linear-gradient(180deg,#E6CCDF,#F1E2EC);border-color:#D0AFC6}
+.acc.zd{background:linear-gradient(180deg,color-mix(in srgb,var(--h) 26%,#fff),color-mix(in srgb,var(--h) 14%,#fff));border-color:color-mix(in srgb,var(--h) 40%,var(--line))}
+html.ui-dark table.tcard tr.zd,body.dark table.tcard tr.zd,html.ui-dark .icard.zd,body.dark .icard.zd{background:#2B3B52;border-color:#3D5170}
+html.ui-dark table.tcard tr.zd td:not(.tct):not(.tca),body.dark table.tcard tr.zd td:not(.tct):not(.tca),html.ui-dark .icard.zd .ip div,body.dark .icard.zd .ip div{background:#1d2633!important}
+html.ui-dark .sacc.zd,body.dark .sacc.zd{background:linear-gradient(180deg,#5a3654,#2e2a3a)}
+html.ui-dark .acc.zd,body.dark .acc.zd{background:linear-gradient(180deg,color-mix(in srgb,var(--h) 45%,#16212c),color-mix(in srgb,var(--h) 20%,#16212c))}
 </style>
 </body>
 </html>
