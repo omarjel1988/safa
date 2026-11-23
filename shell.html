@@ -95,6 +95,8 @@ tr.tot td,tfoot td{background:#FFF1DE!important;font-weight:800}
 .spin{display:inline-block;width:22px;height:22px;border:3px solid var(--cl);border-top-color:var(--c);border-radius:50%;animation:sp .8s linear infinite;vertical-align:middle;margin-left:8px}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (min-width:720px){.grid.l4{grid-template-columns:2fr 1fr 1fr 1fr}.grid.i5{grid-template-columns:2fr 1fr 1fr 1fr}}
+/* سطر الصنف في الجوال: الصنف بعرض كامل، ثم الكود والسعر والكمية بجانب بعض بحجم أصغر */
+@media (max-width:719px){.line .grid.l4{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.line .grid.l4>.f.wide{grid-column:1/-1}.line .grid.l4>.f:not(.wide) label{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.line .grid.l4>.f:not(.wide) label small{display:none}.line .grid.l4>.f:not(.wide) input{min-height:40px;padding:6px 8px;font-size:15px;text-align:center}.line .grid.l4>.f.nw{grid-column:span 1}.line .cmsg{font-size:11px}}
 @media print{header,.noprint,#toast,.bar,.card:has(.grid){display:none!important}body{background:#fff}.tw,.stat,.st,.card{box-shadow:none}}
 </style>
 <style>
