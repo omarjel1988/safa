@@ -86,8 +86,7 @@ tr.op td{background:#fdf0d5!important;font-weight:700}
 <button data-p='dash'>الرئيسية</button>
 <button data-p='entry'>إدخال قيد</button>
 <button data-p='accts'>الحسابات</button>
-<button data-p='search'>بحث</button>
-<button data-p='stmt'>كشف حساب</button>
+<button data-p='stmt'>الكشف والبحث</button>
 <button data-p='month'>تقرير شهري</button>
 </nav>
 </header>
@@ -162,31 +161,25 @@ function drawAcc() {
   $('#at').innerHTML = table(rows, { bal: 1 });
 }
 
-async function search() {
-  if (!S.acc.length) await boot();
-  $('#view').innerHTML = `<h2>البحث في اليومية</h2><div class='card noprint'><div class='form'>
-    <div class='wide'><label>كلمة البحث</label><input id='sq' placeholder='كلمة من البيان أو مبلغ'></div>
-    <div><label>الحساب</label><select id='sa'>${accOpts('', 1)}</select></div>
-    <div><label>من تاريخ</label><input type='date' id='sf'></div><div><label>إلى تاريخ</label><input type='date' id='st'></div>
-    <div><label>نوع الحركة</label><select id='sk'><option value=''>الكل</option><option value='out'>صادر فقط</option><option value='in'>وارد فقط</option></select></div>
-    <div><button class='btn' style='width:100%' onclick='runSearch()'>بحث</button></div></div></div><div id='sr'></div>`;
-  $('#sq').onkeydown = e => { if (e.key === 'Enter') runSearch(); };
-}
-async function runSearch() {
-  const r = await call('search', { q: v('sq'), acc: v('sa'), from: v('sf'), to: v('st'), kind: v('sk') });
-  $('#sr').innerHTML = kpis([['عدد النتائج', r.rows.length, 0, 'n'], ['مجموع الصادر', r.S], ['مجموع الوارد', r.W], ['الصافي (وارد − صادر)', r.W - r.S, 1]]) +
-    table(r.rows, { acc: 1, tot: [r.S, r.W] });
-  S.after = runSearch;
-}
-
+/* الكشف والبحث (دمج «بحث» و«كشف حساب»):
+   حساب محدد بلا كلمة بحث ولا نوع حركة ← كشف حساب كامل (الرصيد السابق والرصيد التراكمي)؛
+   غير ذلك (الكل، أو كلمة بحث، أو نوع حركة) ← نتائج بحث مع مجاميعها */
 async function runStmt() {
-  S.cur = v('ka');
-  const p = { acc: v('ka'), from: v('kf'), to: v('kt') };
-  const r = await call('statement', p);
-  $('#kr').innerHTML = `<div class='row'><b>كشف حساب: ${esc(p.acc)}${p.from ? ' • من ' + p.from : ''}${p.to ? ' • إلى ' + p.to : ''}</b>${
-    r.undated ? `<span class='mut'>${r.undated} قيد بدون تاريخ غير مشمول</span>` : ''}</div>` +
-    kpis([['الرصيد السابق', r.prev], ['صادر الفترة', r.S], ['وارد الفترة', r.W], ['الرصيد الختامي', r.bal, 1]]) +
-    table(r.rows, { bal: 1, open: r.prev, openDate: p.from, tot: [r.S, r.W, r.bal] });
+  const acc = v('ka'), q = v('kq').trim(), kind = v('kk'), from = v('kf'), to = v('kt');
+  const per = (from ? ' • من ' + from : '') + (to ? ' • إلى ' + to : '');
+  if (acc !== 'الكل') S.cur = acc;
+  if (acc !== 'الكل' && !q && !kind) {
+    const r = await call('statement', { acc, from, to });
+    $('#kr').innerHTML = `<div class='row'><b>كشف حساب: ${esc(acc)}${per}</b>${
+      r.undated ? `<span class='mut'>${r.undated} قيد بدون تاريخ غير مشمول</span>` : ''}</div>` +
+      kpis([['الرصيد السابق', r.prev], ['صادر الفترة', r.S], ['وارد الفترة', r.W], ['الرصيد الختامي', r.bal, 1]]) +
+      table(r.rows, { bal: 1, open: r.prev, openDate: from, tot: [r.S, r.W, r.bal] });
+  } else {
+    const r = await call('search', { q, acc, from, to, kind });
+    $('#kr').innerHTML = `<div class='row'><b>${acc === 'الكل' ? 'كل الحسابات' : 'الحساب: ' + esc(acc)}${q ? ' • «' + esc(q) + '»' : ''}${kind ? ' • ' + (kind === 'out' ? 'صادر فقط' : 'وارد فقط') : ''}${per}</b></div>` +
+      kpis([['عدد النتائج', r.rows.length, 0, 'n'], ['مجموع الصادر', r.S], ['مجموع الوارد', r.W], ['الصافي (وارد − صادر)', r.W - r.S, 1]]) +
+      table(r.rows, { acc: acc === 'الكل' ? 1 : 0, tot: [r.S, r.W] });
+  }
   S.after = runStmt;
 }
 
@@ -338,10 +331,14 @@ async function updSafe(e) {
 
 async function stmt() {
   if (!S.acc.length) await boot();
-  $('#view').innerHTML = `<h2>كشف حساب</h2><div class='card noprint'><div class='form'>
-    <div><label>الحساب</label><select id='ka'>${accOpts(S.cur)}</select></div>
+  $('#view').innerHTML = `<h2>الكشف والبحث</h2><div class='card noprint'><div class='form'>
+    <div><label>الحساب</label><select id='ka'>${accOpts(S.cur, 1)}</select></div>
+    <div class='wide'><label>كلمة البحث (اختياري)</label><input id='kq' placeholder='كلمة من البيان أو مبلغ'></div>
     <div><label>من تاريخ</label><input type='date' id='kf'></div><div><label>إلى تاريخ</label><input type='date' id='kt'></div>
-    <div class='btns'><button class='btn' onclick='runStmt()'>عرض الكشف</button><button class='btn sec' onclick='window.print()'>طباعة</button><button class='btn org' onclick='pdfM()'>PDF / واتساب</button></div></div></div><div id='kr'></div>`;
+    <div><label>نوع الحركة</label><select id='kk'><option value=''>الكل</option><option value='out'>صادر فقط</option><option value='in'>وارد فقط</option></select></div>
+    <div class='btns'><button class='btn' onclick='runStmt()'>عرض</button><button class='btn sec' onclick='window.print()'>طباعة</button><button class='btn org' onclick='pdfM()'>PDF / واتساب</button></div></div>
+    <div class='mut' style='font-size:12.5px;margin-top:8px'>اختر حسابًا واضغط «عرض» لكشف الحساب كاملًا مع الرصيد، أو اكتب كلمة بحث أو اختر «الكل» للبحث في القيود.</div></div><div id='kr'></div>`;
+  $('#kq').onkeydown = e => { if (e.key === 'Enter') runStmt(); };
 }
 
 /* ---------- أعمار الأرصدة: كم مضى على آخر دفعة لكل حساب ---------- */
@@ -979,6 +976,7 @@ function navBack() {
   return false;
 }
 function go(p) {
+  if (p === 'search') p = 'stmt'; /* «بحث» صار ضمن «الكشف والبحث» */
   if (p === 'dash') NAVH = [];
   else if (!NAVBACK && S.page && S.page !== p) { NAVH.push({ p: S.page, cur: S.cur }); if (NAVH.length > 30) NAVH.shift(); if (window.RT && RT.navPush) RT.navPush(); }
   NAVBACK = false;
@@ -988,7 +986,7 @@ function go(p) {
   S.page = p; S.after = null;
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
   window.scrollTo(0, 0);
-  ({ dash, entry, accts, search, stmt, month, year, aging, match, rcpt, price, cmp, sett, logp, arch })[p]();
+  ({ dash, entry, accts, stmt, month, year, aging, match, rcpt, price, cmp, sett, logp, arch })[p]();
 }
 
 window.addEventListener('beforeprint', () => document.querySelectorAll('details.pp').forEach(d => d.open = true));
@@ -1028,7 +1026,7 @@ function canShareFile() {
 }
 async function doPdf() {
   const p = { acc: v('ka'), from: v('kf'), to: v('kt'), drive: $('#pdr').checked, share: $('#psh').checked };
-  if (!p.acc) { $('#pres').innerHTML = `<div class='warn'>اختر الحساب أولاً</div>`; return; }
+  if (!p.acc || p.acc === 'الكل') { $('#pres').innerHTML = `<div class='warn'>اختر حسابًا واحدًا أولاً (ملف PDF لكشف حساب واحد)</div>`; return; }
   $('#pres').innerHTML = `<p class='mut'>جاري إنشاء الملف…</p>`;
   let r;
   try { r = await call('pdf', p); }
