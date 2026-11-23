@@ -456,7 +456,6 @@ var SUP = (function () {
     D.entries = d.entries || []; D.audit = d.audit || [];
     loaded = true;
     var h = document.getElementById('supHome'); if (h) h.textContent = homeStat();
-    if (CUR === 'home') supCards();
     if (pageEl && cur && MAP[CUR]) P[cur].fill(pageEl);
   }
   function ensure() {
@@ -652,10 +651,11 @@ var SUP = (function () {
   P.summary = {
     html: function () {
       return '<h1>ملخص الأرصدة</h1><p class="sub">وضع جميع الموردين في نظرة واحدة. اضغط على اسم المورد لفتح كشفه.</p>' +
-        '<div id="m-stats" class="stats"></div><div class="card"><h2>أعلى 10 موردين رصيداً</h2><div id="m-chart"></div></div><div id="m-tbl"></div>';
+        '<div id="m-stats" class="stats"></div><div id="supc"></div><div class="card"><h2>أعلى 10 موردين رصيداً</h2><div id="m-chart"></div></div><div id="m-tbl"></div>';
     },
     init: function (d) { d.addEventListener('click', function (e) { var l = e.target.closest('[data-sup]'); if (l) { stmtSup = l.dataset.sup; go('sstmt'); } }); },
     fill: function (d) {
+      supCards();
       var t = totals();
       var list = D.suppliers.map(function (s) {
         var r = t[s.id], k = s.acur ? (rateNow(s.acur) || 1) : 1, bal = n(s.opening) + r.inc - r.out;
@@ -1441,18 +1441,17 @@ function vHome() {
     tile('s', 'sentry', 'قيود الموردين', 'إدخال قيد، كشف حساب، ملخص الأرصدة، السجل', SUP.homeStat()) +
     tile('r', 'rmon', 'التقارير', 'تقارير شهرية وسنوية للمشتريات واليومية والموردين', 'شهريًا وسنويًا') + '</div>' +
     '<div id="kpis" class="kpis" style="margin-top:14px"><div class="muted" style="grid-column:1/-1"><span class="spin"></span>جارٍ تجهيز اللوحة…</div></div>' +
-    '<div id="supc"></div><div id="dash2"></div>';
-  supCards();
+    '<div id="dash2"></div>';
   if (DASH) renderDash();
   call('webDash').then(function (d) { DASH = d; if (CUR === 'home') renderDash(); }).catch(function () { var k = $('#kpis'); if (k && CUR === 'home' && !DASH) k.innerHTML = ''; });
 }
-/* الرئيسية: بطاقات الموردين مع بحث وترتيب (الضغط على البطاقة يفتح كشف المورد) */
+/* قيود الموردين ← ملخص الأرصدة: بطاقات الموردين مع بحث وترتيب (الضغط على البطاقة يفتح كشف المورد) */
 function supCards() {
   var box = $('#supc'); if (!box) return;
-  if (!SUP.isLoaded()) { box.innerHTML = '<div class="muted" style="margin-top:14px"><span class="spin"></span>جارٍ تحميل الموردين…</div>'; SUP.ensure().catch(function () { box.innerHTML = ''; }); return; }
+  if (!SUP.isLoaded()) { box.innerHTML = '<div class="muted"><span class="spin"></span>جارٍ تحميل الموردين…</div>'; SUP.ensure().catch(function () { box.innerHTML = ''; }); return; }
   if (!$('#sq2')) {
     var so = localStorage.getItem('safa_supsort') || 'bal';
-    box.innerHTML = '<h2 style="margin:18px 2px 0">الموردون</h2><div class="sbar"><input id="sq2" placeholder="بحث سريع في الموردين…" oninput="supCardsDraw()">' +
+    box.innerHTML = '<div class="sbar" style="margin-top:0"><input id="sq2" placeholder="بحث سريع في الموردين…" oninput="supCardsDraw()">' +
       '<select id="ss2" onchange="localStorage.setItem(\'safa_supsort\', this.value); supCardsDraw()">' +
       [['bal', 'ترتيب: الرصيد من الأكبر'], ['last', 'ترتيب: آخر حركة'], ['name', 'ترتيب: الاسم']].map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === so ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') +
       '</select></div><div id="scards" class="scards"></div>';
