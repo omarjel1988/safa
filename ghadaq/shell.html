@@ -955,7 +955,17 @@ async function refreshAll() {
   try { await call('flush'); } catch (e) {}
   go(S.page || 'dash');
 }
+/* زر الرجوع: يعود خطوة للخلف (الصفحة السابقة مع حسابها) — يستدعيه core.js */
+var NAVH = [], NAVBACK = false;
+function navBack() {
+  if (NAVH.length) { const h = NAVH.pop(); if (h.cur) S.cur = h.cur; NAVBACK = true; go(h.p); return true; }
+  if (S.page && S.page !== 'dash') { go('dash'); return true; }
+  return false;
+}
 function go(p) {
+  if (p === 'dash') NAVH = [];
+  else if (!NAVBACK && S.page && S.page !== p) { NAVH.push({ p: S.page, cur: S.cur }); if (NAVH.length > 30) NAVH.shift(); }
+  NAVBACK = false;
   /* إدخال قيد جديد يبدأ بحساب «العام» */
   if (p === 'entry' && S.acc.some(a => a.name === 'العام')) S.cur = 'العام';
   S.page = p; S.after = null;

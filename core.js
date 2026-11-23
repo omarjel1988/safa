@@ -393,7 +393,8 @@
     if (APP.mode !== 'ghadaq' && typeof W.navBack === 'function') { if (W.navBack()) return; }
     else if (APP.mode !== 'ghadaq' && W.CUR && W.CUR !== 'home' && typeof W.go === 'function') { W.go('home'); return; }
     /* يومية غدق: من أي صفحة يعود الرجوع إلى الرئيسية */
-    if (APP.mode === 'ghadaq' && typeof W.go === 'function') { var gp = ''; try { gp = (0, eval)('typeof S!=="undefined"&&S.page'); } catch (e) { /* */ } if (gp && gp !== 'dash') { W.go('dash'); return; } }
+    if (APP.mode === 'ghadaq' && typeof W.navBack === 'function') { if (W.navBack()) return; }
+    else if (APP.mode === 'ghadaq' && typeof W.go === 'function') { var gp = ''; try { gp = (0, eval)('typeof S!=="undefined"&&S.page'); } catch (e) { /* */ } if (gp && gp !== 'dash') { W.go('dash'); return; } }
     exitBox();
   });
 
