@@ -98,6 +98,9 @@ tr.tot td,tfoot td{background:#FFF1DE!important;font-weight:800}
 @media (min-width:720px){.grid.l4{grid-template-columns:2fr 1fr 1fr 1fr}.grid.i5{grid-template-columns:2fr 1fr 1fr 1fr}}
 /* سطر الصنف في الجوال: الصنف بعرض كامل، ثم الكود والسعر والكمية بجانب بعض بحجم أصغر */
 @media (max-width:719px){.line .grid.l4{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.line .grid.l4>.f.wide{grid-column:1/-1}.line .grid.l4>.f:not(.wide) label{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.line .grid.l4>.f:not(.wide) label small{display:none}.line .grid.l4>.f:not(.wide) input{min-height:40px;padding:6px 8px;font-size:15px;text-align:center}.line .grid.l4>.f.nw{grid-column:span 1}.line .cmsg{font-size:11px}}
+.vsl{font-size:14px!important;font-weight:800!important;color:#B35A00!important}
+select.vsup{min-height:54px;font-size:18px;font-weight:800;color:#fff!important;background-color:#E16414!important;border:0!important;border-radius:14px;padding-inline:16px 44px;box-shadow:0 3px 10px rgba(225,100,20,.3);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' stroke='white' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:left 16px center!important;-webkit-appearance:none;appearance:none}
+select.vsup option{color:#222;background:#fff}
 /* استيراد كشف المورد */
 .stsum{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;margin:6px 0}
 .stsum>div{background:#F2F6FB;border-radius:10px;padding:8px;text-align:center}.stsum small{display:block;color:#6B7C8F;font-size:11.5px}.stsum b{font-size:18px}.stsum i{display:block;font-style:normal;font-size:11px;color:#8A6D1F}
@@ -160,7 +163,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.1';
+window.APP_VER = '1.2';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -769,7 +772,7 @@ var SUP = (function () {
       d.querySelector('#l-tbl').innerHTML = list.length ? '<div class="tw"><table><thead><tr><th class="l">المورد</th><th>التاريخ</th><th>البيان</th><th class="num">الوارد</th><th class="num">الصادر</th><th>طريقة الدفع</th><th class="noprint"></th></tr></thead><tbody>' +
         shown.map(function (x) { return '<tr><td class="l">' + esc(supName(x.sid)) + '</td><td>' + esc(x.date) + '</td><td class="wrapc">' + esc(x.desc) + curNote(x) + '</td><td class="num">' + (x.inc ? fmt(x.inc) : '') + '</td><td class="num">' + (x.out ? fmt(x.out) : '') + '</td><td>' + esc(x.method || '') + '</td><td class="noprint">' + actions(x.id) + '</td></tr>'; }).join('') +
         '</tbody><tfoot><tr><td colspan="3">المجموع (' + list.length + ' قيد)</td><td class="num">' + fmt(si) + '</td><td class="num">' + fmt(so) + '</td><td></td><td></td></tr></tfoot></table></div>' +
-        (list.length > shown.length ? '<div class="note">يُعرض أحدث 300 قيد، والمجاميع والتصدير تشمل كل النتائج. ضيّق البحث لرؤية الباقي.</div>' : '') + exportBar('log')
+        (list.length > shown.length ? '<div class="note">يُعرض أحدث 300 قيد، والمجاميع والتصدير تشمل كل النتائج. اختر موردًا أو حدّد التاريخ لرؤية الباقي.</div>' : '') + exportBar('log')
         : empty(D.entries.length ? 'لا توجد قيود مطابقة.' : 'لا توجد قيود بعد.');
     }
   };
@@ -1140,14 +1143,17 @@ function openInvRow(row) { var x = PR[row]; if (x) openInv(String(x.sup).trim() 
 /* ---------- صفحة الفواتير ---------- */
 function vPInv() {
   if (PENDINV) { var k = PENDINV; PENDINV = null; showInv(k); return; }
-  $('#view').innerHTML = '<div class="card"><div class="grid"><div class="f wide"><label>بحث (مورد / رقم فاتورة / صنف)</label><input id="vq" autocomplete="off" onkeydown="if(event.key===\'Enter\')doPInv()"></div>' +
+  var vs = ''; try { vs = localStorage.getItem('safa_pinv_sup') || ''; } catch (e) { /* */ }
+  if (vs && (B.suppliers || []).indexOf(vs) < 0) vs = '';
+  $('#view').innerHTML = '<div class="card"><div class="grid"><div class="f wide"><label class="vsl">المورد</label><select id="vsup" class="vsup" onchange="try{localStorage.setItem(\'safa_pinv_sup\',this.value)}catch(e){}doPInv()"><option value="">كل الموردين</option>' +
+    (B.suppliers || []).slice().sort(function (a, b) { return String(a).localeCompare(String(b), 'ar'); }).map(function (n) { return '<option' + (n === vs ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('') + '</select></div>' +
     '<div class="f"><label>من تاريخ</label><input id="vf" type="date"></div><div class="f"><label>إلى تاريخ</label><input id="vt" type="date"></div></div><br>' +
     '<button class="btn" onclick="doPInv()">عرض</button></div><div id="vres"></div>';
   doPInv();
 }
 function doPInv() {
   $('#vres').innerHTML = SPIN;
-  call('webInvList', { q: $('#vq').value, from: $('#vf').value, to: $('#vt').value }).then(function (r) {
+  call('webInvList', { sup: $('#vsup').value, from: $('#vf').value, to: $('#vt').value }).then(function (r) {
     INVROWS = r.rows;
     var h = '<div class="stats"><div class="stat hi"><span>إجمالي الفواتير</span><b>' + fmt(r.total) + '</b></div><div class="stat"><span>عدد الفواتير</span><b>' + r.count + '</b></div></div>';
     if (!r.rows.length) { $('#vres').innerHTML = h + '<div class="muted">لا توجد فواتير</div>'; return; }
@@ -1155,7 +1161,7 @@ function doPInv() {
       return '<tr class="dclk" title="فتح الفاتورة" onclick="openInvIdx(' + i + ')">' + td(esc(x.date)) + td(esc(x.sup), 'l') + td(esc(x.inv)) + td(x.n) + td(fmt(x.total)) +
         td(esc(x.pay || '—') + (x.cur ? ' <span class="badge">' + esc(x.cur) + '</span>' : '')) + td(x.photo ? '📎' : '') + '</tr>';
     }), '<tr class="tot"><td colspan="4">الإجمالي (' + r.count + ' فاتورة)</td>' + td(fmt(r.total)) + '<td colspan="2"></td></tr>');
-    if (r.count > r.rows.length) h += '<div class="note">يُعرض أحدث ' + r.rows.length + ' فاتورة. ضيّق البحث لرؤية الباقي.</div>';
+    if (r.count > r.rows.length) h += '<div class="note">يُعرض أحدث ' + r.rows.length + ' فاتورة. اختر موردًا أو حدّد التاريخ لرؤية الباقي.</div>';
     $('#vres').innerHTML = h;
   }).catch(function (e) { $('#vres').innerHTML = ''; toast(errMsg(e), 'err'); });
 }
