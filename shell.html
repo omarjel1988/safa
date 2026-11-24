@@ -167,7 +167,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.7';
+window.APP_VER = '1.8';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -1923,13 +1923,17 @@ function dayPop(date) {
       '<div class="stat"><span>رصيد اليوم السابق</span><b>' + jm(lopen, open) + '</b></div><div class="stat hi"><span>رصيد نهاية اليوم</span><b>' + jm(lopen + (t.lnet || 0), open + t.net) + '</b></div>' +
       '<div class="stat"><span>عدد الحركات</span><b>' + r.count + '</b></div></div>';
     if (!r.rows.length) { $('#dbd').innerHTML = h + '<div class="muted">لا توجد حركات في هذا اليوم</div>'; return; }
-    var orow = '<tr style="background:#EEF3F8"><td class="l"><b>رصيد اليوم السابق</b>' + (older ? ' <small>(' + esc(older) + ')</small>' : '') + '</td><td></td><td></td><td></td><td><b>' + jm(lopen, open) + '</b></td><td colspan="2"></td></tr>';
-    h += tbl(['البيان', L.due, L.out, L.inn, 'الرصيد', 'وقت الإدخال', ''], [orow].concat(r.rows.map(function (x) {
-      run += x.inn - x.out; lrun += (x.linn || 0) - (x.lout || 0);
-      return '<tr>' + td(esc(x.st) + jNote(x), 'l') + td(jv(x, 'due')) + td(jv(x, 'out')) + td(jv(x, 'inn')) + td(jm(lrun, run)) +
-        td('<small>' + esc(String(x.time || '').slice(11) || x.time || '') + '</small>') +
-        '<td><button class="btn sec sm" onclick="dayClose();editJ(' + x.row + ')">' + (x.link && x.link.indexOf('INV|') === 0 ? 'الفاتورة' : 'تعديل') + '</button></td></tr>';
-    })), '<tr class="tot"><td>الإجمالي</td>' + td(jm(t.ldue, t.due)) + td(jm(t.lout, t.out)) + td(jm(t.linn, t.inn)) + td(jm(lopen + (t.lnet || 0), open + t.net)) + '<td colspan="2"></td></tr>');
+    /* جدول مضغوط (لا بطاقات): البيان | الذمم (إن وُجدت) | المدفوعات | المقبوضات | الرصيد؛ الضغط على السطر يفتح التعديل، والوقت صغير تحت البيان */
+    var hd = r.rows.some(function (x) { return x.due; }), ec = hd ? '<td></td>' : '';
+    var orow = '<tr style="background:#EEF3F8"><td class="l"><b>رصيد اليوم السابق</b>' + (older ? ' <small>(' + esc(older) + ')</small>' : '') + '</td>' + ec + '<td></td><td></td><td><b>' + jm(lopen, open) + '</b></td></tr>';
+    h += '<div class="note">اضغط على أي سطر لتعديله.</div><div class="tw"><table class="nocard dtbl"><tr><th>البيان</th>' + (hd ? '<th>' + esc(L.due) + '</th>' : '') + '<th>' + esc(L.out) + '</th><th>' + esc(L.inn) + '</th><th>الرصيد</th></tr>' + orow +
+      r.rows.map(function (x) {
+        run += x.inn - x.out; lrun += (x.linn || 0) - (x.lout || 0);
+        var tm = String(x.time || '').slice(11) || x.time || '', inv = x.link && x.link.indexOf('INV|') === 0;
+        return '<tr class="dclk" onclick="dayClose();editJ(' + x.row + ')"><td class="l" style="white-space:normal">' + esc(x.st) + jNote(x) + (tm || inv ? '<small class="jusd">' + esc(tm) + (inv ? ' · فاتورة' : '') + '</small>' : '') + '</td>' +
+          (hd ? '<td>' + jv(x, 'due') + '</td>' : '') + '<td>' + jv(x, 'out') + '</td><td>' + jv(x, 'inn') + '</td><td>' + jm(lrun, run) + '</td></tr>';
+      }).join('') +
+      '<tr class="tot"><td>الإجمالي</td>' + (hd ? '<td>' + jm(t.ldue, t.due) + '</td>' : '') + '<td>' + jm(t.lout, t.out) + '</td><td>' + jm(t.linn, t.inn) + '</td><td>' + jm(lopen + (t.lnet || 0), open + t.net) + '</td></tr></table></div>';
     $('#dbd').innerHTML = h;
   }).catch(function (e) { if ($('#dbd')) $('#dbd').innerHTML = '<div class="muted">' + esc(errMsg(e)) + '</div>'; });
 }
