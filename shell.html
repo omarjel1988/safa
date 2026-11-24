@@ -167,7 +167,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.8';
+window.APP_VER = '1.9';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -1339,6 +1339,18 @@ function jv(x, f) { return x[f] ? jm(x['l' + f], x[f]) : ''; }
 function jNote(x) {
   return (x.sup ? ' <span class="badge">⇠ ' + esc(x.sup) + '</span>' : '') + (x.cur && x.cur !== 'ل.س' ? ' <span class="badge">' + esc(x.cur) + ' × ' + fmtRate(x.rate, x.cur) + '</span>' : '');
 }
+/* جدول اليومية المضغوط (لا بطاقات): التاريخ | البيان | الذمم (إن وُجدت) | المدفوعات | المقبوضات [| الرصيد]؛ الضغط على السطر = تعديل */
+function jTable(rows, t, count, bal) {
+  var L = B.labels, hd = rows.some(function (x) { return x.due; }) || !!t.due;
+  var head = '<tr><th>التاريخ</th><th>البيان</th>' + (hd ? '<th>' + esc(L.due) + '</th>' : '') + '<th>' + esc(L.out) + '</th><th>' + esc(L.inn) + '</th>' + (bal ? '<th>الرصيد</th>' : '') + '</tr>';
+  var body = rows.map(function (x) {
+    var inv = x.link && x.link.indexOf('INV|') === 0, sub = (bal && x.time ? esc(String(x.time).slice(11) || x.time) : '') + (inv ? ' · فاتورة' : '');
+    return '<tr class="dclk" onclick="editJ(' + x.row + ')"><td><small>' + esc(x.date) + '</small></td><td class="l" style="white-space:normal">' + esc(x.st) + jNote(x) + (sub ? '<small class="jusd">' + sub + '</small>' : '') + '</td>' +
+      (hd ? '<td>' + jv(x, 'due') + '</td>' : '') + '<td>' + jv(x, 'out') + '</td><td>' + jv(x, 'inn') + '</td>' + (bal ? '<td>' + jm(x.lbal, x.bal) + '</td>' : '') + '</tr>';
+  }).join('');
+  var tot = '<tr class="tot"><td colspan="2">الإجمالي (' + count + ' حركة)</td>' + (hd ? '<td>' + jm(t.ldue, t.due) + '</td>' : '') + '<td>' + jm(t.lout, t.out) + '</td><td>' + jm(t.linn, t.inn) + '</td>' + (bal ? '<td></td>' : '') + '</tr>';
+  return '<div class="note">اضغط على أي سطر لتعديله.</div><div class="tw"><table class="nocard dtbl">' + head + body + tot + '</table></div>';
+}
 function editBtn(x) {
   var inv = x.link && x.link.indexOf('INV|') === 0;
   return '<td><button class="btn sec sm" onclick="editJ(' + x.row + ')">' + (inv ? 'فتح الفاتورة' : 'تعديل') + '</button></td>';
@@ -1394,9 +1406,7 @@ function doJSearch(off) {
     var t = r.totals, h = jStats(t, r.count);
     regRows(r.rows);
     if (!r.rows.length) { $('#jres').innerHTML = h + '<div class="muted">لا توجد نتائج</div>'; return; }
-    h += tbl(['التاريخ', 'البيان', L.due, L.out, L.inn, 'تعديل'], r.rows.map(function (x) {
-      return '<tr>' + td(esc(x.date)) + td(esc(x.st) + jNote(x), 'l') + td(jv(x, 'due')) + td(jv(x, 'out')) + td(jv(x, 'inn')) + editBtn(x) + '</tr>';
-    }), '<tr class="tot"><td colspan="2">الإجمالي (' + r.count + ' حركة)</td>' + td(jm(t.ldue, t.due)) + td(jm(t.lout, t.out)) + td(jm(t.linn, t.inn)) + '<td></td></tr>');
+    h += jTable(r.rows, t, r.count, false);
     h += pager(r, 'doJSearch') + pdfBox('jsearch', 'jParams()');
     $('#jres').innerHTML = h;
   }).catch(function (e) { $('#jres').innerHTML = ''; toast(errMsg(e), 'err'); });
@@ -1408,10 +1418,8 @@ function doJLog(off) {
     var t = r.totals, h = jStats(t, r.count);
     regRows(r.rows);
     if (!r.rows.length) { $('#gres').innerHTML = h + '<div class="muted">لا توجد حركات</div>'; return; }
-    h += tbl(['التاريخ', 'البيان', L.due, L.out, L.inn, 'الرصيد', 'رصيد ' + L.due, 'وقت الإدخال', 'تعديل'], r.rows.map(function (x) {
-      return '<tr>' + td(esc(x.date)) + td(esc(x.st) + jNote(x), 'l') + td(jv(x, 'due')) + td(jv(x, 'out')) + td(jv(x, 'inn')) + td(jm(x.lbal, x.bal)) + td(jm(x.ldueBal, x.dueBal)) + td(esc(x.time)) + editBtn(x) + '</tr>';
-    }), '<tr class="tot"><td colspan="2">الإجمالي (' + r.count + ' حركة)</td>' + td(jm(t.ldue, t.due)) + td(jm(t.lout, t.out)) + td(jm(t.linn, t.inn)) + '<td colspan="4"></td></tr>');
-    $('#gres').innerHTML = h + pager(r, 'doJLog') + '<div class="note">عمودا الرصيد ورصيد الذمم تراكميان بترتيب الإدخال. المبالغ بالليرة، وتحتها المعادل بالدولار.</div>';
+    h += jTable(r.rows, t, r.count, true);
+    $('#gres').innerHTML = h + pager(r, 'doJLog') + '<div class="note">الرصيد تراكمي بترتيب الإدخال، ووقت الإدخال تحت البيان. المبالغ بالليرة، وتحتها المعادل بالدولار.</div>';
   }).catch(function (e) { $('#gres').innerHTML = ''; toast(errMsg(e), 'err'); });
 }
 /* ======================= الرئيسية (لوحة)، التقارير، البحث الشامل، الإعدادات، رمز الدخول ======================= */
