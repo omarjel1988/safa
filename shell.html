@@ -167,7 +167,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.4';
+window.APP_VER = '1.5';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -194,6 +194,8 @@ function en(v) {
 }
 function num(v) { var n = parseFloat(en(v)); return isNaN(n) ? 0 : n; }
 function fmt(n) { return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+/* سعر الصرف للعرض: العملات الأصغر بكثير من الأساسية (مثل الليرة) تُعرض مقلوبة «1 دولار = 11,000 ل.س» */
+function fmtRate(r, cur) { r = Number(r) || 0; if (r > 0 && r < 0.01) return '1 ' + esc((B.set && B.set.base) || '') + ' = ' + fmt(1 / r) + ' ' + esc(cur || ''); return fmt(r); }
 var tt;
 function toast(m, kind) {
   var t = $('#toast'); t.className = kind || ''; t.textContent = m; t.style.display = 'block';
@@ -1188,7 +1190,7 @@ function renderInv() {
   var hb = v.lines.some(function (l) { return l.base > 0; }), cs = hb ? 6 : 5;
   var pf = function (x) { return (+x).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 }); };
   var info = [['المورد', esc(v.sup)], ['رقم الفاتورة', esc(v.inv)], ['التاريخ', esc(v.date)], ['الدفع', esc(v.pay || 'غير محدد') + (v.method ? ' · ' + esc(v.method) : '')],
-    ['العملة', v.cur ? esc(v.cur) + ' · سعر الصرف ' + fmt(v.rate) : esc(v.base)], ['المصدر', esc(v.src) + (v.time ? ' · ' + esc(v.time) : '')]];
+    ['العملة', v.cur ? esc(v.cur) + ' · سعر الصرف ' + fmtRate(v.rate, v.cur) : esc(v.base)], ['المصدر', esc(v.src) + (v.time ? ' · ' + esc(v.time) : '')]];
   $('#view').innerHTML = '<div class="row noprint" style="margin-bottom:12px"><button class="btn sec sm" onclick="go(\'pinv\')">← كل الفواتير</button></div>' +
     '<div class="invnav noprint" id="invnav"></div>' +
     '<div class="card"><h2>فاتورة شراء رقم ' + esc(v.inv) + '</h2><div class="stats">' + info.map(function (x) { return '<div class="st"><small>' + x[0] + '</small><b style="font-size:15.5px">' + x[1] + '</b></div>'; }).join('') + '</div>' +
@@ -1249,7 +1251,7 @@ function delInv(b) {
 
 /* ---------- مقارنة الأسعار ---------- */
 function vPrice() {
-  $('#view').innerHTML = '<h1>مقارنة أسعار الأصناف</h1><p class="sub">لكل صنف أسعار كل مورد، والمورد الأرخص بآخر سعر يظهر أولًا.</p>' +
+  $('#view').innerHTML = '<h1>مقارنة أسعار الأصناف</h1><p class="sub">لكل صنف أسعار كل مورد، والمورد الأرخص بآخر سعر يظهر أولًا. الأسعار بعملة الفاتورة (مثل الليرة لكشوف 2025).</p>' +
     '<div class="card"><div class="row"><div class="f" style="flex:3 1 220px"><label>ابحث عن صنف أو كود</label><input id="cq" list="dl-items" autocomplete="off" onkeydown="if(event.key===\'Enter\')doPrice()"></div>' +
     '<button class="btn" onclick="doPrice()" style="align-self:flex-end">بحث</button></div></div><div id="cres"></div>';
   $('#cq').value = PQ; PQ = '';
@@ -1260,10 +1262,12 @@ function doPrice() {
   call('webPriceCompare', $('#cq').value).then(function (r) {
     if (!r.items.length) { $('#cres').innerHTML = '<div class="muted">لا توجد مشتريات مطابقة</div>'; return; }
     $('#cres').innerHTML = r.items.map(function (it) {
+      var mix = it.sups.some(function (s) { return s.cur; });
       return '<div class="card"><h2>' + esc(it.item) + (it.code ? ' <span class="badge">' + esc(it.code) + '</span>' : '') + '</h2>' +
         tbl(['المورد', 'آخر سعر', 'تاريخ آخر شراء', 'أقل سعر', 'أعلى سعر', 'المتوسط', 'مرات الشراء'], it.sups.map(function (s, i) {
-          return '<tr>' + td(esc(s.sup) + (i === 0 && it.sups.length > 1 ? ' <span class="badge" style="background:#E8F5E9;color:var(--grn)">الأرخص</span>' : ''), 'l') +
-            td(fmt(s.last)) + td(esc(s.lastDate)) + td(fmt(s.min)) + td(fmt(s.max)) + td(fmt(s.avg)) + td(s.n) + '</tr>';
+          var cu = mix ? ' <small>' + esc(s.cur || r.base || '') + '</small>' : '';
+          return '<tr>' + td(esc(s.sup) + (i === 0 && it.sups.length > 1 && !mix ? ' <span class="badge" style="background:#E8F5E9;color:var(--grn)">الأرخص</span>' : ''), 'l') +
+            td(fmt(s.last) + cu) + td(esc(s.lastDate)) + td(fmt(s.min) + cu) + td(fmt(s.max) + cu) + td(fmt(s.avg) + cu) + td(s.n) + '</tr>';
         })) + '</div>';
     }).join('') + (r.count > r.items.length ? '<div class="note">يُعرض ' + r.items.length + ' صنف من ' + r.count + '. ضيّق البحث.</div>' : '');
   }).catch(function (e) { $('#cres').innerHTML = ''; toast(errMsg(e), 'err'); });
@@ -1326,7 +1330,7 @@ function saveJ() {
   }).catch(function (e) { busy(b, false); toast(errMsg(e), 'err'); });
 }
 function jNote(x) {
-  return (x.sup ? ' <span class="badge">⇠ ' + esc(x.sup) + '</span>' : '') + (x.cur ? ' <span class="badge">' + esc(x.cur) + ' × ' + fmt(x.rate) + '</span>' : '');
+  return (x.sup ? ' <span class="badge">⇠ ' + esc(x.sup) + '</span>' : '') + (x.cur ? ' <span class="badge">' + esc(x.cur) + ' × ' + fmtRate(x.rate, x.cur) + '</span>' : '');
 }
 function editBtn(x) {
   var inv = x.link && x.link.indexOf('INV|') === 0;
@@ -1495,7 +1499,7 @@ function curRateOf(sel, inp) { if (!sel || !sel.value || sel.value === B.set.bas
 function curNote(x) {
   if (!x || !x.cur) return '';
   var a = x.inc || x.out || 0;
-  return ' <span class="badge">' + fmt(a / (x.rate || 1)) + ' ' + esc(x.cur) + ' × ' + fmt(x.rate) + '</span>';
+  return ' <span class="badge">' + fmt(a / (x.rate || 1)) + ' ' + esc(x.cur) + ' × ' + fmtRate(x.rate, x.cur) + '</span>';
 }
 
 /* ---------- رمز الدخول ---------- */
@@ -1832,7 +1836,7 @@ editJ = (function (orig) {
 vHome = (function (orig) {
   return function () {
     orig();
-    var cs = (B.set && B.set.curs) || [];
+    var cs = ((B.set && B.set.curs) || []).filter(function (c) { return !(c.rate > 0 && c.rate < 0.01); });
     if (!cs.length) return;
     $('#kpis').insertAdjacentHTML('beforebegin', '<div class="card" style="padding:10px 14px">' + cs.map(function (c, i) {
       return '<div class="row" style="justify-content:space-between;gap:10px">' +
