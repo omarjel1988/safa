@@ -2040,10 +2040,12 @@ function stR(x) { return Math.round(x * 1000) / 1000; }
 function stRead(f) {
   if (!f || !ST) return;
   var st = $('#stst'), t0 = Date.now(); ST.busy = 1; $('#stpv').innerHTML = '';
-  st.innerHTML = '<span class="spin"></span> جارٍ قراءة الكشف… <span id="stsec"></span><br><small>الكشوف الطويلة قد تحتاج دقيقة أو دقيقتين، اترك النافذة مفتوحة.</small>';
+  st.innerHTML = '<span class="spin"></span> جارٍ قراءة الكشف… <span id="stsec"></span><br><small>الكشف القصير يحتاج نصف دقيقة تقريبًا، والطويل (50 فاتورة أو أكثر) دقيقتين أو ثلاثًا. أبقِ التطبيق مفتوحًا والشاشة تعمل.</small>';
+  var wl = null; try { navigator.wakeLock && navigator.wakeLock.request('screen').then(function (w) { wl = w; }, function () {}); } catch (e) { /* */ }
+  var unlock = function () { try { if (wl) wl.release(); } catch (e) { /* */ } };
   var tick = setInterval(function () { var el = $('#stsec'); if (!el) return clearInterval(tick); el.textContent = Math.round((Date.now() - t0) / 1000) + ' ث'; }, 1000);
   stPart(f).then(function (part) { return stGemini(part); }).then(function (j) {
-    clearInterval(tick); if (!ST) return;
+    clearInterval(tick); unlock(); if (!ST) return;
     var sup = $('#stsup').value;
     if (!sup && j.supplier) {
       var n = aiNorm(j.supplier);
@@ -2052,7 +2054,7 @@ function stRead(f) {
     }
     ST.raw = j; ST.busy = 0;
     stBuild();
-  }).catch(function (e) { clearInterval(tick); if (ST) ST.busy = 0; st.innerHTML = '<b class="neg">' + esc(e.message || e) + '</b>'; });
+  }).catch(function (e) { clearInterval(tick); unlock(); if (ST) ST.busy = 0; st.innerHTML = '<b class="neg">' + esc(e.message || e) + '</b>'; });
 }
 /* يحوّل الرد إلى فواتير وقيود جاهزة، ثم يفحص الموجود في الخادم ويعرض المعاينة */
 function stBuild() {
