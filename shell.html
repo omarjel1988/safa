@@ -103,6 +103,8 @@ select#vsup,select#isup,select#e-sup,select#k-sup,select#l-sup,select#esp,select
 select#vsup option,select#isup option,select#e-sup option,select#k-sup option,select#l-sup option,select#esp option,select#stsup option,select#pf-s option,select#itsup option,select.sp option{color:#222;background:#fff}
 .itf{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:10px;align-items:end}@media (max-width:560px){.itf{grid-template-columns:1fr}}
 label.f:has(> select#e-sup)>span,label.f:has(> select#k-sup)>span,label.f:has(> select#l-sup)>span,.f:has(> select#isup)>label,.f:has(> select#stsup)>label,.f:has(> select#pf-s)>label,.f:has(> select#esp)>label,.f:has(> select.sp)>label{color:#B35A00;font-weight:800}
+.invnav{display:flex;gap:8px;align-items:stretch;margin:0 0 12px}.invnav .btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:52px;font-size:15px;font-weight:800}.invnav .btn small{font-size:11px;font-weight:600;opacity:.75}.invnav .btn[disabled]{opacity:.35}
+.invpos{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 6px;min-width:70px;text-align:center}.invpos b{font-size:16px}.invpos small{font-size:11px;color:#6B7C8F;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* استيراد كشف المورد */
 .stsum{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;margin:6px 0}
 .stsum>div{background:#F2F6FB;border-radius:10px;padding:8px;text-align:center}.stsum small{display:block;color:#6B7C8F;font-size:11.5px}.stsum b{font-size:18px}.stsum i{display:block;font-style:normal;font-size:11px;color:#8A6D1F}
@@ -165,7 +167,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.3';
+window.APP_VER = '1.4';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -899,7 +901,7 @@ var SUP = (function () {
 
 /* ======================= فواتير الشراء: الفاتورة الكاملة، الدفع، العملات، الصور، تنبيه الأسعار ======================= */
 var PMETHODS = ['نقدي كاش', 'شام كاش', 'دولار'];
-var INVEDIT = null, PENDINV = null, INVCUR = null, PQ = '', INVROWS = [];
+var INVEDIT = null, PENDINV = null, INVCUR = null, PQ = '', INVROWS = [], INVSIB = null;
 var SPIN = '<div class="muted"><span class="spin"></span>جارٍ التحميل…</div>';
 
 function vInv() {
@@ -1157,6 +1159,7 @@ function vPInv() {
   doPInv();
 }
 function doPInv() {
+  INVSIB = null;
   $('#vres').innerHTML = SPIN;
   call('webInvList', { sup: $('#vsup').value, from: $('#vf').value, to: $('#vt').value }).then(function (r) {
     INVROWS = r.rows;
@@ -1187,6 +1190,7 @@ function renderInv() {
   var info = [['المورد', esc(v.sup)], ['رقم الفاتورة', esc(v.inv)], ['التاريخ', esc(v.date)], ['الدفع', esc(v.pay || 'غير محدد') + (v.method ? ' · ' + esc(v.method) : '')],
     ['العملة', v.cur ? esc(v.cur) + ' · سعر الصرف ' + fmt(v.rate) : esc(v.base)], ['المصدر', esc(v.src) + (v.time ? ' · ' + esc(v.time) : '')]];
   $('#view').innerHTML = '<div class="row noprint" style="margin-bottom:12px"><button class="btn sec sm" onclick="go(\'pinv\')">← كل الفواتير</button></div>' +
+    '<div class="invnav noprint" id="invnav"></div>' +
     '<div class="card"><h2>فاتورة شراء رقم ' + esc(v.inv) + '</h2><div class="stats">' + info.map(function (x) { return '<div class="st"><small>' + x[0] + '</small><b style="font-size:15.5px">' + x[1] + '</b></div>'; }).join('') + '</div>' +
     tbl(['#', 'كود الصنف', 'الصنف'].concat(hb ? ['السعر الأساسي' + cu, 'السعر بعد الخصم' + cu] : ['السعر' + cu], ['الكمية', 'الإجمالي' + cu]), v.lines.map(function (l, i) {
       return '<tr>' + td(i + 1) + td(esc(l.code)) + td(esc(l.item), 'l') + (hb ? td(l.base ? pf(l.base / k) : '') : '') + td(hb ? pf(l.price / k) : fmt(l.price / k)) + td(esc(l.qty)) + td(fmt(l.total / k)) + '</tr>';
@@ -1200,8 +1204,25 @@ function renderInv() {
     '<div class="row noprint" style="margin-top:10px"><input type="file" id="vphoto" accept="image/*" style="flex:1 1 220px"><button class="btn sec" id="vup" onclick="addInvPhoto()">رفع الصورة</button></div></div>' +
     '<div class="row noprint"><button class="btn" onclick="editInv()">تعديل الفاتورة</button><button class="btn sec" id="vpdf" onclick="invPdf()">PDF للمشاركة</button>' +
     '<button class="btn sec" onclick="window.print()">طباعة</button><button class="btn warn" id="vdel" onclick="delInv(this)">حذف الفاتورة</button></div><div id="pdfo" class="noprint"></div>';
+  invNav();
 }
-function editInv() { INVEDIT = { key: INVCUR.key, sig: INVCUR.sig, data: INVCUR }; go('inv'); }
+/* التنقل بين فواتير نفس المورد (السابق = الأقدم، التالي = الأحدث) */
+function invNav() {
+  var v = INVCUR, box = $('#invnav'); if (!v || !box) return;
+  function draw(list) {
+    if (!INVCUR || INVCUR.key !== v.key || !$('#invnav')) return;
+    var i = -1; list.forEach(function (x, j) { if (x.key === v.key) i = j; });
+    if (i < 0 || list.length < 2) { box.innerHTML = ''; return; }
+    var older = list[i + 1], newer = list[i - 1];
+    box.innerHTML = '<button class="btn sec" ' + (older ? 'onclick="invGo(\'' + esc(older.key).replace(/'/g, '\\\'') + '\')"' : 'disabled') + '>→ السابق' + (older ? '<small>' + esc(older.inv) + ' · ' + esc(older.date) + '</small>' : '') + '</button>' +
+      '<div class="invpos"><b>' + (list.length - i) + ' من ' + list.length + '</b><small>' + esc(v.sup) + '</small></div>' +
+      '<button class="btn sec" ' + (newer ? 'onclick="invGo(\'' + esc(newer.key).replace(/'/g, '\\\'') + '\')"' : 'disabled') + '>التالي ←' + (newer ? '<small>' + esc(newer.inv) + ' · ' + esc(newer.date) + '</small>' : '') + '</button>';
+  }
+  if (INVSIB && INVSIB.sup === v.sup && INVSIB.rows.some(function (x) { return x.key === v.key; })) return draw(INVSIB.rows);
+  call('webInvList', { sup: v.sup }).then(function (r) { INVSIB = { sup: v.sup, rows: r.rows }; draw(r.rows); }).catch(function () { box.innerHTML = ''; });
+}
+function invGo(key) { window.scrollTo(0, 0); showInv(key); }
+function editInv() { INVSIB = null; INVEDIT = { key: INVCUR.key, sig: INVCUR.sig, data: INVCUR }; go('inv'); }
 function invPdf() {
   var b = $('#vpdf'); busy(b, true);
   $('#pdfo').innerHTML = '<div class="note"><span class="spin"></span>جارٍ إنشاء ملف PDF…</div>';
