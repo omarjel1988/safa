@@ -167,7 +167,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.5';
+window.APP_VER = '1.6';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -376,12 +376,14 @@ function renderItems() {
   var sp = $('#itsup') ? $('#itsup').value : '';
   var a = (window.ITEMS || []).filter(function (i) { return (!sp || i.sup === sp || (i.sups || []).indexOf(sp) > -1) && (!q || (i.name + ' ' + i.code + ' ' + i.cat + ' ' + i.notes).toLowerCase().indexOf(q) > -1); });
   if (!a.length) { $('#itl').innerHTML = '<div class="muted">لا توجد أصناف</div>'; return; }
-  function pr(v) { return (v === '' || v == null) ? '' : fmt(v); }
+  /* السعر بعملة آخر شراء (مثل ل.س لكشوف 2025)، وأسعار العملة الأخرى في سطر منفصل (alt) */
+  function pr(v, c) { return (v === '' || v == null) ? '' : fmt(v) + (c ? ' <small>' + esc(c) + '</small>' : ''); }
+  function alt(i) { return (i.alt || []).map(function (x) { var c = x.cur || (B.set && B.set.base) || ''; return '💱 بالـ' + esc(c) + ': آخر ' + fmt(x.last) + ' · أقل ' + fmt(x.min) + ' · أعلى ' + fmt(x.max) + ' · متوسط ' + fmt(x.avg) + ' (' + x.n + ' مرة، ' + esc(x.date) + ' — ' + esc(x.sup) + ')'; }); }
   $('#itl').innerHTML = '<div class="itbl">' + tbl(['كود الصنف', 'اسم الصنف', 'الوحدة', 'التصنيف', 'ملاحظات', 'آخر سعر شراء', 'أقل سعر', 'أعلى سعر', 'متوسط السعر', 'مرات الشراء', 'تاريخ آخر شراء', 'آخر مورد'],
     a.map(function (i) {
-      return '<tr>' + td(esc(i.code)) + td(esc(i.name), 'l') + td(esc(i.unit)) + td(esc(i.cat)) + td(esc(i.notes), 'l') + td(pr(i.last)) + td(pr(i.min)) + td(pr(i.max)) + td(pr(i.avg)) + td(i.n == null ? '' : i.n) + td(esc(i.date)) + td(esc(i.sup)) + '</tr>';
+      return '<tr>' + td(esc(i.code)) + td(esc(i.name), 'l') + td(esc(i.unit)) + td(esc(i.cat)) + td(esc(i.notes), 'l') + td(pr(i.last, i.cur) + alt(i).map(function (x) { return '<div class="note" style="margin:2px 0 0;white-space:normal">' + x + '</div>'; }).join('')) + td(pr(i.min, i.cur)) + td(pr(i.max, i.cur)) + td(pr(i.avg, i.cur)) + td(i.n == null ? '' : i.n) + td(esc(i.date)) + td(esc(i.sup)) + '</tr>';
     })) + '</div><div class="icards">' + a.map(function (i) {
-      function pc(l, v) { return '<div><small>' + l + '</small><span>' + (pr(v) || '—') + '</span></div>'; }
+      function pc(l, v) { return '<div><small>' + l + '</small><span>' + (pr(v, i.cur) || '—') + '</span></div>'; }
       var m = [];
       if (i.unit) m.push('📦 ' + esc(i.unit));
       if (i.cat) m.push('🏷️ ' + esc(i.cat));
@@ -391,6 +393,7 @@ function renderItems() {
       return '<div class="icard"><div class="ih"><b>' + esc(i.name) + '</b><span class="ic">' + esc(i.code) + '</span></div>' +
         '<div class="ip">' + pc('آخر سعر', i.last) + pc('أقل', i.min) + pc('أعلى', i.max) + pc('متوسط', i.avg) + '</div>' +
         (m.length ? '<div class="im">' + m.map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div>' : '') +
+        alt(i).map(function (x) { return '<div class="in">' + x + '</div>'; }).join('') +
         (i.notes ? '<div class="in">📝 ' + esc(i.notes) + '</div>' : '') + '</div>';
     }).join('') + '</div><div class="note">' + a.length + ' صنف</div>';
 }
