@@ -78,7 +78,7 @@ table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
 th{background:var(--cl);color:var(--c);padding:10px 8px;white-space:nowrap;font-weight:800}
 td{padding:9px 8px;border-top:1px solid var(--bd);text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums}
 tbody tr:nth-child(even) td{background:#FAFBFD}
-td.l,th.l{text-align:right}td.num,th.num{text-align:left}td.wrapc{white-space:normal;min-width:180px;text-align:right}
+td.l,th.l{text-align:right}@media (min-width:720px){td.l{white-space:normal;min-width:150px}}td.num,th.num{text-align:left}td.wrapc{white-space:normal;min-width:180px;text-align:right}
 tr.tot td,tfoot td{background:#FFF1DE!important;font-weight:800}
 .detail td{background:var(--cl)!important}
 #toast{position:fixed;top:calc(70px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:max-content;text-align:center;line-height:1.5;background:#222;color:#fff;padding:12px 18px;border-radius:12px;z-index:50;max-width:92%;display:none;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25)}
@@ -160,7 +160,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.0';
+window.APP_VER = '1.1';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -919,7 +919,7 @@ function vInv() {
   curFill($('#icur'), $('#irate'), $('#iratew'), calcInv);
   if (E && E.cur) curSet($('#icur'), $('#irate'), $('#iratew'), E.cur, E.rate);
   $('#ipay').onchange = payNote; payNote();
-  if (E) E.lines.forEach(function (l) { addInvLine({ name: l.item, code: l.code, price: +(l.price / (E.cur ? E.rate : 1)).toFixed(6), qty: l.qty }); });
+  if (E) E.lines.forEach(function (l) { addInvLine({ name: l.item, code: l.code, price: +(l.price / (E.cur ? E.rate : 1)).toFixed(6), qty: l.qty, base: l.base ? +(l.base / (E.cur ? E.rate : 1)).toFixed(6) : '' }); });
   else addInvLine();
   calcInv();
 }
@@ -1030,6 +1030,7 @@ function addInvLine(v) {
   $('.x', d).onclick = function () { if ($$('.line').length > 1) { d.remove(); calcInv(); } else { toast('يجب أن تبقى فاتورة بسطر واحد على الأقل', 'err'); } };
   if (v.name) { n.value = v.name; onName(); if (v.code && !c.readOnly) c.value = v.code; }
   if (v.price !== undefined) $('.p', d).value = v.price;
+  if (v.base) d.dataset.base = v.base;
   if (v.qty !== undefined) $('.q', d).value = v.qty;
 }
 
@@ -1085,7 +1086,7 @@ function saveInv(confirmDup) {
   var p = { supplier: $('#isup').value, invoice: $('#iinv').value, date: $('#idate').value, pay: $('#ipay').value, method: $('#imethod').value,
     cur: $('#icur').value, rate: $('#irate').value, confirmDup: !!confirmDup,
     lines: $$('.line').map(function (d) {
-      return { name: $('.n', d).value, code: $('.c', d).value, unit: $('.u', d).value, cat: $('.g', d).value, price: $('.p', d).value, qty: $('.q', d).value };
+      return { name: $('.n', d).value, code: $('.c', d).value, unit: $('.u', d).value, cat: $('.g', d).value, price: $('.p', d).value, qty: $('.q', d).value, base: d.dataset.base || '' };
     }) };
   if (E) { p.key = E.key; p.sig = E.sig; }
   var fi = $('#iphoto'), file = fi && fi.files && fi.files[0];
@@ -1170,13 +1171,16 @@ function showInv(key) {
 }
 function renderInv() {
   var v = INVCUR, k = v.cur ? v.rate : 1, cu = v.cur ? ' (' + esc(v.cur) + ')' : '';
+  var hb = v.lines.some(function (l) { return l.base > 0; }), cs = hb ? 6 : 5;
+  var pf = function (x) { return (+x).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 }); };
   var info = [['المورد', esc(v.sup)], ['رقم الفاتورة', esc(v.inv)], ['التاريخ', esc(v.date)], ['الدفع', esc(v.pay || 'غير محدد') + (v.method ? ' · ' + esc(v.method) : '')],
     ['العملة', v.cur ? esc(v.cur) + ' · سعر الصرف ' + fmt(v.rate) : esc(v.base)], ['المصدر', esc(v.src) + (v.time ? ' · ' + esc(v.time) : '')]];
   $('#view').innerHTML = '<div class="row noprint" style="margin-bottom:12px"><button class="btn sec sm" onclick="go(\'pinv\')">← كل الفواتير</button></div>' +
     '<div class="card"><h2>فاتورة شراء رقم ' + esc(v.inv) + '</h2><div class="stats">' + info.map(function (x) { return '<div class="st"><small>' + x[0] + '</small><b style="font-size:15.5px">' + x[1] + '</b></div>'; }).join('') + '</div>' +
-    tbl(['#', 'كود الصنف', 'الصنف', 'السعر' + cu, 'الكمية', 'الإجمالي' + cu], v.lines.map(function (l, i) {
-      return '<tr>' + td(i + 1) + td(esc(l.code)) + td(esc(l.item), 'l') + td(fmt(l.price / k)) + td(esc(l.qty)) + td(fmt(l.total / k)) + '</tr>';
-    }), '<tr class="tot"><td colspan="5">الإجمالي' + cu + '</td>' + td(fmt(v.total / k)) + '</tr>' + (v.cur ? '<tr class="tot"><td colspan="5">الإجمالي بـ ' + esc(v.base) + '</td>' + td(fmt(v.total)) + '</tr>' : '')) +
+    tbl(['#', 'كود الصنف', 'الصنف'].concat(hb ? ['السعر الأساسي' + cu, 'السعر بعد الخصم' + cu] : ['السعر' + cu], ['الكمية', 'الإجمالي' + cu]), v.lines.map(function (l, i) {
+      return '<tr>' + td(i + 1) + td(esc(l.code)) + td(esc(l.item), 'l') + (hb ? td(l.base ? pf(l.base / k) : '') : '') + td(hb ? pf(l.price / k) : fmt(l.price / k)) + td(esc(l.qty)) + td(fmt(l.total / k)) + '</tr>';
+    }), '<tr class="tot"><td colspan="' + cs + '">الإجمالي' + cu + '</td>' + td(fmt(v.total / k)) + '</tr>' + (v.cur ? '<tr class="tot"><td colspan="' + cs + '">الإجمالي بـ ' + esc(v.base) + '</td>' + td(fmt(v.total)) + '</tr>' : '')) +
+    (hb ? '<div class="note">السعر الأساسي هو سعر الصنف قبل خصم المورد، والسعر بعد الخصم هو المحسوب في الإجمالي والرصيد.</div>' : '') +
     '<div class="note">' + (v.pay === 'نقدي' ? 'مسجّلة في حساب المورد (وارد وصادر) وفي اليومية كمدفوعات.' : v.pay ? 'مسجّلة في حساب المورد كـ وارد (آجل).' : 'فاتورة غير مربوطة بحساب المورد. عدّلها واختر نوع الدفع لربطها.') + '</div></div>' +
     '<div class="card"><h2>صور الفاتورة</h2><div class="thumbs">' + (v.photos.length ? v.photos.map(function (u) {
       var id = (/[-\w]{25,}/.exec(u) || [''])[0];
@@ -2558,6 +2562,7 @@ function tblCards(re) {
     if (re) { t.classList.remove('tcard'); w.classList.remove('tcw'); t.removeAttribute('data-tcd'); var ib0 = t.closest('.itbl'); if (ib0) ib0.parentElement.classList.remove('icon'); }
     if (t.getAttribute('data-tcd') || !w || !w.clientWidth) continue;
     t.setAttribute('data-tcd', '1');
+    if (window.innerWidth >= 720) continue; /* الآيباد والكمبيوتر: جداول عادية */
     if (t.scrollWidth <= w.clientWidth + 2) continue;
     var ib = t.closest('.itbl');
     if (ib) { ib.parentElement.classList.add('icon'); continue; }

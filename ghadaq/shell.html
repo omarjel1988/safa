@@ -95,7 +95,7 @@ tr.op td{background:#fdf0d5!important;font-weight:700}
 <div id='toast'></div>
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.0';
+window.APP_VER = '1.1';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -1593,6 +1593,7 @@ function tblCards(re) {
     if (re) { t.classList.remove('tcard'); w.classList.remove('tcw'); t.removeAttribute('data-tcd'); var ib0 = t.closest('.itbl'); if (ib0) ib0.parentElement.classList.remove('icon'); }
     if (t.getAttribute('data-tcd') || !w || !w.clientWidth) continue;
     t.setAttribute('data-tcd', '1');
+    if (window.innerWidth >= 720) continue; /* الآيباد والكمبيوتر: جداول عادية */
     if (t.scrollWidth <= w.clientWidth + 2) continue;
     var ib = t.closest('.itbl');
     if (ib) { ib.parentElement.classList.add('icon'); continue; }
