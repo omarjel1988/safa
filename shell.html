@@ -34,6 +34,8 @@ main h1{font-size:21px;margin:2px 0;font-weight:800;color:var(--c)}
 .card{background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:14px;box-shadow:var(--sh)}
 .card h2{margin:0 0 12px;font-size:16.5px;color:var(--c);font-weight:800}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+/* سفاري (الآيباد): خانة التاريخ لها عرض داخلي أكبر من العمود فتتداخل مع جارتها — نجبرها على عرض عمودها */
+.grid>.f{min-width:0}input[type=date]{display:block;width:100%;min-width:0;max-width:100%;-webkit-appearance:none;appearance:none;box-sizing:border-box}
 .f{display:flex;flex-direction:column;gap:4px;min-width:0}
 .f.wide{grid-column:1/-1}
 label,.f>span{font-size:13px;color:var(--mut);font-weight:700}
@@ -167,7 +169,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.9';
+window.APP_VER = '1.10';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
