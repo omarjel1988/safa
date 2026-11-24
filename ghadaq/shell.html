@@ -94,6 +94,8 @@ tr.op td{background:#fdf0d5!important;font-weight:700}
 <div id='ov' onclick='if(event.target===this)closeM()'><div class='box' id='mbox'></div></div>
 <div id='toast'></div>
 <script>
+/* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
+window.APP_VER = '1.0';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -2892,7 +2894,7 @@ onDom(function () { tblCards(); zebraCards(); });
                     (outq.length ? '<div style="font-size:13px;color:#8796A5;padding:4px 0 8px">' + outq.map(function (q) { return '• ' + E(q.d || ''); }).join('<br>') + '</div>' : '') +
                     row('بيانات محفوظة على الجهاز', x[2] + ' عنصر · ' + mb(x[1].usage)) +
                     row('حفظ دائم للبيانات', x[3] ? 'مفعّل' : 'عادي') +
-                    row('إصدار التطبيق', E(String(x[0]).replace('safa-v', '') || '—')) +
+                    row('إصدار التطبيق', '<b>' + E(W.APP_VER || '—') + '</b>' + (x[0] ? ' <small style="color:#8796A5">(بناء ' + E(String(x[0]).replace('safa-v', '')) + ')</small>' : '')) +
                     row('الجهاز', E(devName())) +
                     '<button class="it" id="u3-s1" style="background:var(--ui);color:#fff;text-align:center"' + (outq.length ? '' : ' disabled') + '>⟳ مزامنة الآن</button>' +
                     '<button class="it" id="u3-s2" style="text-align:center">⬇ تحديث التطبيق الآن</button>' +
