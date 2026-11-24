@@ -26,6 +26,8 @@ nav::-webkit-scrollbar{display:none}
 nav button{flex:0 0 auto;border:0;background:rgba(255,255,255,.13);color:#fff;border-radius:10px;padding:7px 15px;font-size:14.5px;font-weight:700;min-height:40px}
 nav button.on{background:#fff;color:var(--c);box-shadow:0 2px 6px rgba(0,0,0,.12)}
 main{max-width:1100px;margin:0 auto;padding:16px 12px 120px}
+/* الكمبيوتر فقط (شاشة عريضة + فأرة): مساحة عمل أعرض والشريط العلوي بعرض الشاشة */
+@media (min-width:1200px) and (hover:hover) and (pointer:fine){.hb,nav{max-width:none}header{padding-left:24px;padding-right:24px}main{max-width:1560px;padding-left:24px;padding-right:24px}}
 main>*{animation:fi .2s ease-out}
 @keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){main>*{animation:none}}
@@ -169,7 +171,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.10';
+window.APP_VER = '1.11';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
