@@ -97,7 +97,7 @@ tr.op td{background:#fdf0d5!important;font-weight:700}
 <div id='toast'></div>
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.4';
+window.APP_VER = '1.5';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -1596,7 +1596,7 @@ function tblCards(re) {
     if (re) { t.classList.remove('tsm', 'tsm2', 'tsm3'); t.removeAttribute('data-tcd'); [].forEach.call(t.querySelectorAll('.tcx'), function (e) { e.classList.remove('tcx'); }); }
     if (t.getAttribute('data-tcd') || !w || !w.clientWidth) continue;
     t.setAttribute('data-tcd', '1');
-    if (window.innerWidth >= 720 || t.classList.contains('nocard')) continue;
+    if (window.innerWidth >= 720) continue;
     if (t.scrollWidth <= w.clientWidth + 2) continue;
     t.classList.add('tsm');
     /* إخفاء الأعمدة الفارغة تمامًا (مثل «ملاحظات» بلا قيم) لإفساح المكان */
