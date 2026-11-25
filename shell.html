@@ -171,7 +171,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.13';
+window.APP_VER = '1.14';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -1651,8 +1651,9 @@ function renderDash() {
   var K = function (c, t, v, s) { return '<div class="kpi" style="--k:' + c + '"><span>' + t + '</span><b>' + v + '</b>' + (s ? '<small>' + s + '</small>' : '') + '</div>'; };
   $('#kpis').innerHTML =
     K('#1F4E79', 'مشتريات هذا الشهر', fmt(d.pMonth), d.invMonth + ' فاتورة' + (ch === null ? '' : ' · ' + (ch >= 0 ? '⬆ ' : '⬇ ') + Math.abs(ch).toFixed(0) + '% عن الشهر الماضي')) +
-    K('#00695C', 'رصيد الصندوق', '<span class="' + (d.cash < 0 ? 'neg' : '') + '">' + fmt(d.cash) + '</span>', 'الذمم: ' + fmt(d.due)) +
-    K('#2E7D32', 'مقبوضات الشهر', fmt(d.jin), 'مدفوعات الشهر: ' + fmt(d.jout)) +
+    /* اليومية بالليرة (العملة المعتمدة) والدولار صغيرًا تحتها */
+    K('#00695C', 'رصيد صندوق اليومية', '<span class="' + ((d.lcash != null ? d.lcash : d.cash) < 0 ? 'neg' : '') + '">' + jm(d.lcash, d.cash) + '</span>', 'الذمم: ' + jm(d.ldue, d.due)) +
+    K('#2E7D32', 'مقبوضات الشهر', jm(d.ljin, d.jin), 'مدفوعات الشهر: ' + jm(d.ljout, d.jout)) +
     K('#6D2E5B', 'أرصدة الموردين', fmt(d.supTotal), d.supCount + ' مورد');
   homeExtras(d);
   $('#dash2').innerHTML =
