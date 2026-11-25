@@ -171,7 +171,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.17';
+window.APP_VER = '1.18';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -1319,9 +1319,9 @@ function addJLine() {
   calcJ();
 }
 function calcJ() {
-  var a = 0, o = 0, i = 0, L = B.labels, c = $('#jcur'), cu = ' ' + esc(csym(c && c.value));
+  var a = 0, o = 0, i = 0, L = B.labels, c = $('#jcur'), cu = ' ' + esc(csym(c && c.value)), F = c && c.value === 'ل.س' ? lsy : function (v) { return fmt(v) + cu; };
   $$('.line').forEach(function (d) { a += jDue(d); o += num($('.o', d).value); i += num($('.i', d).value); });
-  $('#jtot').innerHTML = esc(L.inn) + ': <b style="display:inline">' + fmt(i) + cu + '</b> · ' + esc(L.out) + ': <b style="display:inline">' + fmt(o) + cu + '</b> · ' + esc(L.due) + ': <b style="display:inline">' + fmt(a) + cu + '</b>';
+  $('#jtot').innerHTML = esc(L.inn) + ': <b style="display:inline">' + F(i) + '</b> · ' + esc(L.out) + ': <b style="display:inline">' + F(o) + '</b> · ' + esc(L.due) + ': <b style="display:inline">' + F(a) + '</b>';
 }
 function saveJ() {
   var b = $('#jsave'), withSup = false;
@@ -1834,6 +1834,9 @@ vInv = (function (orig) {
 vJEntry = (function (orig) {
   return function () {
     orig();
+    /* اليومية بالليرة السورية: العملة الافتراضية لإدخال القيد ل.س (يمكن تغييرها لقيد بالدولار) */
+    var jc = $('#jcur');
+    if (jc && jc.value === B.set.base && $$('option', jc).some(function (o) { return o.value === 'ل.س'; })) { jc.value = 'ل.س'; jc.dispatchEvent(new Event('change')); }
     $('#jlines').insertAdjacentHTML('beforebegin', '<div class="note" id="jacc" style="margin:-4px 0 10px"></div>');
     var upd = function () {
       var ac = '';
