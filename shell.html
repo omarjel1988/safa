@@ -171,7 +171,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '2.0';
+window.APP_VER = '1.19';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -901,7 +901,7 @@ var SUP = (function () {
   });
   document.addEventListener('visibilitychange', function () { if (!document.hidden && loaded && MAP[CUR]) reload(true); });
 
-  return { openStmt: function (name) { stmtSup = name; go('sstmt'); }, show: show, quiet: function () { if (loaded) reload(true); }, reload: function () { return reload(false); }, prefetch: function () { ensure().catch(function () {}); }, homeStat: homeStat, ensure: ensure, isLoaded: function () { return loaded; }, raw: function () { return D; },
+  return { openStmt: function (name) { stmtSup = name; go('sstmt'); }, show: show, quiet: function () { if (loaded) reload(true); }, reload: function () { return reload(false); }, prefetch: function () { ensure().catch(function () {}); }, homeStat: homeStat, ensure: ensure, isLoaded: function () { return loaded; },
     /* خلاصة كل مورد لبطاقات الرئيسية */
     cards: function () {
       var t = totals(), lp = {}, le = {};
@@ -2122,178 +2122,6 @@ function stGemini(part) {
   }
   return one(0);
 }
-/* ======================= المساعد الذكي (صوت/كتابة) — Gemini مع أدوات تقرأ بيانات التطبيق ======================= */
-var AIA = { cfg: null, h: [], busy: false, rec: null, speak: localStorage.getItem('ai_speak') !== '0' };
-var AI_PAGES = { home: 'الرئيسية', inv: 'إدخال فاتورة', pinv: 'قائمة الفواتير', psearch: 'بحث المشتريات', plog: 'سجل المشتريات', items: 'الأصناف', pprice: 'مقارنة الأسعار',
-  jentry: 'إدخال اليومية', daily: 'الملخص اليومي', jsearch: 'بحث اليومية', jlog: 'سجل اليومية', rmon: 'التقرير الشهري', ryear: 'التقرير السنوي', summary: 'ملخص أرصدة الموردين', suppliers: 'الموردون' };
-function aiTools() {
-  var S = function (p, req) { return { type: 'OBJECT', properties: p, required: req || [] }; }, s = { type: 'STRING' }, n = { type: 'NUMBER' };
-  return [{ functionDeclarations: [
-    { name: 'price_lookup', description: 'أسعار شراء صنف (آخر/أقل/أعلى/متوسط سعر لكل مورد، وتاريخ آخر شراء). ابحث بجزء من اسم الصنف أو كوده.', parameters: S({ q: s }, ['q']) },
-    { name: 'supplier_balances', description: 'أرصدة الموردين/الحسابات الحالية (الرصيد بعملة الحساب، الوارد، الصادر، آخر دفعة). q اختياري لتصفية الاسم.', parameters: S({ q: s }) },
-    { name: 'supplier_entries', description: 'قيود (كشف حساب) مورد أو حساب محدد: التاريخ والبيان والوارد والصادر، مع تصفية تاريخ اختيارية (yyyy-MM-dd).', parameters: S({ name: s, from: s, to: s }, ['name']) },
-    { name: 'journal', description: 'البحث في يومية الصندوق (بالليرة السورية): كلمة في البيان، من/إلى تاريخ، والنوع in (مقبوضات) أو out (مدفوعات) أو due (ذمم). يرجع المجاميع وأحدث الحركات.', parameters: S({ q: s, from: s, to: s, type: s }) },
-    { name: 'daily_summary', description: 'ملخص اليومية لكل يوم (مدفوعات ومقبوضات وصافي ورصيد الصندوق بالليرة) لآخر الأيام.', parameters: S({}) },
-    { name: 'invoices', description: 'فواتير الشراء: تصفية بالمورد ومن/إلى تاريخ. يرجع العدد والمجموع (بالدولار) وأحدث الفواتير.', parameters: S({ sup: s, from: s, to: s }) },
-    { name: 'report', description: 'التقرير الشهري لسنة: المشتريات (دولار) ومقبوضات/مدفوعات اليومية (ليرة) ووارد/صادر الموردين لكل شهر.', parameters: S({ year: n }) },
-    { name: 'search_all', description: 'بحث عام في كل التطبيق (فواتير، أصناف، يومية، قيود موردين، أسماء موردين).', parameters: S({ q: s }, ['q']) },
-    { name: 'open_page', description: 'فتح صفحة في التطبيق عندما يطلب المستخدم عرض/فتح تقرير أو قسم. page من: ' + Object.keys(AI_PAGES).map(function (k) { return k + ' (' + AI_PAGES[k] + ')'; }).join('، ') + '. أو supplier لفتح كشف مورد.', parameters: S({ page: s, supplier: s }) }
-  ] }];
-}
-function aiR(v) { return Math.round((Number(v) || 0) * 100) / 100; }
-function aiRun(name, a) {
-  a = a || {};
-  var nm = function (x) { return aiNorm(String(x || '')); };
-  if (name === 'price_lookup') return call('webPriceCompare', a.q || '').then(function (r) {
-    return { count: r.count, items: (r.items || []).slice(0, 8).map(function (it) { return { item: it.item, code: it.code, suppliers: it.sups.slice(0, 6).map(function (x) { return { sup: x.sup, currency: csym(x.cur), last: aiR(x.last), min: aiR(x.min), max: aiR(x.max), avg: aiR(x.avg), times: x.n, lastDate: x.lastDate }; }) }; }) };
-  });
-  if (name === 'supplier_balances') return SUP.ensure().then(function () {
-    var q = nm(a.q);
-    return SUP.cards().filter(function (x) { return !q || nm(x.name).indexOf(q) > -1; }).sort(function (x, y) { return y.base - x.base; }).slice(0, 45)
-      .map(function (x) { return { name: x.name, currency: csym(x.acur), balance: aiR(x.bal), balance_usd: aiR(x.base), in: aiR(x.inc), out: aiR(x.out), entries: x.n, lastPayment: x.lastPay }; });
-  });
-  if (name === 'supplier_entries') return SUP.ensure().then(function () {
-    var D = SUP.raw(), q = nm(a.name), s = D.suppliers.filter(function (x) { return nm(x.name) === q; })[0] || D.suppliers.filter(function (x) { return nm(x.name).indexOf(q) > -1 || q.indexOf(nm(x.name)) > -1; })[0];
-    if (!s) return { error: 'لا يوجد مورد بهذا الاسم', suppliers: D.suppliers.map(function (x) { return x.name; }) };
-    var e = D.entries.filter(function (x) { return x.sid === s.id && (!a.from || x.date >= a.from) && (!a.to || x.date <= a.to); }).sort(function (x, y) { return x.date < y.date ? -1 : 1; });
-    var c = SUP.cards().filter(function (x) { return x.name === s.name; })[0] || {};
-    return { supplier: s.name, currency: csym(s.acur), balance_now: aiR(c.bal), count: e.length, entries: e.slice(-40).map(function (x) { return { date: x.date, desc: x.desc, in: aiR(x.inc), out: aiR(x.out) }; }), note: 'المبالغ بالدولار ما لم تُذكر عملة الحساب' };
-  });
-  if (name === 'journal') {
-    var L = B.labels, ty = { 'in': L.inn, out: L.out, due: L.due }[a.type] || 'الكل';
-    return call('webSearchJournal', { q: a.q || '', from: a.from || '', to: a.to || '', type: ty, off: 0 }).then(function (r) {
-      var t = r.totals || {};
-      return { count: r.count, currency: 'ل.س', totals: { receipts: Math.round(t.linn || 0), payments: Math.round(t.lout || 0), net: Math.round(t.lnet || 0), due: Math.round(t.ldue || 0) },
-        latest: (r.rows || []).slice(0, 25).map(function (x) { return { date: x.date, desc: x.st, receipts: Math.round(x.linn || 0), payments: Math.round(x.lout || 0), account: x.sup || '' }; }) };
-    });
-  }
-  if (name === 'daily_summary') return call('webDaily').then(function (r) {
-    return { currency: 'ل.س', cash_balance: Math.round((r.bal || {}).lcash || 0), days: (r.days || []).slice(0, 15).map(function (d) { return { date: d.date, payments: Math.round(d.lout || 0), receipts: Math.round(d.linn || 0), net: Math.round(d.lnet || 0), balance: Math.round(d.lcash || 0) }; }) };
-  });
-  if (name === 'invoices') return call('webInvList', { sup: a.sup || '', from: a.from || '', to: a.to || '' }).then(function (r) {
-    return { count: r.count, total_usd: aiR(r.total), latest: (r.rows || []).slice(0, 20).map(function (x) { return { date: x.date, sup: x.sup, inv: x.inv, items: x.n, total_usd: aiR(x.total) }; }) };
-  });
-  if (name === 'report') return call('webReport', { year: a.year || null }).then(function (r) {
-    return { year: r.year, note: 'purchases وsuppliers بالدولار، receipts/payments/net بالليرة', months: r.byMonth.map(function (x) { return { m: x.m, purchases_usd: aiR(x.p), invoices: x.n, receipts_syp: Math.round(x.linn || 0), payments_syp: Math.round(x.lout || 0), net_syp: Math.round(x.lnet || 0), suppliers_in_usd: aiR(x.sin), suppliers_out_usd: aiR(x.sout) }; }) };
-  });
-  if (name === 'search_all') return call('webGlobalSearch', a.q || '').then(function (r) {
-    return { invoices: (r.inv || []).slice(0, 10).map(function (x) { return { date: x.date, sup: x.sup, inv: x.inv, total_usd: aiR(x.total), items: x.items }; }),
-      journal: (r.j || []).slice(0, 10).map(function (x) { return { date: x.date, desc: x.st, receipts_syp: Math.round(x.linn || 0), payments_syp: Math.round(x.lout || 0) }; }),
-      supplier_entries: (r.s || []).slice(0, 10), suppliers: r.sup || [], items: (r.items || []).slice(0, 10) };
-  });
-  if (name === 'open_page') { AIA.nav = a; return Promise.resolve({ ok: true }); }
-  return Promise.resolve({ error: 'أداة غير معروفة' });
-}
-function aiSys() {
-  return 'أنت مساعد تطبيق «مكتبة الصفاء» (مكتبة قرطاسية في سوريا): فواتير شراء من الموردين بالدولار، أصناف وأسعارها، قيود الموردين، ويومية الصندوق بالليرة السورية.\n' +
-    'اليوم ' + (B.today || '') + '. العملة الأساسية للمشتريات والموردين: الدولار ($)، واليومية بالليرة السورية (ل.س).\n' +
-    'الموردون والحسابات: ' + (B.suppliers || []).join('، ') + '.\n' +
-    'استخدم الأدوات دائمًا للحصول على الأرقام؛ لا تخمّن أي رقم. إن لم تجد بيانات فقل ذلك. الأسماء قد تُنطق بالعامية أو بأخطاء: طابقها مع أقرب اسم.\n' +
-    'أجب بالعربية باختصار وبجمل واضحة صالحة للقراءة بصوت عالٍ (بلا جداول أو رموز ماركداون)، واذكر العملة مع كل مبلغ ($ أو ليرة). عند طلب فتح/عرض صفحة استدعِ open_page ثم أجب بجملة قصيرة.';
-}
-function aiAsk(text) {
-  if (!text || AIA.busy) return;
-  AIA.busy = true; AIA.nav = null;
-  aiMsg('u', text); var w = aiMsg('a', '<span class="spin"></span> أفكّر…');
-  var cfgP = AIA.cfg ? Promise.resolve(AIA.cfg) : call('webAiCfg').then(function (c) { if (!c.ok) throw new Error('مفتاح Gemini غير مضبوط — أضفه من «استيراد كشف حساب مورد».'); AIA.cfg = c; return c; });
-  if (AIA.h.length > 30) AIA.h = [];
-  AIA.h.push({ role: 'user', parts: [{ text: text }] });
-  var steps = 0;
-  function gen(c, mi) {
-    var m = c.models[mi]; if (!m) return Promise.reject(new Error('الخدمة مزدحمة الآن، حاول بعد قليل'));
-    var gc = { temperature: 0.2 }; if (/gemini-[3-9]/.test(m)) gc.thinkingConfig = { thinkingLevel: 'low' };
-    return fetch('https://generativelanguage.googleapis.com/v1beta/models/' + m + ':generateContent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': c.key },
-      body: JSON.stringify({ systemInstruction: { parts: [{ text: aiSys() }] }, contents: AIA.h, tools: aiTools(), generationConfig: gc }) })
-      .then(function (r) { return r.json().then(function (j) { return { code: r.status, j: j }; }); })
-      .then(function (x) {
-        if (x.code === 200) { AIA.mi = mi; return x.j; }
-        if (x.code === 429 || x.code >= 500) return gen(c, mi + 1);
-        throw new Error((x.j.error && x.j.error.message) || ('HTTP ' + x.code));
-      });
-  }
-  function loop(c) {
-    return gen(c, AIA.mi || 0).then(function (j) {
-      var cand = (j.candidates || [])[0] || {}, content = cand.content || { role: 'model', parts: [] }, parts = content.parts || [];
-      content.role = 'model'; AIA.h.push(content);
-      var calls = parts.filter(function (p) { return p.functionCall; });
-      if (calls.length && steps++ < 5) {
-        w.innerHTML = '<span class="spin"></span> أبحث في البيانات… <small>' + calls.map(function (p) { return esc(p.functionCall.name); }).join('، ') + '</small>';
-        return Promise.all(calls.map(function (p) { return aiRun(p.functionCall.name, p.functionCall.args).catch(function (e) { return { error: errMsg(e) }; }); })).then(function (res) {
-          AIA.h.push({ role: 'user', parts: calls.map(function (p, i) { var fr = { name: p.functionCall.name, response: { result: res[i] } }; if (p.functionCall.id) fr.id = p.functionCall.id; return { functionResponse: fr }; }) });
-          return loop(c);
-        });
-      }
-      return parts.filter(function (p) { return p.text && !p.thought; }).map(function (p) { return p.text; }).join('').trim() || 'لم أجد إجابة.';
-    });
-  }
-  cfgP.then(loop).then(function (ans) {
-    AIA.busy = false;
-    w.innerHTML = esc(ans).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
-    aiSay(ans.replace(/[*#_`|]/g, ''));
-    if (AIA.nav) {
-      var nv = AIA.nav; AIA.nav = null;
-      setTimeout(function () {
-        aiClose();
-        if (nv.supplier) SUP.openStmt((B.suppliers || []).filter(function (x) { return aiNorm(x) === aiNorm(nv.supplier); })[0] || nv.supplier);
-        else if (nv.page && (AI_PAGES[nv.page])) go(nv.page);
-        toast(ans.slice(0, 140));
-      }, 900);
-    }
-  }).catch(function (e) {
-    AIA.busy = false; AIA.h = [];
-    w.innerHTML = '<span class="neg">' + esc(errMsg(e)) + '</span>';
-  });
-}
-function aiMsg(who, html) {
-  var b = $('#aimsgs'); if (!b) return document.createElement('div');
-  var d = document.createElement('div'); d.className = 'aim ' + who; d.innerHTML = who === 'u' ? esc(html) : html;
-  b.appendChild(d); b.scrollTop = b.scrollHeight; return d;
-}
-function aiSay(t) {
-  if (!AIA.speak || !window.speechSynthesis || !t) return;
-  try {
-    speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(t.slice(0, 600)); u.lang = 'ar-SA'; u.rate = 1;
-    var v = speechSynthesis.getVoices().filter(function (x) { return /^ar/i.test(x.lang); })[0]; if (v) u.voice = v;
-    speechSynthesis.speak(u);
-  } catch (e) { /* */ }
-}
-function aiMic() {
-  var SR = window.SpeechRecognition || window.webkitSpeechRecognition, btn = $('#aimic');
-  if (!SR) { toast('المتصفح لا يدعم الإدخال الصوتي — اكتب سؤالك أو استخدم ميكروفون لوحة المفاتيح', 'err'); return; }
-  if (AIA.rec) { AIA.rec.stop(); return; }
-  try { speechSynthesis.cancel(); } catch (e) { /* */ }
-  var r = new SR(), inp = $('#aiq'), fin = '';
-  r.lang = 'ar-SA'; r.interimResults = true; r.continuous = false;
-  r.onresult = function (e) { var t = ''; fin = ''; for (var i = 0; i < e.results.length; i++) { if (e.results[i].isFinal) fin += e.results[i][0].transcript; else t += e.results[i][0].transcript; } inp.value = fin + t; };
-  r.onerror = function (e) { if (e.error !== 'no-speech' && e.error !== 'aborted') toast('تعذّر الاستماع: ' + e.error, 'err'); };
-  r.onend = function () { AIA.rec = null; btn.classList.remove('on'); var t = inp.value.trim(); if (t) { inp.value = ''; aiAsk(t); } };
-  AIA.rec = r; btn.classList.add('on'); r.start();
-}
-function aiOpen(listen) {
-  if ($('#aipop')) return;
-  if (!B) { toast('ادخل التطبيق أولًا', 'err'); return; }
-  var o = document.createElement('div'); o.className = 'dpop'; o.id = 'aipop';
-  o.innerHTML = '<div class="dbox"><div class="dhd"><button onclick="aiClose()" title="إغلاق">✕</button><b>✨ اسأل الصفاء</b><button id="aisp" onclick="aiSpk()" title="قراءة الإجابة بصوت">' + (AIA.speak ? '🔊' : '🔇') + '</button></div>' +
-    '<div class="dbd" id="aimsgs"><div class="aim a">اسألني بالصوت أو بالكتابة، مثل: «كم آخر سعر لدفتر سلك 100 ورقة؟»، «كم رصيد المبتدأ والخبر؟»، «كم مدفوعات اليومية هذا الشهر؟»، «افتح التقرير الشهري».</div></div>' +
-    '<div class="aibar"><button id="aimic" class="aimic" onclick="aiMic()" title="تحدّث">🎤</button><input id="aiq" placeholder="اكتب سؤالك…" autocomplete="off" onkeydown="if(event.key===\'Enter\'){var v=this.value.trim();this.value=\'\';aiAsk(v)}">' +
-    '<button class="btn" onclick="var i=$(\'#aiq\'),v=i.value.trim();i.value=\'\';aiAsk(v)">إرسال</button></div></div>';
-  o.onclick = function (e) { if (e.target === o) aiClose(); };
-  document.body.appendChild(o);
-  (AIA.h || []).forEach(function (c) { (c.parts || []).forEach(function (p) { if (p.text && !p.thought && !p.functionCall) aiMsg(c.role === 'user' ? 'u' : 'a', c.role === 'user' ? p.text : esc(p.text).replace(/\n/g, '<br>')); }); });
-  if (listen) aiMic(); else setTimeout(function () { var i = $('#aiq'); if (i && matchMedia('(pointer:fine)').matches) i.focus(); }, 50);
-}
-function aiClose() { if (AIA.rec) try { AIA.rec.abort(); } catch (e) { /* */ } var p = $('#aipop'); if (p) p.remove(); }
-function aiSpk() { AIA.speak = !AIA.speak; localStorage.setItem('ai_speak', AIA.speak ? '1' : '0'); var b = $('#aisp'); if (b) b.textContent = AIA.speak ? '🔊' : '🔇'; if (!AIA.speak) try { speechSynthesis.cancel(); } catch (e) { /* */ } }
-(function () {
-  var st = document.createElement('style');
-  st.textContent = '#aipop .dbd{min-height:38vh}.aim{max-width:88%;padding:9px 12px;border-radius:14px;margin:6px 0;line-height:1.7;font-size:15px;white-space:normal}' +
-    '.aim.u{background:#EDE9FE;margin-inline-start:auto;border-bottom-left-radius:4px}.aim.a{background:#F3F6FA;border-bottom-right-radius:4px}' +
-    '.aibar{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--bd);align-items:center}.aibar input{flex:1;min-width:0}' +
-    '.aimic{width:48px;height:48px;border-radius:50%;border:0;background:#6D28D9;color:#fff;font-size:22px;cursor:pointer;flex:none}.aimic.on{background:#DC2626;animation:aipl 1s infinite}' +
-    '@keyframes aipl{50%{box-shadow:0 0 0 10px rgba(220,38,38,.2)}}html.ui-dark .aim.a,body.dark .aim.a{background:#243042}html.ui-dark .aim.u,body.dark .aim.u{background:#3b2f5e}';
-  document.head.appendChild(st);
-})();
 function stNum(v) { var x = Number(String(v == null ? '' : v).replace(/[٠-٩]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); }).replace(/[^\d.\-]/g, '')); return isFinite(x) ? x : 0; }
 function stR(x) { return Math.round(x * 1000) / 1000; }
 function stRead(f) {
@@ -3812,10 +3640,6 @@ onDom(function () { tblCards(); zebraCards(); });
         var b = el('<button class="ui-hbtn u3-sbtn" title="بحث سريع في كل شيء">' + ICON_S + '</button>');
         b.onclick = quickSearch;
         h.insertBefore(b, anchor);
-        /* زر المساعد الذكي (صوت/كتابة) بجانب البحث */
-        var m = el('<button class="ui-hbtn u3-aibtn" title="اسأل الصفاء بالصوت">' + '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>' + '</button>');
-        m.onclick = function () { aiOpen(true); };
-        h.insertBefore(m, b);
     }
     onDom(searchBtn);
     function quickSearch() {
