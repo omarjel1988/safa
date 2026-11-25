@@ -171,7 +171,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.21';
+window.APP_VER = '1.22';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -200,7 +200,9 @@ function num(v) { var n = parseFloat(en(v)); return isNaN(n) ? 0 : n; }
 function fmt(n) { return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 /* رمز العملة بجانب كل مبلغ: الدولار (العملة الأساسية) $ والليرة ل.س */
 function csym(c) { c = String(c || '').trim(); var b = (window.B && B.set && B.set.base) || 'دولار'; return (!c || c === b || c === 'دولار' || /^usd$/i.test(c) || c === '$') ? '$' : c; }
-function money(n, c) { return fmt(n) + ' ' + csym(c); }
+/* مبالغ الليرة بلا كسور */
+function fmtA(n, c) { return String(c || '').trim() === 'ل.س' ? Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 }) : fmt(n); }
+function money(n, c) { return fmtA(n, c) + ' ' + csym(c); }
 /* سعر الصرف للعرض: العملات الأصغر بكثير من الأساسية (مثل الليرة) تُعرض مقلوبة «1 دولار = 11,000 ل.س» */
 function fmtRate(r, cur) { r = Number(r) || 0; if (r > 0 && r < 0.01) return '1 ' + esc((B.set && B.set.base) || '') + ' = ' + fmt(1 / r) + ' ' + esc(cur || ''); return fmt(r); }
 var tt;
@@ -686,10 +688,10 @@ var SUP = (function () {
       var sid = sel.value, bal = d.querySelector('#e-bal');
       if (!sid) { acctUI(d, null); bal.textContent = '—'; bal.className = 'big'; d.querySelector('#e-last').innerHTML = empty('اختر مورداً لعرض آخر قيوده ورصيده.'); return; }
       var sp = supById(sid), b = balanceOf(sid); acctUI(d, sp);
-      bal.innerHTML = fmt(b) + unitOf(sp) + (sp && sp.acur ? '<small style="display:block;font-size:13px;color:var(--mut);font-weight:600">≈ ' + money(baseOf(sid)) + ' بسعر اليوم</small>' : ''); bal.className = 'big ' + cls(b);
+      bal.innerHTML = fmtA(b, sp && sp.acur) + unitOf(sp) + (sp && sp.acur && sp.kind !== 'sub' ? '<small style="display:block;font-size:13px;color:var(--mut);font-weight:600">≈ ' + money(baseOf(sid)) + ' بسعر اليوم</small>' : ''); bal.className = 'big ' + cls(b);
       var last = ledger(sid).reverse().slice(0, 10);
       d.querySelector('#e-last').innerHTML = last.length ? '<div class="tw"><table><thead><tr><th>التاريخ</th><th>البيان</th><th class="num">الوارد</th><th class="num">الصادر</th><th class="num">الرصيد</th><th>طريقة الدفع</th><th></th></tr></thead><tbody>' +
-        last.map(function (x) { return '<tr><td>' + esc(x.date) + '</td><td class="wrapc">' + esc(x.desc) + curNote(x) + '</td><td class="num">' + (x.ai ? money(x.ai, sp && sp.acur) : '') + '</td><td class="num">' + (x.ao ? money(x.ao, sp && sp.acur) : '') + '</td><td class="num ' + cls(x.bal) + '"><b>' + money(x.bal, sp && sp.acur) + '</b></td><td>' + esc(x.method || '') + '</td><td>' + actions(x.id) + '</td></tr>'; }).join('') +
+        last.map(function (x) { return '<tr><td>' + esc(x.date) + '</td><td class="wrapc">' + esc(x.desc) + curNote(x, sp && sp.acur) + '</td><td class="num">' + (x.ai ? money(x.ai, sp && sp.acur) : '') + '</td><td class="num">' + (x.ao ? money(x.ao, sp && sp.acur) : '') + '</td><td class="num ' + cls(x.bal) + '"><b>' + money(x.bal, sp && sp.acur) + '</b></td><td>' + esc(x.method || '') + '</td><td>' + actions(x.id) + '</td></tr>'; }).join('') +
         '</tbody></table></div>' : empty('لا توجد قيود لهذا المورد بعد.');
     }
   };
@@ -744,7 +746,7 @@ var SUP = (function () {
         rows: [[from || '', 'رصيد مرحّل', '', '', '', fmt(carried)]].concat(rows.map(function (x) { return [x.date, x.desc || '', x.method || '', fmt(x.ai), fmt(x.ao), fmt(x.bal)]; })),
         pdf: { name: s.name, from: from, to: to } };
       d.querySelector('#k-tbl').innerHTML = '<div class="tw"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>طريقة الدفع</th><th class="num">الوارد</th><th class="num">الصادر</th><th class="num">الرصيد</th><th class="noprint"></th></tr></thead><tbody><tr class="detail"><td></td><td class="wrapc"><b>رصيد مرحّل</b></td><td></td><td></td><td></td><td class="num ' + cls(carried) + '"><b>' + money(carried, s.acur) + '</b></td><td></td></tr>' +
-        rows.map(function (x) { return '<tr><td>' + esc(x.date) + '</td><td class="wrapc">' + esc(x.desc) + curNote(x) + '</td><td>' + esc(x.method || '') + '</td><td class="num">' + (x.ai ? money(x.ai, s.acur) : '') + '</td><td class="num">' + (x.ao ? money(x.ao, s.acur) : '') + '</td><td class="num ' + cls(x.bal) + '"><b>' + money(x.bal, s.acur) + '</b></td><td class="noprint">' + actions(x.id) + '</td></tr>'; }).join('') +
+        rows.map(function (x) { return '<tr><td>' + esc(x.date) + '</td><td class="wrapc">' + esc(x.desc) + curNote(x, s.acur) + '</td><td>' + esc(x.method || '') + '</td><td class="num">' + (x.ai ? money(x.ai, s.acur) : '') + '</td><td class="num">' + (x.ao ? money(x.ao, s.acur) : '') + '</td><td class="num ' + cls(x.bal) + '"><b>' + money(x.bal, s.acur) + '</b></td><td class="noprint">' + actions(x.id) + '</td></tr>'; }).join('') +
         '</tbody><tfoot><tr><td colspan="3">مجموع الفترة</td><td class="num">' + money(si, s.acur) + '</td><td class="num">' + money(so, s.acur) + '</td><td class="num">' + money(close, s.acur) + '</td><td></td></tr></tfoot></table></div>' +
         (rows.length ? '' : empty('لا توجد حركات في هذه الفترة.')) + (s.acur ? '<div class="note">المبالغ بالـ ' + esc(s.acur) + ' (عملة حساب المورد)، وكل قيد محوَّل بسعر يومه. الرصيد بالعملة الأساسية بسعر اليوم: ' + fmt(close * (rateNow(s.acur) || 1)) + ' ' + esc(B.set.base) + '.</div>' : '') + exportBar('statement', !s.acur);
     }
@@ -776,8 +778,8 @@ var SUP = (function () {
         list.map(function (r) { return '<tr><td class="l"><a role="button" tabindex="0" data-sup="' + esc(r.id) + '" style="color:var(--c);font-weight:800;cursor:pointer">' + esc(r.name) + '</a>' + U(r) + '</td><td class="num">' + money(r.open, r.acur) + '</td><td class="num">' + money(r.inc, r.acur) + '</td><td class="num">' + money(r.out, r.acur) + '</td><td class="num ' + cls(r.bal) + '"><b>' + money(r.bal, r.acur) + '</b></td><td class="num ' + cls(r.base) + '">' + money(r.base) + '</td></tr>'; }).join('') +
         '</tbody><tfoot><tr><td class="l">الإجمالي (' + esc(B.set.base) + ')</td><td class="num">' + money(top2) + '</td><td class="num">' + money(ti) + '</td><td class="num">' + money(tout) + '</td><td></td><td class="num">' + money(tb) + '</td></tr></tfoot></table></div>' +
         (list.some(function (r) { return r.acur; }) ? '<div class="note">أرصدة الموردين ذوي الحساب بعملة أجنبية تظهر بعملتهم، وتُحوَّل للعملة الأساسية بسعر اليوم.</div>' : '') + exportBar('summary') : '';
-      if (subs.length) d.querySelector('#m-tbl').insertAdjacentHTML('beforeend', '<h2 style="margin:16px 2px 8px">الحسابات الفرعية <small class="muted">(' + subs.length + ')</small></h2><div class="tw"><table><thead><tr><th class="l">الحساب</th><th class="num">إجمالي الوارد</th><th class="num">إجمالي الصادر</th><th class="num">الرصيد الحالي</th><th class="num">بالعملة الأساسية</th></tr></thead><tbody>' +
-        subs.map(function (r) { return '<tr><td class="l"><a role="button" tabindex="0" data-sup="' + esc(r.id) + '" style="color:var(--c);font-weight:800;cursor:pointer">' + esc(r.name) + '</a>' + U(r) + '</td><td class="num">' + money(r.inc, r.acur) + '</td><td class="num">' + money(r.out, r.acur) + '</td><td class="num ' + cls(r.bal) + '"><b>' + money(r.bal, r.acur) + '</b></td><td class="num ' + cls(r.base) + '">' + money(r.base) + '</td></tr>'; }).join('') + '</tbody></table></div>');
+      if (subs.length) d.querySelector('#m-tbl').insertAdjacentHTML('beforeend', '<h2 style="margin:16px 2px 8px">الحسابات الفرعية <small class="muted">(' + subs.length + ')</small></h2><div class="tw"><table><thead><tr><th class="l">الحساب</th><th class="num">إجمالي الوارد</th><th class="num">إجمالي الصادر</th><th class="num">الرصيد الحالي</th></tr></thead><tbody>' +
+        subs.map(function (r) { return '<tr><td class="l"><a role="button" tabindex="0" data-sup="' + esc(r.id) + '" style="color:var(--c);font-weight:800;cursor:pointer">' + esc(r.name) + '</a>' + U(r) + '</td><td class="num">' + money(r.inc, r.acur) + '</td><td class="num">' + money(r.out, r.acur) + '</td><td class="num ' + cls(r.bal) + '"><b>' + money(r.bal, r.acur) + '</b></td></tr>'; }).join('') + '</tbody></table></div>');
     }
   };
 
@@ -800,7 +802,7 @@ var SUP = (function () {
       EXP.log = { name: 'السجل', head: ['المورد', 'التاريخ', 'البيان', 'الوارد', 'الصادر', 'طريقة الدفع'], rows: list.map(function (x) { return [supName(x.sid), x.date, x.desc || '', fmt(x.inc), fmt(x.out), x.method || '']; }) };
       var shown = list.slice(0, 300);
       d.querySelector('#l-tbl').innerHTML = list.length ? '<div class="tw"><table><thead><tr><th class="l">المورد</th><th>التاريخ</th><th>البيان</th><th class="num">الوارد</th><th class="num">الصادر</th><th>طريقة الدفع</th><th class="noprint"></th></tr></thead><tbody>' +
-        shown.map(function (x) { return '<tr><td class="l">' + esc(supName(x.sid)) + '</td><td>' + esc(x.date) + '</td><td class="wrapc">' + esc(x.desc) + curNote(x) + '</td><td class="num">' + (x.inc ? money(x.inc) : '') + '</td><td class="num">' + (x.out ? money(x.out) : '') + '</td><td>' + esc(x.method || '') + '</td><td class="noprint">' + actions(x.id) + '</td></tr>'; }).join('') +
+        shown.map(function (x) { var sa = supById(x.sid), ac = sa && sa.acur, am = acc(x, sa); /* المبلغ بعملة الحساب (الليرة للحسابات الفرعية) */ return '<tr><td class="l">' + esc(supName(x.sid)) + '</td><td>' + esc(x.date) + '</td><td class="wrapc">' + esc(x.desc) + curNote(x, ac) + '</td><td class="num">' + (x.inc ? money(am.inc, ac) : '') + '</td><td class="num">' + (x.out ? money(am.out, ac) : '') + '</td><td>' + esc(x.method || '') + '</td><td class="noprint">' + actions(x.id) + '</td></tr>'; }).join('') +
         '</tbody><tfoot><tr><td colspan="3">المجموع (' + list.length + ' قيد)</td><td class="num">' + money(si) + '</td><td class="num">' + money(so) + '</td><td></td><td></td></tr></tfoot></table></div>' +
         (list.length > shown.length ? '<div class="note">يُعرض أحدث 300 قيد، والمجاميع والتصدير تشمل كل النتائج. اختر موردًا أو حدّد التاريخ لرؤية الباقي.</div>' : '') + exportBar('log')
         : empty(D.entries.length ? 'لا توجد قيود مطابقة.' : 'لا توجد قيود بعد.');
@@ -855,7 +857,7 @@ var SUP = (function () {
       EXP.suppliers = { name: 'الموردون', head: ['المورد', 'عملة الحساب', 'رصيد افتتاحي', 'الجوال', 'الرقم الضريبي', 'عدد القيود', 'الرصيد الحالي', 'ملاحظات'], rows: list.map(function (s) { return [s.name, s.acur || B.set.base, fmt(s.opening), s.phone || '', s.tax || '', t[s.id].n, fmt(balanceOf(s.id)), s.note || '']; }) };
       /* الموردون ثم الحسابات الفرعية في جدولين منفصلين */
       var TB = function (L, h) { return '<h2 style="margin:14px 2px 8px">' + h + ' <small class="muted">(' + L.length + ')</small></h2>' + '<div class="tw"><table><thead><tr><th class="l">المورد</th><th class="num">رصيد افتتاحي</th><th>الجوال</th><th>الرقم الضريبي</th><th>القيود</th><th class="num">الرصيد الحالي</th><th>ملاحظات</th><th class="noprint"></th></tr></thead><tbody>' +
-        L.map(function (s) { var b = balanceOf(s.id); return '<tr><td class="l"><b>' + esc(s.name) + '</b>' + (s.acur ? ' <span class="badge">' + esc(s.acur) + '</span>' : '') + '</td><td class="num">' + money(s.opening, s.acur) + '</td><td>' + esc(s.phone || '') + '</td><td>' + esc(s.tax || '') + '</td><td>' + t[s.id].n + '</td><td class="num ' + cls(b) + '"><b>' + fmt(b) + unitOf(s) + '</b></td><td class="wrapc">' + esc(s.note || '') + '</td><td class="noprint"><button class="btn sec sm" data-act="editsup" data-id="' + esc(s.id) + '">تعديل</button> <button class="btn warn sm" data-act="delsup" data-id="' + esc(s.id) + '">حذف</button></td></tr>'; }).join('') +
+        L.map(function (s) { var b = balanceOf(s.id); return '<tr><td class="l"><b>' + esc(s.name) + '</b>' + (s.acur ? ' <span class="badge">' + esc(s.acur) + '</span>' : '') + '</td><td class="num">' + money(s.opening, s.acur) + '</td><td>' + esc(s.phone || '') + '</td><td>' + esc(s.tax || '') + '</td><td>' + t[s.id].n + '</td><td class="num ' + cls(b) + '"><b>' + fmtA(b, s.acur) + unitOf(s) + '</b></td><td class="wrapc">' + esc(s.note || '') + '</td><td class="noprint"><button class="btn sec sm" data-act="editsup" data-id="' + esc(s.id) + '">تعديل</button> <button class="btn warn sm" data-act="delsup" data-id="' + esc(s.id) + '">حذف</button></td></tr>'; }).join('') +
         '</tbody></table></div>'; };
       var LS = list.filter(function (s) { return s.kind !== 'sub'; }), LB = list.filter(function (s) { return s.kind === 'sub'; });
       d.querySelector('#s-tbl').innerHTML = list.length ? (LS.length ? TB(LS, 'الموردون') : '') + (LB.length ? TB(LB, 'الحسابات الفرعية') : '') + exportBar('suppliers') : empty('لا يوجد موردون بعد. أضف أول مورد من زر «إضافة مورد».');
@@ -1538,8 +1540,8 @@ function curSet(sel, inp, wrap, cur, rate) {
   curShow(sel, wrap);
 }
 function curRateOf(sel, inp) { if (!sel || !sel.value || sel.value === B.set.base) return 1; var r = num(inp.value); return r > 0 ? r : 1; }
-function curNote(x) {
-  if (!x || !x.cur) return '';
+function curNote(x, ac) {
+  if (!x || !x.cur || (ac && x.cur === ac)) return ''; /* قيد بعملة الحساب نفسها: لا حاجة لشارة التحويل */
   var a = x.inc || x.out || 0;
   return ' <span class="badge">' + money(a / (x.rate || 1), x.cur) + ' × ' + fmtRate(x.rate, x.cur) + '</span>';
 }
@@ -1653,7 +1655,7 @@ function supCardsDraw() {
   box.innerHTML = L.length ? L.map(function (x, i) {
     var u = ' <small style="color:var(--mut);font-weight:500">' + esc(csym(x.acur)) + '</small>';
     return '<div class="sacc" onclick="SUP.openStmt(SUPC[' + i + '].name)"><div class="n">' + esc(x.name) + '</div>' +
-      '<div class="bal' + (x.bal < 0 ? ' neg' : '') + '">' + fmt(x.bal) + u + '</div>' +
+      '<div class="bal' + (x.bal < 0 ? ' neg' : '') + '">' + fmtA(x.bal, x.acur) + u + '</div>' +
       '<div class="m"><span>وارد ' + money(x.inc, x.acur) + '</span><span>صادر ' + money(x.out, x.acur) + '</span></div>' +
       '<div class="m" style="margin-top:4px"><span>' + x.n + ' قيد</span><span>آخر دفعة ' + (x.lastPay || '—') + '</span></div></div>';
   }).map(function (h, i) { return i === LS.length && LB.length ? '<h2 class="schd" style="grid-column:1/-1;margin:10px 2px 0">الحسابات الفرعية</h2>' + h : h; }).join('') : '<div class="card muted">لا يوجد مورد بهذا الاسم</div>';
