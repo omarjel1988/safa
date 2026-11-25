@@ -171,7 +171,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.19';
+window.APP_VER = '1.20';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -549,6 +549,9 @@ var SUP = (function () {
   /* ---- البيانات ---- */
   function apply(d) {
     D.suppliers = (d.suppliers || []).map(function (s) { return Object.assign({}, s, { id: s.name }); });
+    /* الحسابات الفرعية (نوع الحساب = فرعي): قائمة منفصلة عن الموردين في كل القوائم */
+    SUBN = D.suppliers.filter(function (s) { return s.kind === 'sub'; }).map(function (s) { return s.name; });
+    try { localStorage.setItem('safa_subs', JSON.stringify(SUBN)); } catch (e) { /* */ }
     D.entries = d.entries || []; D.audit = d.audit || [];
     loaded = true;
     var h = document.getElementById('supHome'); if (h) h.textContent = homeStat();
@@ -591,7 +594,9 @@ var SUP = (function () {
   }
   var sortedSup = function () { return D.suppliers.slice().sort(function (a, b) { return a.name.localeCompare(b.name, 'ar'); }); };
   function supOptions(v, all) {
-    return '<option value="">' + (all || 'اختر المورد…') + '</option>' + sortedSup().map(function (s) { return '<option value="' + esc(s.id) + '"' + (s.id === v ? ' selected' : '') + '>' + esc(s.name) + '</option>'; }).join('');
+    var o = function (s) { return '<option value="' + esc(s.id) + '"' + (s.id === v ? ' selected' : '') + '>' + esc(s.name) + '</option>'; }, L = sortedSup();
+    var a = L.filter(function (s) { return s.kind !== 'sub'; }), b = L.filter(function (s) { return s.kind === 'sub'; });
+    return '<option value="">' + (all || 'اختر المورد…') + '</option>' + (b.length ? '<optgroup label="الموردون">' + a.map(o).join('') + '</optgroup><optgroup label="الحسابات الفرعية">' + b.map(o).join('') + '</optgroup>' : a.map(o).join(''));
   }
   function methodOpts(v, all) {
     var list = METHODS.concat(D.entries.map(function (e) { return e.method; }).filter(Boolean)).filter(function (x, i, a) { return a.indexOf(x) === i; });
@@ -755,8 +760,10 @@ var SUP = (function () {
       var t = totals();
       var list = D.suppliers.map(function (s) {
         var r = t[s.id], k = s.acur ? (rateNow(s.acur) || 1) : 1, bal = n(s.opening) + r.inc - r.out;
-        return { id: s.id, name: s.name, acur: s.acur, open: n(s.opening), inc: r.inc, out: r.out, bal: bal, k: k, base: bal * k };
+        return { id: s.id, name: s.name, acur: s.acur, kind: s.kind, open: n(s.opening), inc: r.inc, out: r.out, bal: bal, k: k, base: bal * k };
       }).sort(function (a, b) { return b.base - a.base; });
+      /* الحسابات الفرعية منفصلة: لا تدخل في إحصاءات الموردين ورسمهم، ولها جدول خاص أسفل الصفحة */
+      var subs = list.filter(function (r) { return r.kind === 'sub'; }); list = list.filter(function (r) { return r.kind !== 'sub'; });
       var ti = 0, tout = 0, tb = 0, top2 = 0; list.forEach(function (r) { ti += r.inc * r.k; tout += r.out * r.k; tb += r.base; top2 += r.open * r.k; });
       var U = function (r) { return r.acur ? ' <span class="badge">' + esc(r.acur) + '</span>' : ''; };
       d.querySelector('#m-stats').innerHTML = list.length ? '<div class="st"><small>عدد الموردين</small><b>' + list.length + '</b></div><div class="st"><small>إجمالي الوارد</small><b>' + money(ti) + '</b></div><div class="st"><small>إجمالي الصادر</small><b>' + money(tout) + '</b></div><div class="stat hi"><span>إجمالي الأرصدة (' + esc(B.set.base) + ')</span><b>' + money(tb) + '</b></div>' : '';
@@ -767,6 +774,8 @@ var SUP = (function () {
         list.map(function (r) { return '<tr><td class="l"><a role="button" tabindex="0" data-sup="' + esc(r.id) + '" style="color:var(--c);font-weight:800;cursor:pointer">' + esc(r.name) + '</a>' + U(r) + '</td><td class="num">' + money(r.open, r.acur) + '</td><td class="num">' + money(r.inc, r.acur) + '</td><td class="num">' + money(r.out, r.acur) + '</td><td class="num ' + cls(r.bal) + '"><b>' + money(r.bal, r.acur) + '</b></td><td class="num ' + cls(r.base) + '">' + money(r.base) + '</td></tr>'; }).join('') +
         '</tbody><tfoot><tr><td class="l">الإجمالي (' + esc(B.set.base) + ')</td><td class="num">' + money(top2) + '</td><td class="num">' + money(ti) + '</td><td class="num">' + money(tout) + '</td><td></td><td class="num">' + money(tb) + '</td></tr></tfoot></table></div>' +
         (list.some(function (r) { return r.acur; }) ? '<div class="note">أرصدة الموردين ذوي الحساب بعملة أجنبية تظهر بعملتهم، وتُحوَّل للعملة الأساسية بسعر اليوم.</div>' : '') + exportBar('summary') : '';
+      if (subs.length) d.querySelector('#m-tbl').insertAdjacentHTML('beforeend', '<h2 style="margin:16px 2px 8px">الحسابات الفرعية <small class="muted">(' + subs.length + ')</small></h2><div class="tw"><table><thead><tr><th class="l">الحساب</th><th class="num">إجمالي الوارد</th><th class="num">إجمالي الصادر</th><th class="num">الرصيد الحالي</th><th class="num">بالعملة الأساسية</th></tr></thead><tbody>' +
+        subs.map(function (r) { return '<tr><td class="l"><a role="button" tabindex="0" data-sup="' + esc(r.id) + '" style="color:var(--c);font-weight:800;cursor:pointer">' + esc(r.name) + '</a>' + U(r) + '</td><td class="num">' + money(r.inc, r.acur) + '</td><td class="num">' + money(r.out, r.acur) + '</td><td class="num ' + cls(r.bal) + '"><b>' + money(r.bal, r.acur) + '</b></td><td class="num ' + cls(r.base) + '">' + money(r.base) + '</td></tr>'; }).join('') + '</tbody></table></div>');
     }
   };
 
@@ -800,12 +809,13 @@ var SUP = (function () {
   P.suppliers = {
     html: function () {
       return '<h1>الموردون</h1><p class="sub">الرصيد الافتتاحي الموجب يُعامل كوارد، والسالب كصادر.</p>' +
-        '<div class="row" style="margin-bottom:12px"><button class="btn grn" data-act="newsup">＋ إضافة مورد</button></div>' +
+        '<div class="row" style="margin-bottom:12px"><button class="btn grn" data-act="newsup">＋ إضافة مورد</button><button class="btn sec" data-act="newsub">＋ إضافة حساب فرعي</button></div>' +
         /* نموذج المورد في نافذة منبثقة (للإضافة والتعديل) */
         '<div class="dpop" id="s-pop" style="display:none"><div class="dbox" style="max-width:560px"><div class="dhd" style="background:linear-gradient(135deg,#6D2E5B,#8E4A7C)"><button data-act="cancelsup">✕</button><b id="s-h">إضافة مورد</b><span style="min-width:40px"></span></div><div class="dbd"><div class="grid">' +
         '<label class="f"><span>اسم المورد</span><input id="s-name" autocomplete="off"></label><label class="f"><span>رصيد افتتاحي</span><input id="s-open" ' + IN + '></label>' +
         '<label class="f"><span>رقم الجوال</span><input id="s-phone" inputmode="tel"></label><label class="f"><span>الرقم الضريبي</span><input id="s-tax" inputmode="numeric"></label>' +
         '<label class="f"><span>عملة الحساب</span><select id="s-acur"></select></label>' +
+        '<label class="f"><span>نوع الحساب</span><select id="s-kind"><option value="">مورد</option><option value="sub">حساب فرعي (مصروفات، رواتب، مشتريات نقدية…)</option></select></label>' +
         '<label class="f wide"><span>ملاحظات</span><input id="s-note"></label></div><div class="note">اختر الدولار لمورد تتعامل معه بالدولار: رصيده يُحسب بالدولار وكل قيد يُحوَّل بسعر يومه.</div><div id="s-err"></div>' +
         '<div class="row" style="margin-top:12px"><button class="btn grn" data-act="savesup" id="s-save">إضافة المورد</button><button class="btn sec" data-act="cancelsup" id="s-cancel">إلغاء</button></div></div></div></div>' +
         '<div id="s-tbl"></div>';
@@ -819,16 +829,16 @@ var SUP = (function () {
           if (!name) return show('اكتب اسم المورد.');
           if (D.suppliers.some(function (s) { return s.id !== editSup && norm(s.name) === norm(name); })) return show('المورد موجود مسبقاً.');
           var old = editSup ? D.suppliers.find(function (s) { return s.id === editSup; }) : null;
-          var rec = Object.assign({}, old || {}, { name: name, opening: n(d.querySelector('#s-open').value), phone: d.querySelector('#s-phone').value.trim(), tax: d.querySelector('#s-tax').value.trim(), note: d.querySelector('#s-note').value.trim(), acur: d.querySelector('#s-acur').value });
+          var rec = Object.assign({}, old || {}, { name: name, opening: n(d.querySelector('#s-open').value), phone: d.querySelector('#s-phone').value.trim(), tax: d.querySelector('#s-tax').value.trim(), note: d.querySelector('#s-note').value.trim(), acur: d.querySelector('#s-acur').value, kind: d.querySelector('#s-kind').value });
           busy(b, true);
           put('suppliers', rec).then(function (r) { busy(b, false); if (r) { ok(old ? 'تم حفظ التعديل' : 'تمت إضافة المورد'); editSup = null; clearSup(d); } });
         }
         if (a === 'cancelsup') { editSup = null; clearSup(d); }
-        if (a === 'newsup') { editSup = null; clearSup(d); supPop(d, true); }
+        if (a === 'newsup' || a === 'newsub') { editSup = null; clearSup(d); if (a === 'newsub') { d.querySelector('#s-kind').value = 'sub'; d.querySelector('#s-h').textContent = 'إضافة حساب فرعي'; d.querySelector('#s-save').textContent = 'إضافة الحساب'; } supPop(d, true); }
         if (a === 'editsup') {
           var s = supById(b.dataset.id); if (!s) return; editSup = s.id;
-          d.querySelector('#s-name').value = s.name; d.querySelector('#s-open').value = s.opening || ''; d.querySelector('#s-phone').value = s.phone || ''; d.querySelector('#s-tax').value = s.tax || ''; d.querySelector('#s-note').value = s.note || ''; d.querySelector('#s-acur').value = s.acur || '';
-          d.querySelector('#s-h').textContent = 'تعديل مورد'; d.querySelector('#s-save').textContent = 'حفظ التعديل'; supPop(d, true);
+          d.querySelector('#s-name').value = s.name; d.querySelector('#s-open').value = s.opening || ''; d.querySelector('#s-phone').value = s.phone || ''; d.querySelector('#s-tax').value = s.tax || ''; d.querySelector('#s-note').value = s.note || ''; d.querySelector('#s-acur').value = s.acur || ''; d.querySelector('#s-kind').value = s.kind === 'sub' ? 'sub' : '';
+          d.querySelector('#s-h').textContent = s.kind === 'sub' ? 'تعديل حساب فرعي' : 'تعديل مورد'; d.querySelector('#s-save').textContent = 'حفظ التعديل'; supPop(d, true);
         }
         if (a === 'delsup') armDelete(b, function () {
           var s = supById(b.dataset.id); if (!s) return;
@@ -841,13 +851,16 @@ var SUP = (function () {
       var ac = d.querySelector('#s-acur'), av = ac.value; ac.innerHTML = '<option value="">' + esc(B.set.base) + ' (الأساسية)</option>' + ((B.set && B.set.curs) || []).map(function (c) { return '<option>' + esc(c.code) + '</option>'; }).join(''); ac.value = av;
       var t = totals(), list = sortedSup();
       EXP.suppliers = { name: 'الموردون', head: ['المورد', 'عملة الحساب', 'رصيد افتتاحي', 'الجوال', 'الرقم الضريبي', 'عدد القيود', 'الرصيد الحالي', 'ملاحظات'], rows: list.map(function (s) { return [s.name, s.acur || B.set.base, fmt(s.opening), s.phone || '', s.tax || '', t[s.id].n, fmt(balanceOf(s.id)), s.note || '']; }) };
-      d.querySelector('#s-tbl').innerHTML = list.length ? '<div class="tw"><table><thead><tr><th class="l">المورد</th><th class="num">رصيد افتتاحي</th><th>الجوال</th><th>الرقم الضريبي</th><th>القيود</th><th class="num">الرصيد الحالي</th><th>ملاحظات</th><th class="noprint"></th></tr></thead><tbody>' +
-        list.map(function (s) { var b = balanceOf(s.id); return '<tr><td class="l"><b>' + esc(s.name) + '</b>' + (s.acur ? ' <span class="badge">' + esc(s.acur) + '</span>' : '') + '</td><td class="num">' + money(s.opening, s.acur) + '</td><td>' + esc(s.phone || '') + '</td><td>' + esc(s.tax || '') + '</td><td>' + t[s.id].n + '</td><td class="num ' + cls(b) + '"><b>' + fmt(b) + unitOf(s) + '</b></td><td class="wrapc">' + esc(s.note || '') + '</td><td class="noprint"><button class="btn sec sm" data-act="editsup" data-id="' + esc(s.id) + '">تعديل</button> <button class="btn warn sm" data-act="delsup" data-id="' + esc(s.id) + '">حذف</button></td></tr>'; }).join('') +
-        '</tbody></table></div>' + exportBar('suppliers') : empty('لا يوجد موردون بعد. أضف أول مورد من زر «إضافة مورد».');
+      /* الموردون ثم الحسابات الفرعية في جدولين منفصلين */
+      var TB = function (L, h) { return '<h2 style="margin:14px 2px 8px">' + h + ' <small class="muted">(' + L.length + ')</small></h2>' + '<div class="tw"><table><thead><tr><th class="l">المورد</th><th class="num">رصيد افتتاحي</th><th>الجوال</th><th>الرقم الضريبي</th><th>القيود</th><th class="num">الرصيد الحالي</th><th>ملاحظات</th><th class="noprint"></th></tr></thead><tbody>' +
+        L.map(function (s) { var b = balanceOf(s.id); return '<tr><td class="l"><b>' + esc(s.name) + '</b>' + (s.acur ? ' <span class="badge">' + esc(s.acur) + '</span>' : '') + '</td><td class="num">' + money(s.opening, s.acur) + '</td><td>' + esc(s.phone || '') + '</td><td>' + esc(s.tax || '') + '</td><td>' + t[s.id].n + '</td><td class="num ' + cls(b) + '"><b>' + fmt(b) + unitOf(s) + '</b></td><td class="wrapc">' + esc(s.note || '') + '</td><td class="noprint"><button class="btn sec sm" data-act="editsup" data-id="' + esc(s.id) + '">تعديل</button> <button class="btn warn sm" data-act="delsup" data-id="' + esc(s.id) + '">حذف</button></td></tr>'; }).join('') +
+        '</tbody></table></div>'; };
+      var LS = list.filter(function (s) { return s.kind !== 'sub'; }), LB = list.filter(function (s) { return s.kind === 'sub'; });
+      d.querySelector('#s-tbl').innerHTML = list.length ? (LS.length ? TB(LS, 'الموردون') : '') + (LB.length ? TB(LB, 'الحسابات الفرعية') : '') + exportBar('suppliers') : empty('لا يوجد موردون بعد. أضف أول مورد من زر «إضافة مورد».');
     }
   };
   function clearSup(d) {
-    ['#s-name', '#s-open', '#s-phone', '#s-tax', '#s-note', '#s-acur'].forEach(function (s) { d.querySelector(s).value = ''; });
+    ['#s-name', '#s-open', '#s-phone', '#s-tax', '#s-note', '#s-acur', '#s-kind'].forEach(function (s) { d.querySelector(s).value = ''; });
     d.querySelector('#s-h').textContent = 'إضافة مورد'; d.querySelector('#s-save').textContent = 'إضافة المورد'; d.querySelector('#s-err').innerHTML = '';
     supPop(d, false);
   }
@@ -1631,6 +1644,9 @@ function supCardsDraw() {
   if (so === 'bal') L.sort(function (a, b) { return b.base - a.base; });
   else if (so === 'last') L.sort(function (a, b) { return (b.last || '').localeCompare(a.last || ''); });
   else L.sort(function (a, b) { return a.name.localeCompare(b.name, 'ar'); });
+  /* الموردون أولًا ثم الحسابات الفرعية تحت عنوان منفصل */
+  var LS = L.filter(function (x) { return SUBN.indexOf(x.name) < 0; }), LB = L.filter(function (x) { return SUBN.indexOf(x.name) > -1; });
+  L = LS.concat(LB);
   SUPC = L;
   box.innerHTML = L.length ? L.map(function (x, i) {
     var u = ' <small style="color:var(--mut);font-weight:500">' + esc(csym(x.acur)) + '</small>';
@@ -1638,7 +1654,7 @@ function supCardsDraw() {
       '<div class="bal' + (x.bal < 0 ? ' neg' : '') + '">' + fmt(x.bal) + u + '</div>' +
       '<div class="m"><span>وارد ' + money(x.inc, x.acur) + '</span><span>صادر ' + money(x.out, x.acur) + '</span></div>' +
       '<div class="m" style="margin-top:4px"><span>' + x.n + ' قيد</span><span>آخر دفعة ' + (x.lastPay || '—') + '</span></div></div>';
-  }).join('') : '<div class="card muted">لا يوجد مورد بهذا الاسم</div>';
+  }).map(function (h, i) { return i === LS.length && LB.length ? '<h2 class="schd" style="grid-column:1/-1;margin:10px 2px 0">الحسابات الفرعية</h2>' + h : h; }).join('') : '<div class="card muted">لا يوجد مورد بهذا الاسم</div>';
 }
 var SUPC = [];
 /* الرئيسية: تذكير اليومية + مقارنة بنفس الشهر من العام الماضي */
@@ -1972,8 +1988,11 @@ refreshJ = (function (orig) { return function () { if (CUR === 'daily') vDaily()
 function supOpts(v, none) {
   var list = (B.suppliers || []).slice().sort(function (a, b) { return String(a).localeCompare(String(b), 'ar'); });
   if (v && list.indexOf(v) < 0) list.unshift(v);
-  return '<option value="">' + esc(none || 'اختر المورد…') + '</option>' + list.map(function (s) { return '<option value="' + esc(s) + '"' + (s === v ? ' selected' : '') + '>' + esc(s) + '</option>'; }).join('');
+  var o = function (s) { return '<option value="' + esc(s) + '"' + (s === v ? ' selected' : '') + '>' + esc(s) + '</option>'; };
+  var sb = list.filter(function (s) { return SUBN.indexOf(s) > -1; }), sp = list.filter(function (s) { return SUBN.indexOf(s) < 0; });
+  return '<option value="">' + esc(none || 'اختر المورد…') + '</option>' + (sb.length ? '<optgroup label="الموردون">' + sp.map(o).join('') + '</optgroup><optgroup label="الحسابات الفرعية">' + sb.map(o).join('') + '</optgroup>' : sp.map(o).join(''));
 }
+var SUBN = (function () { try { return JSON.parse(localStorage.getItem('safa_subs') || '[]'); } catch (e) { return []; } })();
 
 /* ======================= السرعة: ذاكرة مؤقتة للقراءة + تحميل مسبق ======================= */
 /* صفحات العرض تظهر فورًا من آخر نسخة محفوظة، ثم تتحدث بهدوء من الخادم.
