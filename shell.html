@@ -171,7 +171,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.20';
+window.APP_VER = '1.21';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -220,6 +220,8 @@ function refreshView() {
 function fillLists() {
   $('#dl-items').innerHTML = B.items.map(function (i) { return '<option value="' + esc(i.name) + '">'; }).join('');
   $('#dl-sup').innerHTML = B.suppliers.map(function (s) { return '<option value="' + esc(s) + '">'; }).join('');
+  /* الحسابات الفرعية من webBoot مباشرة (دون انتظار فتح قيود الموردين) */
+  if (B.subs) { SUBN = B.subs; try { localStorage.setItem('safa_subs', JSON.stringify(SUBN)); } catch (e) { /* */ } }
 }
 function reboot(cb) { return call('webBoot').then(function (b) { B = b; fillLists(); if (cb) cb(); }); }
 /* فتح سريع: core.js يعرض آخر بيانات محفوظة فورًا ثم يرسل الحديثة هنا إن اختلفت */
