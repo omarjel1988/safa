@@ -171,7 +171,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.15';
+window.APP_VER = '1.16';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -1341,7 +1341,8 @@ function saveJ() {
 }
 /* اليومية: الليرة هي العملة المعتمدة (l…) والدولار فرعي تحتها */
 function fmtL(n) { return Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 }) + '<small class="cs"> ل.س</small>'; }
-function jm(l, b) { if (l == null) return money(b); return fmtL(l) + '<small class="jusd">' + money(b) + '</small>'; }
+/* اليومية بالليرة السورية فقط (بطلب المستخدم)؛ الدولار فقط إن لم يصل مبلغ الليرة من الخادم */
+function jm(l, b) { return l == null ? money(b) : fmtL(l); }
 function jv(x, f) { return x[f] ? jm(x['l' + f], x[f]) : ''; }
 function jNote(x) {
   return (x.sup ? ' <span class="badge">⇠ ' + esc(x.sup) + '</span>' : '') + (x.cur && x.cur !== 'ل.س' ? ' <span class="badge">' + esc(x.cur) + ' × ' + fmtRate(x.rate, x.cur) + '</span>' : '');
@@ -1426,7 +1427,7 @@ function doJLog(off) {
     regRows(r.rows);
     if (!r.rows.length) { $('#gres').innerHTML = h + '<div class="muted">لا توجد حركات</div>'; return; }
     h += jTable(r.rows, t, r.count, true);
-    $('#gres').innerHTML = h + pager(r, 'doJLog') + '<div class="note">الرصيد تراكمي بترتيب الإدخال، ووقت الإدخال تحت البيان. المبالغ بالليرة، وتحتها المعادل بالدولار.</div>';
+    $('#gres').innerHTML = h + pager(r, 'doJLog') + '<div class="note">الرصيد تراكمي بترتيب الإدخال، ووقت الإدخال تحت البيان. المبالغ بالليرة السورية.</div>';
   }).catch(function (e) { $('#gres').innerHTML = ''; toast(errMsg(e), 'err'); });
 }
 /* ======================= الرئيسية (لوحة)، التقارير، البحث الشامل، الإعدادات، رمز الدخول ======================= */
@@ -1903,9 +1904,9 @@ function vDaily() {
     if (!r.days.length) { $('#view').innerHTML = h + '<div class="muted">لا توجد حركات بعد</div>'; return; }
     /* جدول (لا بطاقات) بالليرة؛ عمودا الذمم يظهران فقط إن وُجدت ذمم */
     var hasDue = r.days.some(function (d) { return d.due || d.dueBal; }), lv = function (l, b) { return l == null ? money(b) : fmtL(l); };
-    h += '<div class="note">اضغط على أي يوم لعرض تفاصيله. المبالغ بالليرة، والرصيد بالدولار تحته.</div><div class="tw"><table class="nocard dtbl"><tr><th>التاريخ</th>' + (hasDue ? '<th>' + esc(L.due) + '</th>' : '') + '<th>' + esc(L.out) + '</th><th>' + esc(L.inn) + '</th><th>صافي</th><th>الرصيد</th>' + (hasDue ? '<th>رصيد ' + esc(L.due) + '</th>' : '') + '</tr>' +
+    h += '<div class="note">اضغط على أي يوم لعرض تفاصيله. المبالغ بالليرة السورية.</div><div class="tw"><table class="nocard dtbl"><tr><th>التاريخ</th>' + (hasDue ? '<th>' + esc(L.due) + '</th>' : '') + '<th>' + esc(L.out) + '</th><th>' + esc(L.inn) + '</th><th>صافي</th><th>الرصيد</th>' + (hasDue ? '<th>رصيد ' + esc(L.due) + '</th>' : '') + '</tr>' +
       r.days.map(function (d) {
-        return '<tr class="dclk" onclick="dayPop(\'' + esc(d.date) + '\')"><td><b style="color:var(--j)">' + esc(d.date) + '</b></td>' + (hasDue ? '<td>' + lv(d.ldue, d.due) + '</td>' : '') + '<td>' + lv(d.lout, d.out) + '</td><td>' + lv(d.linn, d.inn) + '</td><td class="' + (d.net < 0 ? 'neg' : '') + '">' + lv(d.lnet, d.net) + '</td><td>' + jm(d.lcash, d.cash) + '</td>' + (hasDue ? '<td>' + lv(d.ldueBal, d.dueBal) + '</td>' : '') + '</tr>';
+        return '<tr class="dclk" onclick="dayPop(\'' + esc(d.date) + '\')"><td><b style="color:var(--j)">' + esc(d.date) + '</b></td>' + (hasDue ? '<td>' + lv(d.ldue, d.due) + '</td>' : '') + '<td>' + lv(d.lout, d.out) + '</td><td>' + lv(d.linn, d.inn) + '</td><td class="' + ((d.lnet != null ? d.lnet : d.net) < 0 ? 'neg' : '') + '">' + lv(d.lnet, d.net) + '</td><td>' + jm(d.lcash, d.cash) + '</td>' + (hasDue ? '<td>' + lv(d.ldueBal, d.dueBal) + '</td>' : '') + '</tr>';
       }).join('') + '</table></div><div class="pdf"><button class="btn sec" onclick="runPdf(this,\'daily\',{})">تصدير PDF</button><div id="pdfo"></div></div>';
     $('#view').innerHTML = h;
   }).catch(function (e) { toast(errMsg(e), 'err'); });
