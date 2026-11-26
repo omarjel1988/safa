@@ -97,7 +97,7 @@ tr.op td{background:#fdf0d5!important;font-weight:700}
 <div id='toast'></div>
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.6';
+window.APP_VER = '1.7';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -2398,6 +2398,34 @@ onDom(function () { tblCards(); zebraCards(); });
         h.insertBefore(b, aa);
     }
     onDom(headerBtns);
+    /* العرض الأفقي دون تفعيل الدوران التلقائي في الجوال: ملء الشاشة ثم قفل الاتجاه أفقيًا (أندرويد)؛ الضغط مرة ثانية يرجع للعمودي */
+    function rotOn() { return !!(document.fullscreenElement && screen.orientation && /landscape/.test(screen.orientation.type)); }
+    function rotIcon(b) { b.classList.toggle('on', rotOn()); b.title = rotOn() ? 'رجوع للوضع العمودي' : 'عرض أفقي'; }
+    function rotToggle(b) {
+        var so = screen.orientation;
+        if (rotOn() || document.fullscreenElement) {
+            try { so.unlock(); } catch (e) { /* */ }
+            document.exitFullscreen().catch(function () { /* */ });
+            return;
+        }
+        var de = document.documentElement;
+        (de.requestFullscreen ? de.requestFullscreen({ navigationUI: 'hide' }) : Promise.reject(new Error('fs')))
+            .then(function () { return so.lock('landscape'); })
+            .catch(function () { if (document.fullscreenElement) document.exitFullscreen().catch(function () { /* */ }); msg('تعذّر تدوير الشاشة على هذا الجهاز', true); });
+    }
+    function rotBtn() {
+        if (!(screen.orientation && screen.orientation.lock) || !matchMedia('(pointer:coarse)').matches)
+            return;
+        var aa = document.querySelector('header .ui-aa');
+        if (!aa || aa.parentElement.querySelector('.ui-rot'))
+            return;
+        var b = el('<button class="ui-hbtn ui-rot" title="عرض أفقي"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="11" rx="2"/><path d="M8 3h4a4 4 0 0 1 4 4"/><path d="M14 5l2 2-2 2"/></svg></button>');
+        b.onclick = function () { rotToggle(b); };
+        aa.parentElement.insertBefore(b, aa);
+        document.addEventListener('fullscreenchange', function () { rotIcon(b); });
+        rotIcon(b);
+    }
+    onDom(rotBtn);
     /* زر تفعيل البصمة داخل نافذة المظهر */
     onDom(function () {
         var bx = document.querySelector('.ui-sheet .bx');
@@ -2979,6 +3007,7 @@ body.ui-no-nav .ui-fab{bottom:calc(20px + env(safe-area-inset-bottom))}
 
 @media (max-width:440px){.hb{gap:3px}.hb h1{font-size:16.5px;gap:5px}.hb button{padding:4px 5px!important;min-width:32px;min-height:34px}.hb button svg{width:17px!important;height:17px!important}.hb .u3-sw img{width:20px!important;height:20px!important}}@media (max-width:375px){.hb h1 i{display:none}.hb h1{font-size:15.5px}}@media (max-width:440px){header .top{padding-left:8px!important;padding-right:10px!important}.ui-hgrp{gap:3px!important}.ui-hgrp .ui-hbtn{padding:4px 5px!important;min-width:32px!important;min-height:34px}.ui-hgrp .ui-hi svg,.ui-hgrp .u3-sbtn svg{width:17px!important;height:17px!important}.top .brand{font-size:16px!important;white-space:nowrap}.ui-hgrp .u3-sw img{width:20px!important;height:20px!important}}
 .ui-hgrp{display:flex;align-items:center;gap:8px}.ui-hgrp .ui-hbtn{margin:0;display:inline-flex;align-items:center;justify-content:center;gap:6px}.ui-hgrp .ui-hi svg{width:19px;height:19px;flex:0 0 auto}.ui-hgrp .ui-hbtn.hide{display:none}.top .brand{min-width:0}button[onclick^="newEntryM"]{display:none!important}.form{gap:12px!important}.form>*{min-width:0}input[type=date]{-webkit-appearance:none;appearance:none;display:block;width:100%!important;min-width:0!important;max-width:100%;box-sizing:border-box;min-height:44px}input[type=date]::-webkit-date-and-time-value{text-align:right;margin:0}input[type=date]::-webkit-calendar-picker-indicator{margin:0}.form>div:has(>#na),.form>div:has(>#ma),.form>div:has(>#aa),.form>div:has(>#ka),.form>div:has(>#sa),.form>div:has(>#xa),.form>div:has(>#cba){grid-column:1/-1}.form>div:has(>#na) label,.form>div:has(>#ma) label,.form>div:has(>#aa) label,.form>div:has(>#ka) label,.form>div:has(>#sa) label,.form>div:has(>#xa) label,.form>div:has(>#cba) label{font-size:15px;font-weight:800;color:#0A4F45}body.dark .form>div:has(>#na) label,body.dark .form>div:has(>#ma) label,body.dark .form>div:has(>#aa) label,body.dark .form>div:has(>#ka) label,body.dark .form>div:has(>#sa) label,body.dark .form>div:has(>#xa) label,body.dark .form>div:has(>#cba) label{color:#7CC4D2}.lgt td.x{min-width:240px;max-width:360px;word-break:normal!important;overflow-wrap:break-word}@media (max-width:600px){.grid:has(>.acc){grid-template-columns:1fr 1fr!important;gap:8px!important}.grid>.acc{padding:10px 10px 9px;min-width:0}.grid>.acc .n{font-size:14px;overflow-wrap:anywhere}.grid>.acc .bal{font-size:17px;margin:4px 0;overflow-wrap:anywhere}.grid>.acc .m{flex-direction:column;gap:1px;font-size:11.5px}}@media (max-width:600px){.form:has(#ns),.form:has(#ms),.form:has(#es){grid-template-columns:1fr 1fr!important}.form:has(#ns)>*,.form:has(#ms)>*,.form:has(#es)>*{grid-column:1/-1}.form>div:has(>#ns),.form>div:has(>#nw),.form>div:has(>#ms),.form>div:has(>#mw),.form>div:has(>#es),.form>div:has(>#ew){grid-column:auto!important;min-width:0}}@media (max-width:700px){.ui-hgrp{gap:6px}.ui-hgrp .ui-hbtn{padding:6px 9px;min-width:40px}.ui-hgrp .ui-lb{display:none}}
+.ui-rot.on{background:rgba(255,255,255,.38)!important}
 .ui-hbtn{background:rgba(255,255,255,.17);color:#fff;border:0;border-radius:10px;padding:6px 11px;font:800 15px Cairo,-apple-system,sans-serif;min-height:38px;margin-inline-start:6px}
 @keyframes uiF{from{opacity:0}}@keyframes uiU{from{transform:translateY(40px);opacity:.4}}@keyframes uiIn{from{opacity:0;transform:translateY(8px)}}
 .ui-in{animation:uiIn .22s ease-out}
