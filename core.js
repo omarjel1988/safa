@@ -72,8 +72,8 @@
     writes: ['webSaveInvoice', 'webSaveJournal', 'webJUpdate', 'webJDelete', 'webPUpdate', 'webPDelete', 'webAddItem', 'webFillCodes', 'webAddSupplier',
       'webSupSaveEntry', 'webSupDeleteEntry', 'webSupSaveSupplier', 'webSupDeleteSupplier', 'webInvReplace', 'webInvDelete', 'webInvAttach',
       'webSaveSettings', 'webSetPin', 'webBackupNow', 'webAutoBackup', 'webSetRate', 'webSetGeminiKey',
-      'webSaleSave', 'webSaleDelete', 'webItemBarcode', 'webItemSaleSet', 'webSalesSet', 'webStockCount'],
-    nocache: ['webDevPing', 'webDevList', 'webDevOut', 'webPdf', 'webInvPdf', 'webSupPdf', 'webInvExtract', 'webAiState', 'webAiCfg', 'webStmtImport', 'webPFindPdf', 'webAiCategorize', 'webAiMonth', 'webFxRate'],
+      'webSaleSave', 'webSaleDelete', 'webItemBarcode', 'webItemSaleSet', 'webSalesSet', 'webStockCount', 'webItemRename', 'webCashClose'],
+    nocache: ['webDevPing', 'webDevList', 'webDevOut', 'webPdf', 'webInvPdf', 'webSupPdf', 'webInvExtract', 'webAiState', 'webAiCfg', 'webStmtImport', 'webPFindPdf', 'webAiCategorize', 'webAiMonth', 'webFxRate', 'webCashExpected'],
     swr: ['webBoot', 'webDash'],
     offline: {
       /* المبيعات: الفاتورة تُحفظ في الجهاز وتُرسل عند عودة الاتصال (الخادم يتجاهل المعرّف المكرر) */

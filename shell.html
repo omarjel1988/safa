@@ -177,7 +177,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '3.5.1';
+window.APP_VER = '3.6';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 /* الأمان: هوية هذا الجهاز تُرسل مع الدخول (سجل الدخول، وخروج جهاز محدد) — نفس مفتاح «الأجهزة المتصلة» */
 function secDev() {
@@ -632,7 +632,7 @@ var SUP = (function () {
     if (!w) return;
     w._force = s && s.acur ? s.acur : '';
     if (lb) lb.textContent = w._force ? 'سعر ' + w._force + ' اليوم' : 'سعر الصرف';
-    if (w._force && !d.querySelector('#e-rate').value) d.querySelector('#e-rate').value = rateNow(w._force) || '';
+    if (w._force && !d.querySelector('#e-rate').value) d.querySelector('#e-rate').value = rateShow(rateNow(w._force));
     if (info) info.innerHTML = w._force ? 'حساب هذا المورد بالـ <b>' + esc(w._force) + '</b>: اكتب المبلغ بالعملة التي دفعت/استلمت بها، وأدخل سعر ' + esc(w._force) + ' اليوم ليُحوَّل الرصيد.' : '';
     curShow(d.querySelector('#e-cur'), w);
   }
@@ -808,7 +808,7 @@ var SUP = (function () {
     var ss0 = supById(sid); if (ss0 && ss0.acur && !(n(d.querySelector('#e-rate').value) > 0)) return show('أدخل سعر ' + ss0.acur + ' اليوم.');
     err.innerHTML = '';
     var old = editEntry ? D.entries.find(function (x) { return x.id === editEntry; }) : null;
-    var rec = Object.assign({}, old || {}, { sid: sid, date: date, desc: desc, inc: inc, out: out, method: method, cur: d.querySelector('#e-cur').value, rate: d.querySelector('#e-rate').value });
+    var rec = Object.assign({}, old || {}, { sid: sid, date: date, desc: desc, inc: inc, out: out, method: method, cur: d.querySelector('#e-cur').value, rate: rateNorm(d.querySelector('#e-rate').value) });
     busy(btn, true);
     put('entries', rec).then(function (r) {
       busy(btn, false); if (!r) return;
@@ -1398,6 +1398,38 @@ function doPrice() {
   }).catch(function (e) { $('#cres').innerHTML = ''; toast(errMsg(e), 'err'); });
 }
 /* ======================= اليومية: العملات وربط دفعات الموردين ======================= */
+/* إغلاق الصندوق (3.6): المبلغ الفعلي في الدرج مقابل رصيد النقد في اليومية (webCashExpected/webCashClose/webCashList) */
+var CASHX = 0;
+function cashPop() {
+  var o = document.createElement('div'); o.className = 'dpop'; o.id = 'cashpop';
+  o.innerHTML = '<div class="dbox" style="max-width:520px"><div class="dhd"><button onclick="this.closest(\'.dpop\').remove()">✕</button><b>🔒 إغلاق الصندوق</b><span style="min-width:40px"></span></div>' +
+    '<div class="dbd"><div class="note" style="margin-top:0" id="cashe"><span class="spin"></span> جارٍ حساب رصيد الصندوق…</div>' +
+    '<div class="grid"><div class="f"><label>المبلغ الموجود فعلًا (ل.س)</label><input id="cashc" inputmode="numeric" autocomplete="off" oninput="cashDiff()"></div>' +
+    '<div class="f"><label>ملاحظة</label><input id="cashn" placeholder="اختياري"></div></div>' +
+    '<div id="cashd" style="margin:10px 0;font-weight:800"></div>' +
+    '<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="cashp" checked style="width:20px;height:20px;min-height:0"> ترحيل الفرق لليومية (زيادة/عجز في الصندوق)</label><br>' +
+    '<div class="row"><button class="btn grn" onclick="cashSave(this)">حفظ الإغلاق</button></div><h3 style="margin:16px 0 6px;font-size:15px">آخر الإغلاقات</h3><div id="cashl" class="muted">…</div></div></div>';
+  o.onclick = function (e) { if (e.target === o) o.remove(); };
+  document.body.appendChild(o);
+  call('webCashExpected').then(function (r) { CASHX = r.lcash; $('#cashe').innerHTML = 'رصيد الصندوق حسب اليومية: <b>' + ls0(r.lcash) + '</b> ل.س'; cashDiff(); setTimeout(function () { $('#cashc').focus(); }, 50); })
+    .catch(function (e) { $('#cashe').textContent = errMsg(e); });
+  call('webCashList').then(function (L) {
+    $('#cashl').innerHTML = L.length ? L.map(function (x) { return '<div class="phl" style="cursor:default"><span>' + esc(x.t) + '<small>المتوقع ' + ls0(x.exp) + ' · الفعلي ' + ls0(x.cnt) + (x.post ? ' · رُحّل' : '') + ' · ' + esc(x.u) + (x.note ? ' · ' + esc(x.note) : '') + '</small></span><b style="color:' + (x.diff < 0 ? 'var(--red)' : x.diff > 0 ? 'var(--grn)' : 'inherit') + '">' + (x.diff > 0 ? '+' : '') + ls0(x.diff) + '</b></div>'; }).join('') : 'لا توجد إغلاقات سابقة';
+  }).catch(function () { $('#cashl').textContent = ''; });
+}
+function cashDiff() {
+  var v = $('#cashc').value.trim(), d = num(v) - CASHX, b = $('#cashd');
+  b.innerHTML = v === '' ? '' : d === 0 ? '<span style="color:var(--grn)">✓ مطابق</span>' : d > 0 ? '<span style="color:var(--grn)">زيادة ' + ls0(d) + ' ل.س</span>' : '<span style="color:var(--red)">عجز ' + ls0(-d) + ' ل.س</span>';
+}
+function cashSave(b) {
+  busy(b, true);
+  call('webCashClose', { counted: $('#cashc').value, note: $('#cashn').value, post: $('#cashp').checked }).then(function (r) {
+    busy(b, false); if (r && r.ok === false) { toast(r.msg, 'err'); return; }
+    var p = $('#cashpop'); if (p) p.remove();
+    toast(r.diff === 0 ? '✓ الصندوق مطابق' : (r.diff > 0 ? 'زيادة ' : 'عجز ') + ls0(Math.abs(r.diff)) + ' ل.س' + (r.posted ? ' — رُحّل لليومية' : ''), r.diff === 0 ? 'ok' : 'err');
+    if (CUR === 'jentry') loadDay();
+  }, function (e) { busy(b, false); toast(errMsg(e), 'err'); });
+}
 function vJEntry() {
   var L = B.labels;
   $('#view').innerHTML =
@@ -1415,6 +1447,7 @@ function vJEntry() {
     '<div class="bar"><div class="tot" id="jtot">—</div><button class="btn grn" id="jsave" onclick="saveJ()">حفظ اليومية</button></div>';
   curFill($('#jcur'), $('#jrate'), $('#jratew'), calcJ);
   setTimeout(function () { fxHook('#jdate', '#jcur', '#jrate', '#jratew'); }, 0);
+  if (canMoney() && can('jour', 'a')) { var st0 = $('#view .stats'); if (st0) st0.insertAdjacentHTML('afterend', '<button class="btn sec" style="width:100%;margin:0 0 12px" onclick="cashPop()">🔒 إغلاق الصندوق — مطابقة النقد الموجود</button>'); }
   addJLine();
   loadDay();
 }
@@ -1707,7 +1740,7 @@ document.head.insertAdjacentHTML('beforeend', '<style>' +
   '.posr:empty{display:none}.posr div{padding:10px 12px;border-top:1px solid var(--bd);cursor:pointer;display:flex;justify-content:space-between;gap:10px}.posr div:first-child{border-top:0}.posr div:active{background:var(--cl)}.posr small{color:var(--mut)}.posr b{white-space:nowrap;font-variant-numeric:tabular-nums}' +
   '.postop{display:flex;gap:7px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}.postop::-webkit-scrollbar{display:none}.postop button{flex:0 0 auto;border:1px solid var(--bd);background:#fff;border-radius:12px;padding:6px 12px;font-weight:700;color:var(--c);max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
   '.posh{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}.posh input[type=date]{width:auto;flex:0 0 150px;min-height:40px;padding:6px 10px}' +
-  '.pchip{border:1.5px solid var(--c);background:#fff;color:var(--c);border-radius:99px;padding:5px 14px;font-weight:800;min-height:38px}.pchip.on{background:var(--c);color:#fff}' +
+  '.pchip{border:1.5px solid var(--c);background:#fff;color:var(--c);border-radius:99px;padding:5px 14px;font-weight:800;min-height:38px}.pchip.on{background:var(--c);color:#fff}.pchip.ret{background:var(--red);border-color:var(--red)}' +
   '#poscu2{flex:1;min-width:140px;min-height:40px;padding:6px 10px}' +
   '.pl{display:grid;grid-template-columns:minmax(0,1fr) auto 100px 92px 30px;gap:8px;align-items:center;padding:9px 0;border-top:1px solid var(--bd)}.pl:first-child{border-top:0}' +
   '.pl .pn{font-weight:700;line-height:1.35;overflow-wrap:anywhere}.pl .pn small{display:block;color:var(--mut);font-weight:500;font-size:12px}' +
@@ -1801,7 +1834,10 @@ function vPos() {
     '<div id="postop" class="postop"></div>' +
     '<div class="card"><div class="posh"><input type="date" id="posd" value="' + esc(C.date || todayStr()) + '" onchange="posCart().date=this.value===todayStr()?\'\':this.value;posKeep()">' +
     '<button class="pchip' + (C.cust ? '' : ' on') + '" id="poscu" onclick="posCust()">' + (C.cust ? '👤 باسم' : '💵 نقدي') + '</button>' +
-    '<input id="poscu2" class="' + (C.cust ? '' : 'hide') + '" placeholder="اسم العميل" value="' + esc(C.cust) + '" oninput="posCart().cust=this.value.trim();posKeep()"></div>' +
+    '<input id="poscu2" class="' + (C.cust ? '' : 'hide') + '" placeholder="اسم العميل" value="' + esc(C.cust) + '" oninput="posCart().cust=this.value.trim();posKeep()">' +
+    '<button class="pchip' + (C.ret ? ' on ret' : '') + '" id="posret" onclick="posRet()">↩︎ مرتجع</button>' +
+    '<input id="posdc" class="' + (C.ret ? 'hide' : '') + '" placeholder="خصم (مبلغ أو %)" inputmode="text" value="' + esc(C.disc || '') + '" oninput="posCart().disc=this.value.trim();posKeep();posLines()" style="flex:0 0 150px;min-height:40px;padding:6px 10px"></div>' +
+    (C.ret ? '<div class="note" style="margin:0 0 6px;color:var(--red)"><b>فاتورة مرتجع:</b> الكميات ترجع للمخزون، والمبلغ يُخصم من مبيعات اليوم في اليومية.</div>' : '') +
     '<div id="posl"></div></div>' +
     '<div class="card"><h2>فواتير اليوم على هذا الجهاز</h2><div id="posh"></div></div>' +
     '<div class="bar"><div class="tot">الإجمالي<b id="post">0</b></div><button class="btn grn" id="possv" onclick="posSave()">حفظ الفاتورة</button></div>';
@@ -1816,6 +1852,9 @@ function posTop() {
   POSTL = L;
   box.innerHTML = L.map(function (x, i) { return '<button onclick="posAdd(POSTL[' + i + '])">' + esc(x.n) + '</button>'; }).join('');
 }
+function posRet() { var C = posCart(); C.ret = !C.ret; if (C.ret) C.disc = ''; posKeep(); vPos(); }
+/* الخصم: «2000» مبلغ، «10%» نسبة من مجموع الأسطر */
+function posDisc(sub) { var C = posCart(), d = String(C.disc || '').trim(); if (!d || C.ret) return 0; var v = num(d.replace('%', '')); if (!(v > 0)) return 0; return Math.min(sub, /%/.test(d) ? Math.round(sub * v / 100) : v); }
 function posCust() {
   var C = posCart(), i = $('#poscu2'), on = i.classList.contains('hide');
   i.classList.toggle('hide', !on); $('#poscu').classList.toggle('on', !on); $('#poscu').textContent = on ? '👤 باسم' : '💵 نقدي';
@@ -1873,7 +1912,10 @@ function posLines(focusLast) {
       '<input class="pp' + (low ? ' low' : '') + '" inputmode="numeric" placeholder="السعر" value="' + (l.p ? esc(l.p) : '') + '" onchange="posPv(' + i + ',this.value)">' +
       '<b class="pt">' + ls0(t) + '</b><button class="x" onclick="posDel(' + i + ')">✕</button></div>';
   }).join('');
-  var tt = $('#post'); if (tt) tt.innerHTML = ls0(tot) + ' <small>ل.س</small>';
+  var dc = posDisc(tot), net = tot - dc;
+  if (dc) box.insertAdjacentHTML('beforeend', '<div class="pl" style="grid-template-columns:1fr auto;display:grid"><div class="pn">خصم' + (/%/.test(C.disc) ? ' ' + esc(C.disc) : '') + '</div><b class="pt" style="color:var(--red)">−' + ls0(dc) + '</b></div>');
+  var tt = $('#post'); if (tt) tt.innerHTML = (C.ret && net ? '−' : '') + ls0(net) + ' <small>ل.س</small>';
+  var sv = $('#possv'); if (sv) { sv.textContent = C.ret ? 'حفظ المرتجع' : 'حفظ الفاتورة'; sv.className = 'btn ' + (C.ret ? 'warn' : 'grn'); }
   if (focusLast && C.lines.length) { var ps = $$('#posl .pp'), p = ps[ps.length - 1]; if (p && !p.value) p.focus(); }
 }
 function posQ(i, d) { var l = posCart().lines[i]; if (!l) return; l.q = Math.max(1, Math.round((Number(l.q) + d) * 1000) / 1000); posKeep(); posLines(); }
@@ -1896,13 +1938,15 @@ function posSave() {
   var bad = C.lines.filter(function (l) { return !(l.p > 0); })[0];
   if (bad) { toast('اكتب سعر «' + bad.n + '»', 'err'); return; }
   var cu = String(C.cust || '').trim();
-  var p = { id: posDev() + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), no: posNo(), date: $('#posd').value || todayStr(), cust: cu, t: Date.now(),
-    dev: secDev().n, lines: C.lines.map(function (l) { return { c: l.c, n: l.n, q: l.q, p: l.p, u: l.k > 1 ? l.u : '', k: l.k || 1 }; }) };
+  var sg = C.ret ? -1 : 1, sub = C.lines.reduce(function (s, l) { return s + l.q * l.p; }, 0), dc = posDisc(sub);
+  var p = { id: posDev() + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), no: (C.ret ? 'R' : '') + posNo(), date: $('#posd').value || todayStr(), cust: cu, t: Date.now(),
+    dev: secDev().n, lines: C.lines.map(function (l) { return { c: l.c, n: l.n, q: sg * l.q, p: l.p, u: l.k > 1 ? l.u : '', k: l.k || 1 }; }) };
+  if (dc) p.lines.push({ c: '#DISC', n: 'خصم' + (/%/.test(C.disc) ? ' ' + C.disc : ''), q: 1, p: -dc, u: '', k: 1 });
   var tot = p.lines.reduce(function (s, l) { return s + l.q * l.p; }, 0);
   var H = lsJ('safa_pos_inv', []);
   H.unshift({ id: p.id, no: p.no, date: p.date, cust: cu, lines: p.lines, total: tot, t: Date.now() }); lsS('safa_pos_inv', H.slice(0, 300));
   POSD = { lines: [], cust: '', date: '' }; posKeep();
-  p.lines.forEach(function (l) { posOp({ id: p.id, k: 's', c: l.c, n: l.n, q: l.q * (l.k || 1), at: p.t }); }); sbApply();
+  p.lines.forEach(function (l) { if (l.c !== '#DISC') posOp({ id: p.id, k: 's', c: l.c, n: l.n, q: l.q * (l.k || 1), at: p.t }); }); sbApply();
   busy(b, true);
   call('webSaleSave', p).then(function (r) {
     busy(b, false);
@@ -1913,7 +1957,7 @@ function posSave() {
     /* لم تُحفظ ولم تدخل صندوق الإرسال: أرجعها للسلة */
     var H2 = lsJ('safa_pos_inv', []).filter(function (x) { return x.id !== p.id; }); lsS('safa_pos_inv', H2);
     lsS('safa_pos_ops', lsJ('safa_pos_ops', []).filter(function (o) { return o.id !== p.id; })); sbApply();
-    POSD = { lines: p.lines, cust: cu, date: p.date === todayStr() ? '' : p.date }; posKeep(); if (CUR === 'pos') vPos();
+    POSD = { lines: p.lines.filter(function (l) { return l.c !== '#DISC'; }).map(function (l) { return Object.assign({}, l, { q: Math.abs(l.q) }); }), cust: cu, date: p.date === todayStr() ? '' : p.date, ret: sg < 0, disc: C.disc || '' }; posKeep(); if (CUR === 'pos') vPos();
   });
 }
 function posPending() { var s = {}; try { RT.out().forEach(function (x) { var a = x.a && x.a[1] && x.a[1][0]; if ((x.fn === 'webSaleSave' || x.fn === 'webStockCount') && a) s[a.id] = 1; }); } catch (e) { /* */ } return s; }
@@ -1943,7 +1987,8 @@ function posHistSync() {
 /* عرض فاتورة بيع ومشاركتها */
 function saleText(x) {
   var o = ['مكتبة الصفاء', 'فاتورة بيع ' + x.no + ' — ' + x.date, 'العميل: ' + (x.cust || 'نقدي'), ''];
-  x.lines.forEach(function (l) { o.push('• ' + l.n + (l.k > 1 ? ' — ' + unitLbl(l) : '') + ' × ' + l.q + ' = ' + ls0(l.q * l.p)); });
+  if (x.total < 0 || /^R/.test(x.no)) o[1] = 'مرتجع مبيعات ' + x.no + ' — ' + x.date;
+  x.lines.forEach(function (l) { o.push(l.c === '#DISC' ? '• ' + l.n + ': −' + ls0(-l.p) : '• ' + l.n + (l.k > 1 ? ' — ' + unitLbl(l) : '') + ' × ' + l.q + ' = ' + ls0(l.q * l.p)); });
   o.push('', 'الإجمالي: ' + ls0(x.total) + ' ل.س');
   return o.join('\n');
 }
@@ -2150,7 +2195,8 @@ function spEdit(i) {
   var x = SPE = SPL[i]; if (!x) return;
   var o = document.createElement('div'); o.className = 'dpop'; o.id = 'sppop';
   o.innerHTML = '<div class="dbox" style="max-width:560px"><div class="dhd" style="background:linear-gradient(135deg,#8E2440,#B23A48)"><button onclick="this.closest(\'.dpop\').remove()">✕</button><b>' + esc(x.n) + '</b><span style="min-width:40px"></span></div>' +
-    '<div class="dbd"><div class="note" style="margin-top:0">' + esc(x.c) + (x.u ? ' · الوحدة: ' + esc(x.u) : '') + (SB.money && x.cost ? ' · تكلفة القطعة ' + ls0(x.cost) + ' ل.س · السعر التلقائي ' + ls0(x.auto) : '') + '</div><div class="grid">' +
+    '<div class="dbd"><div class="note" style="margin-top:0">' + esc(x.c) + (x.u ? ' · الوحدة: ' + esc(x.u) : '') + (SB.money && x.cost ? ' · تكلفة القطعة ' + ls0(x.cost) + ' ل.س · السعر التلقائي ' + ls0(x.auto) : '') + '</div>' +
+    (can('items', 'e') ? '<div class="f wide" style="margin-bottom:8px"><label>اسم الصنف <small>(التغيير يُطبَّق على كل المشتريات والمبيعات والجرد)</small></label><input id="spen" value="' + esc(x.n) + '"></div>' : '') + '<div class="grid">' +
     '<div class="f"><label>قطع العبوة</label><input id="spe1" inputmode="numeric" value="' + (x.ppg ? '' : esc(x.pp)) + '" placeholder="' + esc(x.pp) + ' (تقدير)"></div>' +
     '<div class="f"><label>نسبة الربح %</label><input id="spe2" inputmode="decimal" value="' + (x.mks ? esc(x.mk) : '') + '" placeholder="' + esc(SB.set.mk) + ' (افتراضي)"></div>' +
     '<div class="f"><label>سعر بيع يدوي (ل.س)</label><input id="spe3" inputmode="numeric" value="' + (x.pr > 0 ? esc(x.pr) : '') + '" placeholder="تلقائي"></div>' +
@@ -2169,7 +2215,9 @@ function spUnitRow(y) {
 function spEditSave(b) {
   var x = SPE; busy(b, true);
   var un = $$('#speu .spu').map(function (r) { return { u: $('.u1', r).value.trim() || 'علبة', n: num($('.u2', r).value), p: num($('.u3', r).value), bc: $('.u4', r).value.split(/[\s,،;]+/).filter(String) }; }).filter(function (y) { return y.n > 1; });
-  call('webItemSaleSet', { c: x.c, n: x.n, pp: $('#spe1').value, mk: $('#spe2').value, pr: $('#spe3').value, bc: $('#spe4').value, un: un }).then(function (r) {
+  var nn = $('#spen') ? $('#spen').value.replace(/\s+/g, ' ').trim() : x.n;
+  var ren = nn && nn !== x.n ? call('webItemRename', { c: x.c, n: x.n, nw: nn }).then(function (r) { if (r && r.ok === false) throw new Error(r.msg); x.n = nn; toast('تغيّر الاسم في ' + (r.n || 0) + ' سجل', 'ok'); }) : Promise.resolve();
+  ren.then(function () { return call('webItemSaleSet', { c: x.c, n: x.n, pp: $('#spe1').value, mk: $('#spe2').value, pr: $('#spe3').value, bc: $('#spe4').value, un: un }); }).then(function (r) {
     if (r && r.ok === false) { busy(b, false); toast(r.msg, 'err'); return; }
     var p = $('#sppop'); if (p) p.remove(); toast('تم الحفظ', 'ok');
     sbLoad(function () { if (CUR === 'sprice') spDraw(); }, true);
@@ -2184,7 +2232,7 @@ function cntSkip() { var s = lsJ('safa_cnt_skip', {}); return s.d === todayStr()
 function cntNext() {
   if (CUR !== 'pos' || !SB || $('#cntpop') || !can('sales', 'a')) return;
   var sk = cntSkip(), x = posCart().lines.map(posItem).filter(function (y) { return y && y.st === null && !sk[y.c || y.n]; })[0];
-  if (x) cntPop(x, { first: 1, next: cntNext });
+  if (x && !posCart().ret) cntPop(x, { first: 1, next: cntNext });
 }
 function cntPop(x, opt) {
   opt = opt || {}; CNTX = { x: x, opt: opt };
@@ -2361,10 +2409,13 @@ function go(v) {
 
 /* ---------- العملات ---------- */
 function curList() { var s = B.set || { base: '', curs: [] }; return [s.base].concat(s.curs.map(function (c) { return c.code; })); }
+/* 3.6: سعر الليرة يُعرض ويُكتب «ليرة لكل دولار» (15,325)؛ النظام يخزن «دولار لكل ليرة» — أي رقم > 50 يُقلب عند القراءة (هنا وفي الخادم spRate_) */
+function rateShow(r) { r = Number(r) || 0; return r > 0 && r < 0.02 ? String(Math.round(1 / r)) : (r ? String(r) : ''); }
+function rateNorm(v) { var r = num(v); return r > 50 ? String(1 / r) : v; }
 function curDefRate(c) {
   if (!c || c === B.set.base) return '';
   var x = B.set.curs.filter(function (z) { return z.code === c; })[0];
-  return x && x.rate > 0 ? x.rate : '';
+  return x && x.rate > 0 ? rateShow(x.rate) : '';
 }
 function curFill(sel, inp, wrap, cb) {
   var v = sel.value, list = curList();
@@ -2409,18 +2460,18 @@ function fxFill(dt, sel, inp, wrap) {
   var ds = dt.value || todayStr();
   fxGet(ds).then(function (x) {
     if (!x || (dt.value || todayStr()) !== ds) return;
-    var v = 1 / x.syp, same = Math.abs(num(inp.value) - v) < v * 1e-6;
+    var v = 1 / x.syp, cv = num(inp.value), same = Math.abs((cv > 50 ? 1 / cv : cv) - v) < v * 1e-4;
     hint.innerHTML = '📈 الليرة اليوم (' + esc(x.d) + '): <b>' + ls0(x.syp) + '</b> ل.س للدولار' + (inp._man && !same ? ' · <a href="#" onclick="event.preventDefault();var w=this.closest(\'.f\'),i=w.querySelector(\'input\');i._man=0;w._fx&&w._fx()">استخدمه</a>' : '');
-    if (!inp._man && !same) { inp.value = String(v); inp.dispatchEvent(new Event('input')); }
+    if (!inp._man && !same) { inp.value = String(x.syp); inp.dispatchEvent(new Event('input')); }
   }).catch(function () { hint.innerHTML = ''; });
 }
 function curSet(sel, inp, wrap, cur, rate) {
   if (cur && !$$('option', sel).some(function (o) { return o.value === cur; })) sel.insertAdjacentHTML('beforeend', '<option>' + esc(cur) + '</option>');
   sel.value = cur || B.set.base;
-  inp.value = cur ? rate : '';
+  inp.value = cur ? rateShow(rate) : '';
   curShow(sel, wrap);
 }
-function curRateOf(sel, inp) { if (!sel || !sel.value || sel.value === B.set.base) return 1; var r = num(inp.value); return r > 0 ? r : 1; }
+function curRateOf(sel, inp) { if (!sel || !sel.value || sel.value === B.set.base) return 1; var r = num(inp.value); if (r > 50) r = 1 / r; return r > 0 ? r : 1; }
 function curNote(x, ac) {
   if (!x || !x.cur || (ac && x.cur === ac)) return ''; /* قيد بعملة الحساب نفسها: لا حاجة لشارة التحويل */
   var a = x.inc || x.out || 0;
@@ -2555,7 +2606,7 @@ var SUPC = [];
 var MNS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 function homeExtras(d) {
   var old = $('#jban'); if (old) old.remove(); old = $('#lyc'); if (old) old.remove();
-  alertsCard();
+  alertsCard(); salesHome();
   if (d.lastJ !== undefined && d.today && d.lastJ !== d.today && localStorage.getItem('u3_jban') !== d.today) {
     var hero = $('#view .hero');
     if (hero) hero.insertAdjacentHTML('afterend', '<div class="jban noprint" id="jban"><span>📒 لم تُدخل يومية اليوم بعد' + (d.lastJ ? ' — آخر يومية ' + esc(d.lastJ) : '') + '</span><span style="display:flex;gap:6px"><button onclick="go(\'jentry\')">إدخال الآن</button><button class="l" onclick="localStorage.setItem(\'u3_jban\', DASH.today); this.closest(\'.jban\').remove()">لاحقًا</button></span></div>');
@@ -2573,6 +2624,17 @@ function homeExtras(d) {
 /* ===== التنبيهات الذكية (الرئيسية) — الخادم webAlerts: ارتفاع الأسعار، سعر صرف شاذ في اليومية، رصيد صندوق سالب،
    قيود مدفوعات غير مرحّلة، موردون بلا دفعة منذ 45 يومًا. تُجلب مرة في الجلسة (ALR) وتُحفظ للعرض دون اتصال؛ «جديد» إن تغيّرت منذ آخر اطلاع ===== */
 var ALR = null, ALRP = null, ALRALL = false;
+/* بطاقة المبيعات في الرئيسية (3.6): مبيعات اليوم + أصناف أوشكت على النفاد */
+function salesHome() {
+  if (!canTab('pos') && !canTab('stock')) return;
+  call('webSalesToday').then(function (r) {
+    var kp = $('#kpis') || $('#alr'); if (!kp || CUR !== 'home' || !r) return;
+    var box = $('#slh'); if (!box) { kp.insertAdjacentHTML('beforebegin', '<div class="card noprint" id="slh" style="border-inline-start:4px solid #8E2440"></div>'); box = $('#slh'); }
+    box.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer" onclick="go(\'sinv\')"><b>🛒 مبيعات اليوم</b><b style="font-size:18px">' + ls0(r.s) + ' <small>ل.س</small></b></div>' +
+      '<div class="note" style="margin:2px 0 0">' + r.n + ' فاتورة' + (r.out ? ' · <span style="color:var(--red)">' + r.out + ' صنف نفد</span>' : '') + '</div>' +
+      (r.nlow ? '<div style="margin-top:8px;cursor:pointer" onclick="go(\'stock\')"><b style="color:#E65100">⚠️ أوشك على النفاد (' + r.nlow + ')</b><div class="note" style="margin:2px 0 0">' + r.low.map(function (x) { return esc(x.n) + ' (' + ls0(x.st) + ')'; }).join('، ') + (r.nlow > r.low.length ? ' …' : '') + '</div></div>' : '');
+  }).catch(function () { });
+}
 function alertsCard() {
   var put = function (r) {
     var box = $('#alr'), kp = $('#kpis'); if (!kp) return;
@@ -2833,10 +2895,16 @@ function backupNow() {
 
 
 /* ======================= سعر الصرف المتغير وحسابات الموردين بالدولار ======================= */
-function curShow(sel, wrap) { if (wrap) wrap.classList.toggle('hide', !wrap._force && (!sel.value || sel.value === B.set.base)); }
+function curShow(sel, wrap) {
+  if (!wrap) return;
+  wrap.classList.toggle('hide', !wrap._force && (!sel.value || sel.value === B.set.base));
+  var cur = sel.value && sel.value !== B.set.base ? sel.value : wrap._force, l = wrap.querySelector('label') || wrap.querySelector('span');
+  if (l && cur === 'ل.س') l.textContent = 'سعر الدولار (ل.س)';
+  var i = wrap.querySelector('input'); if (i && cur === 'ل.س') i.placeholder = 'مثلًا 15325';
+}
 function acurOf(name) { return (B.acur || {})[String(name || '').trim()] || ''; }
 function rememberRate(cur, rate) {
-  var r = num(rate);
+  var r = num(rate); if (r > 50) r = 1 / r;
   if (!cur || !(r > 0) || !B.set) return;
   B.set.curs.forEach(function (c) { if (c.code === cur && c.rate !== r) { c.rate = r; c.at = Date.now(); } });
 }
@@ -2860,7 +2928,7 @@ vInv = (function (orig) {
     var upd = function () { forceRate($('#iratew'), $('#irate'), $('#icur'), acurOf($('#isup').value), $('#iacc')); calcInv(); };
     $('#isup').addEventListener('input', upd); $('#isup').addEventListener('change', upd); $('#icur').addEventListener('change', upd);
     upd();
-    if (E && !E.cur && E.arate) $('#irate').value = E.arate;
+    if (E && !E.cur && E.arate) $('#irate').value = rateShow(E.arate);
   };
 })(vInv);
 
@@ -2897,7 +2965,7 @@ editJ = (function (orig) {
     $('#erate').closest('.f').insertAdjacentHTML('afterend', '<div class="f wide note" id="eacc" style="margin:0"></div>');
     var upd = function () { forceRate($('#eratew'), $('#erate'), $('#ecur'), acurOf(sp.value), $('#eacc')); };
     sp.addEventListener('input', upd); sp.addEventListener('change', upd); $('#ecur').addEventListener('change', upd);
-    if (x && !x.cur && x.rate > 1 && acurOf(x.sup)) $('#erate').value = x.rate;
+    if (x && !x.cur && x.rate && acurOf(x.sup)) $('#erate').value = rateShow(x.rate);
     upd();
   };
 })(editJ);
