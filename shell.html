@@ -142,6 +142,8 @@ body.dark .icard,html.ui-dark .icard{background:#1d2633;border-color:#2c3a4d}bod
 @media print{header,.noprint,#toast,.bar,.card:has(.grid){display:none!important}body{background:#fff}.tw,.stat,.st,.card{box-shadow:none}}
 .jsug{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 2px 0}.jsug:empty{display:none}.jsl{font-size:13px;color:var(--mut);font-weight:700}.jsc{border:1.5px solid #E16414;background:#FFF4EC;color:#B34A08;border-radius:999px;padding:5px 12px;font:inherit;font-size:14px;font-weight:800;cursor:pointer}.jsc small{font-weight:600;opacity:.75}.jsc.jai{border-style:dashed;background:transparent;color:var(--mut)}.jsw{flex-basis:100%;color:var(--mut);font-size:12px}body.dark .jsc,html.ui-dark .jsc{background:#3a2615;color:#FFB27A}
 .alr{padding:12px 14px}.alh{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}.alh b{font-size:16px}.alh small{color:var(--mut)}.alc{background:#E16414;color:#fff;border-radius:999px;padding:1px 8px;font-size:13px}.aln{background:#C62828;color:#fff;border-radius:6px;padding:1px 6px;font-size:11px}.all{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}.ali{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:12px;background:#F6F8FB;border:1px solid #E3E8EF;cursor:pointer}.ali.hi{background:#FFF4EC;border-color:#F5C58A}.ali b{display:block;font-size:14px}.ali small{display:block;color:var(--mut);font-size:12.5px;margin-top:2px}.aic{font-size:18px;line-height:1.3}html.ui-dark .ali,body.dark .ali{background:#1E2A36;border-color:#2c3a4d}html.ui-dark .ali.hi,body.dark .ali.hi{background:#33251a;border-color:#6b4a2c}
+.aimx{white-space:pre-wrap;line-height:1.9;font-size:15px;background:#F6F8FB;border:1px solid #E3E8EF;border-radius:12px;padding:12px 14px;margin-top:10px}html.ui-dark .aimx,body.dark .aimx{background:#1E2A36;border-color:#2c3a4d}
+.cpl{display:flex;flex-direction:column;gap:6px}.cpr{display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--line,#E3E8EF);padding:6px 0}.cpn{flex:1;min-width:0;font-size:14px}.cpn small{display:block;color:var(--mut);font-size:11.5px}.cpr select{flex:0 0 42%;width:42%;min-width:0;padding:6px 4px;font-size:14px}
 </style>
 <style>
 /* تنبيه ارتفاع السعر، تذكير اليومية، مقارنة العام الماضي، زر واتساب */
@@ -173,7 +175,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.26';
+window.APP_VER = '1.27';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -375,19 +377,26 @@ function doPLog(off) {
 function vItems() {
   $('#view').innerHTML =
     '<div class="row" style="margin-bottom:12px"><button class="btn grn" onclick="itemPop()">＋ إضافة صنف</button>' +
-    '<button class="btn sec" id="afill" onclick="fillCodes()">ترقيم الأصناف التي بلا كود</button></div>' +
+    '<button class="btn sec" id="afill" onclick="fillCodes()">ترقيم الأصناف التي بلا كود</button><button class="btn sec" id="aicat" onclick="aiCat()">🤖 تصنيف الأصناف تلقائيًا</button></div>' +
     '<div class="card"><div class="itf"><div class="f"><label class="vsl">المورد</label><select id="itsup" onchange="try{localStorage.setItem(\'safa_items_sup\',this.value)}catch(e){}renderItems()">' + supOpts(itSupSaved(), 'كل الموردين') + '</select></div>' +
+    '<div class="f"><label>التصنيف</label><select id="itcat" onchange="renderItems()"><option value="">كل التصنيفات</option></select></div>' +
     '<div class="f"><label>بحث في الأصناف</label><input id="iq" autocomplete="off" oninput="renderItems()"></div></div></div><div id="itl"><div class="muted">جارٍ التحميل…</div></div>';
   loadItems();
 }
 function itSupSaved() { var v = ''; try { v = localStorage.getItem('safa_items_sup') || ''; } catch (e) { /* */ } return (B.suppliers || []).indexOf(v) > -1 ? v : ''; }
 function loadItems() {
-  call('webListItems').then(function (a) { window.ITEMS = a; renderItems(); }).catch(function (e) { toast(errMsg(e), 'err'); });
+  call('webListItems').then(function (a) {
+    window.ITEMS = a;
+    /* قائمة التصنيفات الموجودة (مع العدد) */
+    var cs = $('#itcat'), cv = cs ? cs.value : '', m = {}; (a || []).forEach(function (i) { var c = String(i.cat || '').trim() || '—'; m[c] = (m[c] || 0) + 1; });
+    if (cs) cs.innerHTML = '<option value="">كل التصنيفات</option>' + Object.keys(m).sort(function (x, y) { return x.localeCompare(y, 'ar'); }).map(function (c) { return '<option value="' + esc(c) + '"' + (c === cv ? ' selected' : '') + '>' + esc(c === '—' ? 'بلا تصنيف' : c) + ' (' + m[c] + ')</option>'; }).join('');
+    renderItems();
+  }).catch(function (e) { toast(errMsg(e), 'err'); });
 }
 function renderItems() {
   var q = $('#iq').value.trim().toLowerCase();
   var sp = $('#itsup') ? $('#itsup').value : '';
-  var a = (window.ITEMS || []).filter(function (i) { return (!sp || i.sup === sp || (i.sups || []).indexOf(sp) > -1) && (!q || (i.name + ' ' + i.code + ' ' + i.cat + ' ' + i.notes).toLowerCase().indexOf(q) > -1); });
+  var a = (window.ITEMS || []).filter(function (i) { return (!$('#itcat') || !$('#itcat').value || ($('#itcat').value === '—' ? !String(i.cat || '').trim() : String(i.cat || '').trim() === $('#itcat').value)) && (!sp || i.sup === sp || (i.sups || []).indexOf(sp) > -1) && (!q || (i.name + ' ' + i.code + ' ' + i.cat + ' ' + i.notes).toLowerCase().indexOf(q) > -1); });
   if (!a.length) { $('#itl').innerHTML = '<div class="muted">لا توجد أصناف</div>'; return; }
   /* السعر بعملة آخر شراء (مثل ل.س لكشوف 2025)، وأسعار العملة الأخرى في سطر منفصل (alt) */
   function pr(v, c) { return (v === '' || v == null) ? '' : fmt(v) + ' <small>' + esc(csym(c)) + '</small>'; }
@@ -411,6 +420,62 @@ function renderItems() {
     }).join('') + '</div><div class="note">' + a.length + ' صنف</div>';
 }
 /* إضافة صنف في نافذة منبثقة (بنمط .dpop) */
+/* ===== تصنيف الأصناف تلقائيًا بالذكاء الاصطناعي (الخادم webAiCategorize على دفعات) ثم مراجعة وحفظ ===== */
+function aiCat() {
+  var b = $('#aicat'), got = [], lab = '🤖 تصنيف الأصناف تلقائيًا', C0 = [];
+  busy(b, true);
+  call('webAiCategorize', { list: true }).then(function (r) {
+    var todo = r.todo || [], cats = C0 = r.cats || [], rules = String(r.rules || '').replace('{CATS}', cats.join('، ')), N = 100, parts = [];
+    if (!todo.length) { busy(b, false); toast('كل الأصناف مصنّفة', 'ok'); return; }
+    for (var k = 0; k < todo.length; k += N) parts.push(todo.slice(k, k + N));
+    var done = 0, run = function (part) {
+      return aiGen(rules + part.map(function (x) { return x.code + ' | ' + x.name; }).join('\n'), true).then(function (j) {
+        var m = {}; (Array.isArray(j) ? j : (j.items || [])).forEach(function (x) { if (x && x.code) m[String(x.code).trim()] = String(x.cat || '').trim(); });
+        part.forEach(function (x) { var c = m[x.code]; got.push({ code: x.code, name: x.name, cat: cats.indexOf(c) > -1 ? c : 'أخرى' }); });
+        done += part.length; b.textContent = '🤖 صُنِّف ' + done + ' من ' + todo.length + '…';
+      });
+    };
+    /* دفعتان في الوقت نفسه */
+    var q = parts.slice(), worker = function () { var p = q.shift(); return p ? run(p).then(worker) : Promise.resolve(); };
+    return Promise.all([worker(), worker()]).then(function () {
+      busy(b, false); b.textContent = lab;
+      var ord = {}; todo.forEach(function (x, i) { ord[x.code] = i; }); got.sort(function (a, z) { return ord[a.code] - ord[z.code]; });
+      aiCatPop(got, cats);
+    });
+  }).catch(function (e) { busy(b, false); b.textContent = lab; if (got.length) toast('تعذّر إكمال التصنيف (' + errMsg(e) + ')، وعُرض ما صُنِّف', 'err'); else toast(errMsg(e), 'err'); if (got.length) aiCatPop(got, C0); });
+}
+function aiCatPop(L, cats) {
+  var old = $('#cpop'); if (old) old.remove();
+  var cnt = {}; L.forEach(function (x) { cnt[x.cat] = (cnt[x.cat] || 0) + 1; });
+  var opts = function (v) { return cats.map(function (c) { return '<option' + (c === v ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join(''); };
+  var o = document.createElement('div'); o.className = 'dpop'; o.id = 'cpop';
+  o.innerHTML = '<div class="dbox" style="max-width:760px"><div class="dhd" style="background:linear-gradient(135deg,var(--c,#1F4E79),#2E6DA4)"><button onclick="$(\'#cpop\').remove()">✕</button><b>🤖 التصنيفات المقترحة (' + L.length + ')</b><span style="min-width:40px"></span></div>' +
+    '<div class="dbd"><div class="note">راجع التصنيفات وعدّل ما تريد من القائمة بجانب كل صنف، ثم اضغط «حفظ التصنيفات».</div><div class="chips2" style="margin:6px 0 10px">' +
+    Object.keys(cnt).sort(function (a, z) { return cnt[z] - cnt[a]; }).map(function (c) { return '<button type="button" onclick="aiCatJump(this.textContent)">' + esc(c) + ' (' + cnt[c] + ')</button>'; }).join('') + '</div>' +
+    '<div class="cpl">' +
+    L.map(function (x, i) { return '<div class="cpr" data-c="' + esc(x.cat) + '"><div class="cpn">' + esc(x.name) + '<small>' + esc(x.code) + '</small></div><select data-i="' + i + '">' + opts(x.cat) + '</select></div>'; }).join('') +
+    '</div><div class="row" style="margin-top:12px"><button class="btn grn" id="csave">حفظ التصنيفات</button><button class="btn sec" onclick="$(\'#cpop\').remove()">إلغاء</button></div></div></div>';
+  document.body.appendChild(o);
+  o.addEventListener('click', function (e) { if (e.target === o) o.remove(); });
+  $('#csave').onclick = function () {
+    var b = this, ap = [].map.call(o.querySelectorAll('select[data-i]'), function (s) { return { code: L[+s.getAttribute('data-i')].code, cat: s.value }; });
+    busy(b, true);
+    call('webAiCategorize', { apply: ap }).then(function (r) { busy(b, false); o.remove(); toast('حُفظت تصنيفات ' + (r.n || ap.length) + ' صنفًا', 'ok'); loadItems(); })
+      .catch(function (e) { busy(b, false); toast(errMsg(e), 'err'); });
+  };
+}
+function aiCatJump(t) { var c = String(t).replace(/ \(\d+\)$/, ''), r = $('#cpop .cpr[data-c="' + c.replace(/"/g, '') + '"]'); if (r) r.scrollIntoView({ block: 'center' }); }
+/* ===== الملخص الشهري المكتوب (الخادم webAiMonth: أرقام الشهر + نص من Gemini) ===== */
+function aiMonth() {
+  var b = $('#aimb'), y = RYEAR || new Date().getFullYear(), m = +$('#aimm').value;
+  busy(b, true); $('#aimt').innerHTML = '<div class="muted">🤖 يكتب الملخص… (قد يستغرق دقيقة)</div>';
+  call('webAiMonth', { y: y, m: m }).then(function (r) { return r.text ? r.text : aiGen(r.prompt, false); }).then(function (t) {
+    busy(b, false); AIMT = String(t || '').replace(/\*\*/g, '');
+    $('#aimt').innerHTML = '<div class="aimx">' + esc(AIMT) + '</div><div class="row noprint" style="margin-top:10px"><button class="btn sec sm" onclick="aiMonthCopy()">نسخ</button><button class="btn sec sm" onclick="window.open(\'https://wa.me/?text=\'+encodeURIComponent(AIMT))">واتساب</button></div>';
+  }).catch(function (e) { busy(b, false); $('#aimt').innerHTML = ''; toast(errMsg(e), 'err'); });
+}
+var AIMT = '';
+function aiMonthCopy() { try { navigator.clipboard.writeText(AIMT).then(function () { toast('نُسخ الملخص', 'ok'); }); } catch (e) { toast('تعذّر النسخ', 'err'); } }
 function itemPop() {
   itemClose();
   var o = document.createElement('div'); o.className = 'dpop'; o.id = 'ipop';
@@ -1399,24 +1464,42 @@ function jSug(d) {
   });
 }
 var JAI = null;
+/* نداء Gemini من الجهاز مباشرة (المفتاح والنماذج من الخادم webAiCfg): نص أو JSON، مع الانتقال للنموذج التالي عند الازدحام */
+function aiGen(prompt, json) {
+  return (JAI ? Promise.resolve(JAI) : call('webAiCfg').then(function (c) { if (!c || !c.ok) throw new Error('الذكاء الاصطناعي غير مفعّل (أضف مفتاح Gemini من الإعدادات)'); JAI = c; return c; }))
+    .then(function (c) {
+      var models = c.models || [], i = 0, last = '';
+      function one(t) {
+        if (i >= models.length) return Promise.reject(new Error('خدمة الذكاء الاصطناعي مزدحمة الآن، حاول بعد دقيقة' + (last ? ' (' + last + ')' : '')));
+        var m = models[i], gc = { temperature: json ? 0 : 0.4 };
+        if (json) gc.responseMimeType = 'application/json';
+        if (/gemini-[3-9]/.test(m)) gc.thinkingConfig = { thinkingLevel: 'low' };
+        return fetch('https://generativelanguage.googleapis.com/v1beta/models/' + m + ':generateContent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': c.key }, body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: gc }) })
+          .then(function (r) { return r.json().then(function (j) { return { code: r.status, j: j }; }); })
+          .then(function (x) {
+            if (x.code === 200) {
+              var t = ((((x.j.candidates || [])[0] || {}).content || {}).parts || []).map(function (q) { return q.text || ''; }).join('').trim();
+              if (!json) return t;
+              try { return JSON.parse(t.replace(/^```(?:json)?|```$/g, '').trim()); } catch (e) { last = 'رد غير مكتمل'; i++; return one(0); }
+            }
+            last = (x.j.error && x.j.error.message) || ('HTTP ' + x.code);
+            if (x.code === 400 || x.code === 401 || x.code === 403) throw new Error('تعذّر الاتصال بالذكاء الاصطناعي: ' + last);
+            if (x.code === 503 && t < 1) return new Promise(function (r) { setTimeout(r, 1500); }).then(function () { return one(t + 1); });
+            i++; return one(0);
+          });
+      }
+      return one(0);
+    });
+}
 function jAsk(d, st, btn) {
   btn.disabled = true; btn.textContent = '🤖 يفكّر…';
-  (JAI ? Promise.resolve(JAI) : call('webAiCfg').then(function (c) { if (!c || !c.ok) throw new Error('الذكاء الاصطناعي غير مفعّل (مفتاح Gemini)'); JAI = c; return c; }))
-    .then(function (c) {
+  Promise.resolve().then(function () {
       var H = JH || { hints: [], accts: [] }, names = H.accts.map(function (a) { return a.name + (a.sub ? ' (حساب فرعي)' : ''); });
       var ex = H.hints.slice().sort(function (a, b) { return b.n - a.n; }).slice(0, 80).map(function (h) { return '«' + h.k + '» → ' + h.sup; }).join('\n');
       var prompt = 'أنت محاسب لمكتبة قرطاسية. قيد مدفوعات في يومية الصندوق بيانه: «' + st + '».\nاختر الحساب الذي يُرحَّل إليه من هذه القائمة فقط:\n' + names.join('، ') +
         '\nأمثلة من قيود سابقة (بيان → حساب):\n' + ex + '\nقواعد: «دفعة» أو «دفعة على الحساب» وحدها = الوفاء. المصاريف الصغيرة المتنوعة = نثريات. شراء نقدي من محل/مكتبة غير موجودة = مشتريات نقدية.' +
         '\nأجب JSON فقط: {"sup":"اسم الحساب كما في القائمة أو فارغ إن لم تعرف","why":"سبب قصير"}';
-      var models = c.models || [], i = 0;
-      function one() {
-        if (i >= models.length) return Promise.reject(new Error('تعذّر الاتصال بالذكاء الاصطناعي'));
-        var m = models[i], gc = { temperature: 0, responseMimeType: 'application/json' };
-        if (/gemini-[3-9]/.test(m)) gc.thinkingConfig = { thinkingLevel: 'low' };
-        return fetch('https://generativelanguage.googleapis.com/v1beta/models/' + m + ':generateContent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': c.key }, body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: gc }) })
-          .then(function (r) { return r.json().then(function (j) { if (r.status !== 200) { i++; return one(); } var t = ((((j.candidates || [])[0] || {}).content || {}).parts || []).map(function (q) { return q.text || ''; }).join(''); return JSON.parse(t.replace(/^```(?:json)?|```$/g, '').trim()); }); });
-      }
-      return one();
+      return aiGen(prompt, true);
     })
     .then(function (r) {
       var nm = String((r && r.sup) || '').trim(), ok = JH && JH.accts.some(function (a) { return a.name === nm; });
@@ -1881,6 +1964,9 @@ function doRMon() {
     $('#ry').innerHTML = r.years.map(function (y) { return '<option' + (y == r.year ? ' selected' : '') + '>' + y + '</option>'; }).join('');
     var rows = r.byMonth, t = repSum(rows), labels = rows.map(function (x) { return MN[x.m - 1]; });
     $('#rres').innerHTML = '<h1>التقرير الشهري — ' + r.year + '</h1><p class="sub">المشتريات والموردون بالدولار، واليومية (المقبوضات والمدفوعات وصافي النقد والذمم) بالليرة السورية.</p>' + repKpis(t) +
+      '<div class="card aim"><h2>🤖 الملخص الشهري المكتوب</h2><div class="row noprint"><div class="f" style="flex:0 1 160px"><label>الشهر</label><select id="aimm">' +
+      MN.map(function (n, i) { var cm = (r.year == new Date().getFullYear() ? new Date().getMonth() : 11); return '<option value="' + (i + 1) + '"' + (i === cm ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
+      '</select></div><button class="btn grn" id="aimb" onclick="aiMonth()" style="align-self:flex-end">اكتب الملخص</button></div><div id="aimt"></div></div>' +
       '<div class="card"><h2>المشتريات</h2>' + chartSvg(labels, SER(rows)) + '</div><div class="card"><h2>اليومية</h2>' + chartSvg(labels, SERJ(rows)) + '</div>' + repTable('الشهر', labels, rows, t);
   }).catch(function (e) { $('#rres').innerHTML = ''; toast(errMsg(e), 'err'); });
 }
