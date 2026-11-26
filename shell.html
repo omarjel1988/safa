@@ -145,6 +145,7 @@ body.dark .icard,html.ui-dark .icard{background:#1d2633;border-color:#2c3a4d}bod
 .aimx{white-space:pre-wrap;line-height:1.9;font-size:15px;background:#F6F8FB;border:1px solid #E3E8EF;border-radius:12px;padding:12px 14px;margin-top:10px}html.ui-dark .aimx,body.dark .aimx{background:#1E2A36;border-color:#2c3a4d}
 .cpl{display:flex;flex-direction:column;gap:6px}.cpr{display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--line,#E3E8EF);padding:6px 0}.cpn{flex:1;min-width:0;font-size:14px}.cpn small{display:block;color:var(--mut);font-size:11.5px}.cpr select{flex:0 0 42%;width:42%;min-width:0;padding:6px 4px;font-size:14px}
 .urow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line,#E3E8EF);border-radius:12px;margin-bottom:8px;cursor:pointer}.urow.off{opacity:.55}.uchip{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;background:#ECEFF1;color:#455A64;margin-inline-start:4px}.uchip.a{background:#E3F2FD;color:#1565C0}.uopts{display:flex;flex-direction:column;gap:8px;margin-top:10px}.uopts label{display:flex;gap:10px;align-items:center;font-size:14px;line-height:1.5}.uopts input,.utbl input{width:22px!important;height:22px!important;min-height:0!important;min-width:0!important;flex:0 0 22px;padding:0!important;margin:0;box-shadow:none!important;accent-color:var(--c,#1F4E79)}.utbl{width:100%;min-width:0!important;table-layout:fixed;border-collapse:collapse}.utbl th:first-child,.utbl td:first-child{width:34%}.utbl td,.utbl th{text-align:center;padding:8px 2px;border-bottom:1px solid var(--line,#E3E8EF);font-size:13.5px;white-space:normal}.utbl td.l,.utbl th.l{text-align:start}.alog{padding:8px 0;border-bottom:1px solid var(--line,#E3E8EF)}.alog small{display:block;color:var(--mut);font-size:12px}.alog code{display:block;font-size:11px;color:#637082;white-space:pre-wrap;word-break:break-all;max-height:60px;overflow:hidden;direction:ltr;text-align:left}body.nomoney #kpis,body.nomoney #dash2,body.nomoney #alr,body.nomoney #lyc{display:none!important}
+.srw{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line,#E3E8EF)}.srw:last-child{border-bottom:0}.srw b{font-size:15px}
 </style>
 <style>
 /* تنبيه ارتفاع السعر، تذكير اليومية، مقارنة العام الماضي، زر واتساب */
@@ -176,7 +177,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '2.0';
+window.APP_VER = '2.1';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 /* الأمان: هوية هذا الجهاز تُرسل مع الدخول (سجل الدخول، وخروج جهاز محدد) — نفس مفتاح «الأجهزة المتصلة» */
 function secDev() {
@@ -2032,13 +2033,17 @@ function renderSettings() {
     '<div class="card"><h2>👤 حسابي</h2><p class="sub">' + esc((B.me && B.me.name) || 'المدير') + ' — اسم الدخول: <b dir="ltr">' + esc((B.me && B.me.u) || 'admin') + '</b>' + (B.me && B.me.admin ? ' · مدير' : '') + '</p><div class="grid">' +
     '<div class="f"><label>كلمة المرور الحالية</label>' + pw('pold') + '</div><div class="f"><label>كلمة المرور الجديدة (6 خانات على الأقل)</label>' + pw('pnew') + '</div><div class="f"><label>تأكيد كلمة المرور</label>' + pw('pnew2') + '</div></div>' +
     '<div class="row" style="margin-top:12px"><button class="btn grn" onclick="saveMyPass()">تغيير كلمة المرور</button><button class="btn warn" onclick="logoutMe()">🚪 تسجيل الخروج</button></div></div>' +
+    '<div class="card"><h2>🛡️ الأمان والنظام</h2><div id="sbio"></div>' +
+    (!B.me || B.me.admin ? '<div class="srw"><b>🔐 الأجهزة المتصلة والأمان</b><button class="btn sec sm" onclick="uiDev()">عرض</button></div>' : '') +
+    '<div class="srw"><b>🛠 حالة النظام</b><button class="btn sec sm" onclick="uiSys()">فتح</button></div></div>' +
     (B.me && !B.me.admin ? '' : '<div class="card"><h2>👥 المستخدمون والصلاحيات</h2><p class="sub">أضف مستخدمين وحدد لكل واحد ما يرى وما يضيف وما يعدّل وما يحذف في كل قسم. كل عملية تُسجَّل باسم من قام بها.</p><div id="ulist"><div class="muted">جارٍ التحميل…</div></div>' +
       '<div class="row" style="margin-top:12px"><button class="btn grn" onclick="userPop()">＋ مستخدم جديد</button><button class="btn sec" onclick="auditPop()">📜 سجل العمليات</button></div></div>') +
     '<div class="card' + (se ? '' : ' hide') + '"><h2>النسخ الاحتياطي</h2><p class="sub">نسخة تلقائية كل أسبوع من الملفين بصيغة Excel في مجلد «نسخ احتياطية - مكتبة الصفاء» على Drive، ويُحتفظ بآخر 10 نسخ لكل ملف.</p>' +
     '<div class="stats"><div class="st"><small>آخر نسخة</small><b style="font-size:16px">' + (s.backup.last ? esc(new Date(s.backup.last).toLocaleString('ar-SA-u-ca-gregory-nu-latn')) : 'لم تُنشأ بعد') + '</b></div></div>' +
-    '<div class="row"><button class="btn" id="bkn" onclick="backupNow()">إنشاء نسخة الآن</button>' + (s.backup.url ? '<a class="lnk" style="margin:0" href="' + esc(s.backup.url) + '" target="_blank" rel="noopener">فتح مجلد النسخ ←</a>' : '') + '</div></div>';
+    '<div class="row"><button class="btn" id="bkn" onclick="backupNow()">إنشاء نسخة الآن</button><button class="btn sec" onclick="uiBackup()">⬇︎ تنزيل نسخة على هذا الجهاز</button>' + (s.backup.url ? '<a class="lnk" style="margin:0" href="' + esc(s.backup.url) + '" target="_blank" rel="noopener">فتح مجلد النسخ ←</a>' : '') + '</div></div>';
   s.set.curs.forEach(function (c) { addCurRow(c); });
   if ($('#ulist')) usersLoad();
+  if (window.uiBioRows) uiBioRows($('#sbio'));
 }
 /* ===== حسابي + إدارة المستخدمين (المدير) ===== */
 function saveMyPass() {
@@ -3339,7 +3344,7 @@ onDom(function () { tblCards(); zebraCards(); });
         var h = CFG.header();
         if (!h || h.querySelector('.ui-aa'))
             return;
-        var b = el('<button class="ui-hbtn ui-aa" title="المظهر والإعدادات">Aa</button>');
+        var b = el('<button class="ui-hbtn ui-aa" title="المظهر">Aa</button>');
         b.onclick = lookSheet;
         {
             var hb = document.getElementById('homeBtn');
@@ -3349,10 +3354,9 @@ onDom(function () { tblCards(); zebraCards(); });
     var LOCKM = Number(ls('ui_lock') || 10);
     function lookSheet() {
         var z = [[0.9, 'صغير'], [1, 'عادي'], [1.12, 'كبير'], [1.25, 'كبير جدًا']], d = CFG.dark(), cz = CFG.zoom();
-        var o = sheet('المظهر والإعدادات', [], '<div class="rw"><b>الوضع</b><span class="ui-seg"><button data-d="0" class="' + (d ? '' : 'on') + '">☀️ فاتح</button><button data-d="1" class="' + (d ? 'on' : '') + '">🌙 داكن</button></span></div>' +
+        var o = sheet('المظهر', [], '<div class="rw"><b>الوضع</b><span class="ui-seg"><button data-d="0" class="' + (d ? '' : 'on') + '">☀️ فاتح</button><button data-d="1" class="' + (d ? 'on' : '') + '">🌙 داكن</button></span></div>' +
             '<div class="rw"><b>حجم الخط</b><span class="ui-seg">' + z.map(function (q) { return '<button data-z="' + q[0] + '" class="' + (cz === q[0] ? 'on' : '') + '">' + q[1] + '</button>'; }).join('') + '</span></div>' +
             '<div class="rw"><b>القفل التلقائي</b><span class="ui-seg">' + [[5, '5 د'], [10, '10 د'], [30, '30 د'], [0, 'إيقاف']].map(function (q) { return '<button data-l="' + q[0] + '" class="' + (LOCKM === q[0] ? 'on' : '') + '">' + q[1] + '</button>'; }).join('') + '</span></div>' +
-            '<div class="rw" style="border:0"><b>نسخة احتياطية على هذا الجهاز</b><button class="ui-hbtn" data-bk="1" style="background:var(--ui)">⬇︎ تنزيل</button></div>' +
             '<div style="color:#8796A5;font-size:12.5px">القفل التلقائي يطلب رمز الدخول بعد مدة بلا استخدام (إذا كان الرمز مفعّلًا).</div>');
         o.addEventListener('click', function (e) {
             var b = e.target.closest('button');
@@ -3380,7 +3384,8 @@ onDom(function () { tblCards(); zebraCards(); });
             }
         });
     }
-    /* ---------- النسخة الاحتياطية على الجهاز ---------- */
+    /* ---------- النسخة الاحتياطية على الجهاز (زرها في صفحة «الإعدادات» ← النسخ الاحتياطي) ---------- */
+    W.uiBackup = function () { backup(); };
     function backup() {
         if (!navigator.onLine) {
             msg('تنزيل النسخة يحتاج اتصالًا بالإنترنت', true);
@@ -3818,34 +3823,31 @@ onDom(function () { tblCards(); zebraCards(); });
         rotIcon(b);
     }
     onDom(rotBtn);
-    /* زر تفعيل البصمة داخل نافذة المظهر */
-    onDom(function () {
-        var bx = document.querySelector('.ui-sheet .bx');
-        if (!bx || bx.querySelector('.bio-row') || !/المظهر والإعدادات/.test(bx.textContent))
-            return;
+    /* صفوف «الدخول ببصمة الوجه» و«القفل التلقائي بعد» — تُعرض في صفحة «الإعدادات» (W.uiBioRows(box)) */
+    W.uiBioRows = function (bx) {
+        if (!bx) return;
         bioOk().then(function (ok) {
-            if (!ok || bx.querySelector('.bio-row'))
-                return;
+            if (!ok) { bx.innerHTML = '<div class="srw"><b>الدخول ببصمة الوجه</b><span class="muted">غير مدعوم على هذا الجهاز</span></div>'; return; }
             var on = !!bioInfo();
-            var r = el('<div class="rw bio-row"><b>الدخول ببصمة الوجه</b><button class="ui-hbtn" style="background:' + (on ? '#C62828' : 'var(--ui)') + '">' + (on ? 'إيقاف' : 'تفعيل') + '</button></div>');
-            r.querySelector('button').onclick = function () { var s = r.closest('.ui-sheet'); if (s)
-                s.remove(); if (on) {
+            bx.innerHTML = '';
+            var r = el('<div class="srw bio-row"><b>👆 الدخول ببصمة الوجه</b><button class="btn ' + (on ? 'warn' : 'grn') + ' sm">' + (on ? 'إيقاف' : 'تفعيل') + '</button></div>');
+            r.querySelector('button').onclick = function () { if (on) {
                 ls(BK, null);
                 msg('أُوقف الدخول ببصمة الوجه');
+                W.uiBioRows(bx);
             }
             else
                 bioEnable(); };
-            var rws = bx.querySelectorAll('.rw');
-            bx.insertBefore(r, rws[rws.length - 1] || null);
+            bx.appendChild(r);
             if (on) {
                 var m = lockMins(), opts = [[1, 'دقيقة'], [3, '3 دقائق'], [5, '5 دقائق'], [10, '10 دقائق'], [15, '15 دقيقة'], [30, '30 دقيقة'], [60, 'ساعة'], [0, 'بدون قفل']];
-                var r2 = el('<div class="rw bio-row2"><b>القفل التلقائي بعد</b><select style="min-height:38px;border-radius:10px;border:1px solid #ccc;font:700 14px Cairo,system-ui,sans-serif;padding:0 8px">' +
+                var r2 = el('<div class="srw bio-row2"><b>القفل التلقائي بالبصمة بعد</b><select style="width:auto;min-width:130px">' +
                     opts.map(function (x) { return '<option value="' + x[0] + '"' + (x[0] === m ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select></div>');
                 r2.querySelector('select').onchange = function () { ls(LKM, this.value); touch(); msg(this.value === '0' ? 'أُوقف القفل التلقائي' : 'سيُقفل التطبيق بعد ' + this.options[this.selectedIndex].text + ' من عدم الاستخدام'); };
-                bx.insertBefore(r2, r.nextSibling);
+                bx.appendChild(r2);
             }
         });
-    });
+    };
 })();
 </script>
 <script>
@@ -4327,17 +4329,17 @@ onDom(function () { tblCards(); zebraCards(); });
             };
         });
     }
-    /* صفوف إضافية في نافذة «المظهر والإعدادات» */
+    /* «حالة النظام» و«الأجهزة المتصلة والأمان» تُفتح من صفحة «الإعدادات» */
+    W.uiSys = function () { sysSheet(); };
+    W.uiDev = function () { devSheet(); };
+    /* صفوف إضافية في نافذة «المظهر» */
     onDom(function () {
         var bx = document.querySelector('.ui-sheet .bx');
-        if (!bx || bx.querySelector('.u3-rows') || !/المظهر والإعدادات/.test(bx.textContent))
+        if (!bx || bx.querySelector('.u3-rows') || !/المظهر/.test(bx.textContent) || !/حجم الخط/.test(bx.textContent))
             return;
         var h = '<div class="u3-rows">' +
-            '<div class="rw"><b>✨ طلب تعديل من Claude</b><a class="ui-hbtn" href="https://claude.ai/project/01a1fb54-a249-7381-9d01-9e00d43c4c82" target="_blank" rel="noopener" style="background:var(--ui);text-decoration:none">فتح</a></div>' +
             '<div class="rw"><b>👤 الاسم على هذا الجهاز: ' + E(RT.userName() || '—') + '</b><button class="ui-hbtn" data-u3="uname" style="background:var(--ui)">تغيير</button></div>' +
             '<div class="rw"><b>⭐ المفضلة</b><button class="ui-hbtn" data-u3="fav" style="background:var(--ui)">تعديل</button></div>' +
-            '<div class="rw"><b>🛠 حالة النظام</b><button class="ui-hbtn" data-u3="sys" style="background:var(--ui)">فتح</button></div>' +
-            '<div class="rw"><b>🔐 الأجهزة المتصلة والأمان</b><button class="ui-hbtn" data-u3="dev" style="background:var(--ui)">عرض</button></div>' +
             ('<div class="rw"><b>تنبيه ارتفاع السعر</b><span class="ui-seg">' + [5, 10, 20].map(function (p) { return '<button data-rise="' + p + '" class="' + (riseTh() === p ? 'on' : '') + '">' + p + '%</button>'; }).join('') + '</span></div>') + '</div>';
         var r = el(h), rws = bx.querySelectorAll('.rw');
         bx.insertBefore(r, rws[rws.length - 1] || null);
