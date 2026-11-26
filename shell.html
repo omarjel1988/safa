@@ -177,7 +177,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '3.5';
+window.APP_VER = '3.5.1';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 /* الأمان: هوية هذا الجهاز تُرسل مع الدخول (سجل الدخول، وخروج جهاز محدد) — نفس مفتاح «الأجهزة المتصلة» */
 function secDev() {
@@ -1805,7 +1805,7 @@ function vPos() {
     '<div id="posl"></div></div>' +
     '<div class="card"><h2>فواتير اليوم على هذا الجهاز</h2><div id="posh"></div></div>' +
     '<div class="bar"><div class="tot">الإجمالي<b id="post">0</b></div><button class="btn grn" id="possv" onclick="posSave()">حفظ الفاتورة</button></div>';
-  posLines(); posHist();
+  posLines(); posHist(); posHistSync();
   $('#posl').innerHTML = '<div class="posem"><span class="spin"></span> جارٍ تجهيز الأصناف…</div>';
   sbLoad(function () { if (CUR !== 'pos') return; posTop(); posLines(); }).catch(function (e) { if (!SB) $('#posl').innerHTML = '<div class="posem">' + esc(errMsg(e)) + '</div>'; });
   bcWarm();
@@ -1928,7 +1928,18 @@ function posHist() {
       '<small>' + ('0' + tm.getHours()).slice(-2) + ':' + ('0' + tm.getMinutes()).slice(-2) + ' · ' + esc(x.cust || 'نقدي') + ' · ' + x.lines.length + ' صنف</small></span><b>' + ls0(x.total) + '</b></div>';
   }).join('') : '<div class="muted">لا توجد فواتير اليوم بعد</div>';
 }
-var POSH = [];
+var POSH = [], POSSYNC = 0;
+/* مطابقة فواتير الجهاز مع الخادم: ما حُذف من «فواتير البيع» (من أي جهاز) يختفي من القائمة هنا */
+function posHistSync() {
+  if (!navigator.onLine || Date.now() - POSSYNC < 30000 || !can('sales', 'v')) return;
+  POSSYNC = Date.now();
+  var from = todayStr(), H = lsJ('safa_pos_inv', []).filter(function (x) { return x.date === from; }); if (!H.length) return;
+  call('webSaleList', { from: from, to: from }).then(function (r) {
+    var ids = {}, q = posPending(), old = Date.now() - 120000; (r.inv || []).forEach(function (x) { ids[x.id] = 1; });
+    var H2 = lsJ('safa_pos_inv', []), K = H2.filter(function (x) { return x.date !== from || ids[x.id] || q[x.id] || x.t > old; });
+    if (K.length !== H2.length) { lsS('safa_pos_inv', K); if (CUR === 'pos') posHist(); }
+  }).catch(function () { });
+}
 /* عرض فاتورة بيع ومشاركتها */
 function saleText(x) {
   var o = ['مكتبة الصفاء', 'فاتورة بيع ' + x.no + ' — ' + x.date, 'العميل: ' + (x.cust || 'نقدي'), ''];
@@ -1946,7 +1957,7 @@ function saleView(x) {
     '<div class="phl" style="cursor:default;border-top:2px solid var(--bd)"><span><b>الإجمالي</b>' + (x.profit != null && x.nc !== undefined ? '<small>الربح ' + ls0(x.profit) + ' ل.س' + (x.nc ? ' (' + x.nc + ' صنف بلا تكلفة)' : '') + '</small>' : '') + '</span><b>' + ls0(x.total) + ' ل.س</b></div>' +
     '<div class="row" style="margin-top:12px"><button class="btn grn" onclick="window.open(\'https://wa.me/?text=\'+encodeURIComponent(saleText(SALEV)),\'_blank\')">واتساب</button>' +
     (navigator.share ? '<button class="btn sec" onclick="navigator.share({text:saleText(SALEV)}).catch(function(){})">مشاركة</button>' : '') +
-    (x.user !== undefined && can('sales', 'd') ? '<button class="btn warn" onclick="saleDel(this)">حذف</button>' : '') + '</div></div></div>';
+    (can('sales', 'd') ? (posPending()[x.id] ? '<span class="note">⏳ بانتظار الإرسال — يمكن حذفها بعد وصولها للخادم</span>' : '<button class="btn warn" onclick="saleDel(this)">حذف</button>') : '') + '</div></div></div>';
   o.onclick = function (e) { if (e.target === o) o.remove(); };
   document.body.appendChild(o);
 }
@@ -1956,7 +1967,8 @@ function saleDel(b) {
   call('webSaleDelete', { id: SALEV.id }).then(function (r) {
     if (r && r.ok === false) { busy(b, false); toast(r.msg, 'err'); return; }
     lsS('safa_pos_inv', lsJ('safa_pos_inv', []).filter(function (x) { return x.id !== SALEV.id; }));
-    var p = $('#svpop'); if (p) p.remove(); toast('حُذفت الفاتورة', 'ok'); if (CUR === 'sinv') doSInv();
+    lsS('safa_pos_ops', lsJ('safa_pos_ops', []).filter(function (o) { return o.id !== SALEV.id; })); sbApply();
+    var p = $('#svpop'); if (p) p.remove(); toast('حُذفت الفاتورة', 'ok'); if (CUR === 'sinv') doSInv(); if (CUR === 'pos') posHist();
   }, function (e) { busy(b, false); toast(errMsg(e), 'err'); });
 }
 
