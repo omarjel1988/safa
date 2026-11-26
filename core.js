@@ -73,7 +73,7 @@
       'webSupSaveEntry', 'webSupDeleteEntry', 'webSupSaveSupplier', 'webSupDeleteSupplier', 'webInvReplace', 'webInvDelete', 'webInvAttach',
       'webSaveSettings', 'webSetPin', 'webBackupNow', 'webAutoBackup', 'webSetRate', 'webSetGeminiKey',
       'webSaleSave', 'webSaleDelete', 'webItemBarcode', 'webItemSaleSet', 'webSalesSet', 'webStockCount'],
-    nocache: ['webDevPing', 'webDevList', 'webDevOut', 'webPdf', 'webInvPdf', 'webSupPdf', 'webInvExtract', 'webAiState', 'webAiCfg', 'webStmtImport', 'webPFindPdf', 'webAiCategorize', 'webAiMonth'],
+    nocache: ['webDevPing', 'webDevList', 'webDevOut', 'webPdf', 'webInvPdf', 'webSupPdf', 'webInvExtract', 'webAiState', 'webAiCfg', 'webStmtImport', 'webPFindPdf', 'webAiCategorize', 'webAiMonth', 'webFxRate'],
     swr: ['webBoot', 'webDash'],
     offline: {
       /* المبيعات: الفاتورة تُحفظ في الجهاز وتُرسل عند عودة الاتصال (الخادم يتجاهل المعرّف المكرر) */

@@ -177,7 +177,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '3.4';
+window.APP_VER = '3.5';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 /* الأمان: هوية هذا الجهاز تُرسل مع الدخول (سجل الدخول، وخروج جهاز محدد) — نفس مفتاح «الأجهزة المتصلة» */
 function secDev() {
@@ -771,6 +771,7 @@ var SUP = (function () {
     fill: function (d) {
       var sel = d.querySelector('#e-sup'), cv = sel.value; sel.innerHTML = supOptions(cv); sel.value = cv;
       var ms = d.querySelector('#e-method'), mv = ms.value; ms.innerHTML = methodOpts(mv); ms.value = mv; curFill(d.querySelector('#e-cur'), d.querySelector('#e-rate'), d.querySelector('#e-ratew'));
+      setTimeout(function () { fxHook('#e-date', '#e-cur', '#e-rate', '#e-ratew', !!d._load); }, 0);
       if (d._load) {
         var x = D.entries.find(function (y) { return y.id === d._load; });
         if (x && supById(x.sid)) {
@@ -1053,6 +1054,7 @@ function vInv() {
   if (E && E.method) $('#imethod').value = E.method;
   curFill($('#icur'), $('#irate'), $('#iratew'), calcInv);
   if (E && E.cur) curSet($('#icur'), $('#irate'), $('#iratew'), E.cur, E.rate);
+  setTimeout(function () { fxHook('#idate', '#icur', '#irate', '#iratew', E && (E.cur || E.arate)); }, 0);
   $('#ipay').onchange = payNote; payNote();
   if (E) E.lines.forEach(function (l) { addInvLine({ name: l.item, code: l.code, price: +(l.price / (E.cur ? E.rate : 1)).toFixed(6), qty: l.qty, base: l.base ? +(l.base / (E.cur ? E.rate : 1)).toFixed(6) : '' }); });
   else addInvLine();
@@ -1412,6 +1414,7 @@ function vJEntry() {
     'لدفعة مورد: اكتب المبلغ في ' + esc(L.out) + ' واختر المورد، فتُرحَّل تلقائيًا إلى كشف حسابه في قيود الموردين.</div>' +
     '<div class="bar"><div class="tot" id="jtot">—</div><button class="btn grn" id="jsave" onclick="saveJ()">حفظ اليومية</button></div>';
   curFill($('#jcur'), $('#jrate'), $('#jratew'), calcJ);
+  setTimeout(function () { fxHook('#jdate', '#jcur', '#jrate', '#jratew'); }, 0);
   addJLine();
   loadDay();
 }
@@ -2362,6 +2365,43 @@ function curFill(sel, inp, wrap, cb) {
   }
   curShow(sel, wrap);
 }
+/* ===== سعر الدولار من sp-today.com حسب تاريخ العملية (3.5) — webFxRate: متوسط الشراء والمبيع بالليرة القديمة =====
+   يملأ خانة سعر الليرة تلقائيًا (بنفس صيغة النظام: دولار لكل ليرة = 1 ÷ السعر) ما لم تُكتب يدويًا (inp._man)، مع سطر يوضح المصدر.
+   الذاكرة في الجهاز safa_fx (سعر اليوم يُعاد جلبه بعد 3 ساعات). */
+var FXC = lsJ('safa_fx', {});
+function fxGet(ds) {
+  var x = FXC[ds];
+  if (x && (ds !== todayStr() || Date.now() - x.t < 3 * 36e5)) return Promise.resolve(x);
+  return call('webFxRate', { date: ds }).then(function (r) {
+    if (!r || !(r.syp > 0)) return null;
+    FXC[ds] = { syp: r.syp, d: r.d, t: Date.now() }; lsS('safa_fx', FXC); return FXC[ds];
+  });
+}
+function fxHook(dId, cId, rId, wId, man) {
+  var dt = $(dId), sel = $(cId), inp = $(rId), wrap = $(wId); if (!dt || !sel || !inp || !wrap) return;
+  inp._man = !!man;
+  var run = function () { fxFill(dt, sel, inp, wrap); };
+  wrap._fx = run;
+  if (!inp._fxb) {
+    inp._fxb = 1;
+    inp.addEventListener('input', function (e) { if (e.isTrusted) { inp._man = 1; run(); } });
+    dt.addEventListener('change', run); sel.addEventListener('change', function () { inp._man = 0; run(); });
+  }
+  run();
+}
+function fxFill(dt, sel, inp, wrap) {
+  if (!B || !B.set) return;
+  var cur = sel.value && sel.value !== B.set.base ? sel.value : (wrap._force || ''), hint = $('.fxh', wrap);
+  if (cur !== 'ل.س') { if (hint) hint.innerHTML = ''; return; }
+  if (!hint) { hint = document.createElement('small'); hint.className = 'fxh'; hint.style.cssText = 'display:block;color:var(--mut);font-size:12px;margin-top:3px'; wrap.appendChild(hint); }
+  var ds = dt.value || todayStr();
+  fxGet(ds).then(function (x) {
+    if (!x || (dt.value || todayStr()) !== ds) return;
+    var v = 1 / x.syp, same = Math.abs(num(inp.value) - v) < v * 1e-6;
+    hint.innerHTML = '📈 الليرة اليوم (' + esc(x.d) + '): <b>' + ls0(x.syp) + '</b> ل.س للدولار' + (inp._man && !same ? ' · <a href="#" onclick="event.preventDefault();var w=this.closest(\'.f\'),i=w.querySelector(\'input\');i._man=0;w._fx&&w._fx()">استخدمه</a>' : '');
+    if (!inp._man && !same) { inp.value = String(v); inp.dispatchEvent(new Event('input')); }
+  }).catch(function () { hint.innerHTML = ''; });
+}
 function curSet(sel, inp, wrap, cur, rate) {
   if (cur && !$$('option', sel).some(function (o) { return o.value === cur; })) sel.insertAdjacentHTML('beforeend', '<option>' + esc(cur) + '</option>');
   sel.value = cur || B.set.base;
@@ -2795,6 +2835,7 @@ function forceRate(wrap, inp, sel, ac, note) {
   if (l) l.textContent = ac ? 'سعر ' + ac + ' اليوم' : 'سعر الصرف';
   if (ac && !inp.value) inp.value = curDefRate(ac);
   curShow(sel, wrap);
+  if (wrap._fx) wrap._fx();
   if (note) note.innerHTML = ac ? 'حساب هذا المورد بالـ <b>' + esc(ac) + '</b>: سعر ' + esc(ac) + ' اليوم مطلوب ليُحوَّل المبلغ إلى رصيده' + (cur && cur !== ac ? '. <b class="neg">اختر ' + esc(ac) + ' أو ' + esc(B.set.base) + ' كعملة.</b>' : '.') : '';
 }
 
