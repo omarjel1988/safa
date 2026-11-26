@@ -141,6 +141,7 @@ html.ui-dark .stbal,body.dark .stbal{background:#2A2216;border-color:#4a3a20}
 body.dark .icard,html.ui-dark .icard{background:#1d2633;border-color:#2c3a4d}body.dark .icard .ip div,html.ui-dark .icard .ip div{background:#243042}body.dark .icard .ic,html.ui-dark .icard .ic{background:#2c3a4d;color:#cfe0f2}
 @media print{header,.noprint,#toast,.bar,.card:has(.grid){display:none!important}body{background:#fff}.tw,.stat,.st,.card{box-shadow:none}}
 .jsug{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 2px 0}.jsug:empty{display:none}.jsl{font-size:13px;color:var(--mut);font-weight:700}.jsc{border:1.5px solid #E16414;background:#FFF4EC;color:#B34A08;border-radius:999px;padding:5px 12px;font:inherit;font-size:14px;font-weight:800;cursor:pointer}.jsc small{font-weight:600;opacity:.75}.jsc.jai{border-style:dashed;background:transparent;color:var(--mut)}.jsw{flex-basis:100%;color:var(--mut);font-size:12px}body.dark .jsc,html.ui-dark .jsc{background:#3a2615;color:#FFB27A}
+.alr{padding:12px 14px}.alh{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}.alh b{font-size:16px}.alh small{color:var(--mut)}.alc{background:#E16414;color:#fff;border-radius:999px;padding:1px 8px;font-size:13px}.aln{background:#C62828;color:#fff;border-radius:6px;padding:1px 6px;font-size:11px}.all{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}.ali{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:12px;background:#F6F8FB;border:1px solid #E3E8EF;cursor:pointer}.ali.hi{background:#FFF4EC;border-color:#F5C58A}.ali b{display:block;font-size:14px}.ali small{display:block;color:var(--mut);font-size:12.5px;margin-top:2px}.aic{font-size:18px;line-height:1.3}html.ui-dark .ali,body.dark .ali{background:#1E2A36;border-color:#2c3a4d}html.ui-dark .ali.hi,body.dark .ali.hi{background:#33251a;border-color:#6b4a2c}
 </style>
 <style>
 /* تنبيه ارتفاع السعر، تذكير اليومية، مقارنة العام الماضي، زر واتساب */
@@ -172,7 +173,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.25';
+window.APP_VER = '1.26';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -1756,6 +1757,7 @@ var SUPC = [];
 var MNS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 function homeExtras(d) {
   var old = $('#jban'); if (old) old.remove(); old = $('#lyc'); if (old) old.remove();
+  alertsCard();
   if (d.lastJ !== undefined && d.today && d.lastJ !== d.today && localStorage.getItem('u3_jban') !== d.today) {
     var hero = $('#view .hero');
     if (hero) hero.insertAdjacentHTML('afterend', '<div class="jban noprint" id="jban"><span>📒 لم تُدخل يومية اليوم بعد' + (d.lastJ ? ' — آخر يومية ' + esc(d.lastJ) : '') + '</span><span style="display:flex;gap:6px"><button onclick="go(\'jentry\')">إدخال الآن</button><button class="l" onclick="localStorage.setItem(\'u3_jban\', DASH.today); this.closest(\'.jban\').remove()">لاحقًا</button></span></div>');
@@ -1769,6 +1771,42 @@ function homeExtras(d) {
       c('مقبوضات ' + esc(mo), jm(L.linn, L.inn), 'هذا الشهر: ' + jm(d.ljin, d.jin)) +
       c('مدفوعات ' + esc(mo), jm(L.lout, L.out), 'هذا الشهر: ' + jm(d.ljout, d.jout)) + '</div></div>');
   }
+}
+/* ===== التنبيهات الذكية (الرئيسية) — الخادم webAlerts: ارتفاع الأسعار، سعر صرف شاذ في اليومية، رصيد صندوق سالب،
+   قيود مدفوعات غير مرحّلة، موردون بلا دفعة منذ 45 يومًا. تُجلب مرة في الجلسة (ALR) وتُحفظ للعرض دون اتصال؛ «جديد» إن تغيّرت منذ آخر اطلاع ===== */
+var ALR = null, ALRP = null, ALRALL = false;
+function alertsCard() {
+  var put = function (r) {
+    var box = $('#alr'), kp = $('#kpis'); if (!kp) return;
+    if (!box) { kp.insertAdjacentHTML('beforebegin', '<div class="card alr noprint" id="alr"></div>'); box = $('#alr'); }
+    var A = (r && r.items) || [];
+    if (!A.length) { box.innerHTML = '<div class="alh"><b>🔔 التنبيهات الذكية</b><small>✅ لا شيء يحتاج انتباهك' + (r && r.at ? ' — ' + esc(r.at) : '') + '</small></div>'; return; }
+    var sig = A.map(function (x) { return x.t + (x.row || x.title) + (x.date || ''); }).join('|'), seen = localStorage.getItem('safa_alr_seen') === sig;
+    var show = ALRALL ? A : A.slice(0, 3);
+    box.innerHTML = '<div class="alh"><b>🔔 التنبيهات الذكية <span class="alc">' + A.length + '</span>' + (seen ? '' : ' <span class="aln">جديد</span>') + '</b><small>' + esc(r.at || '') + '</small></div>' +
+      '<div class="all">' + show.map(function (x, i) { return alertRow(x, i); }).join('') + '</div>' +
+      (A.length > 3 ? '<button class="btn sec sm" onclick="ALRALL=!ALRALL;alertsCard()">' + (ALRALL ? 'عرض أقل' : 'عرض كل التنبيهات (' + A.length + ')') + '</button>' : '');
+    [].forEach.call(box.querySelectorAll('.ali[data-i]'), function (el) { el.onclick = function () { localStorage.setItem('safa_alr_seen', sig); alertGo(A[+el.getAttribute('data-i')]); }; });
+    if (ALRALL) localStorage.setItem('safa_alr_seen', sig);
+  };
+  if (ALR) { put(ALR); return; }
+  try { var c = JSON.parse(localStorage.getItem('safa_alr') || 'null'); if (c) put(c); } catch (e) { /* */ }
+  if (!ALRP) ALRP = call('webAlerts', { rise: riseTh() }).then(function (r) { ALR = r; try { localStorage.setItem('safa_alr', JSON.stringify(r)); } catch (e) { /* */ } if ($('#kpis')) put(r); }).catch(function () { ALRP = null; });
+}
+function alertRow(x, i) {
+  var ic = { price: '📈', rate: '💱', neg: '⚠️', unposted: '📝', unpaid: '⏳' }[x.t] || '🔔', t = '', d = '';
+  if (x.t === 'price') { t = 'ارتفاع سعر: ' + esc(x.title.replace(/^⬆ /, '')); d = '<b class="neg">+' + x.pct + '%</b> من ' + money(x.from, x.cur) + ' إلى ' + money(x.to, x.cur) + ' · ' + esc(x.sup) + ' · ' + esc(x.date); }
+  else if (x.t === 'rate') { t = 'سعر صرف غير معتاد: ' + esc(x.title); d = esc(x.date) + ' · 1 $ = ' + lsy(x.v) + ' (المعتاد ≈ ' + lsy(x.med) + ')'; }
+  else if (x.t === 'neg') { t = 'رصيد الصندوق سالب'; d = esc(x.date) + ' · ' + lsy(x.v); }
+  else if (x.t === 'unposted') { t = 'مدفوعات غير مرحّلة لأي حساب: ' + esc(x.title); d = esc(x.date) + ' · ' + lsy(x.amt); }
+  else if (x.t === 'unpaid') { t = esc(x.title) + ': لا دفعة منذ ' + (x.days > 9000 ? 'البداية' : x.days + ' يومًا'); d = 'الرصيد ' + money(x.bal, x.acur) + (x.last ? ' · آخر دفعة ' + esc(x.last) : ''); }
+  return '<div class="ali' + (x.lvl > 1 ? ' hi' : '') + '" data-i="' + i + '"><span class="aic">' + ic + '</span><div><b>' + t + '</b><small>' + d + '</small></div></div>';
+}
+function alertGo(x) {
+  if (!x) return;
+  if (x.t === 'unpaid') SUP.openStmt(x.title);
+  else if (x.t === 'rate' || x.t === 'neg' || x.t === 'unposted') dayPop(x.date);
+  else if (x.t === 'price') go('pprice');
 }
 function renderDash() {
   var d = DASH, ch = d.pPrev ? (d.pMonth - d.pPrev) / d.pPrev * 100 : null;
