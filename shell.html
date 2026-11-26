@@ -144,6 +144,7 @@ body.dark .icard,html.ui-dark .icard{background:#1d2633;border-color:#2c3a4d}bod
 .alr{padding:12px 14px}.alh{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}.alh b{font-size:16px}.alh small{color:var(--mut)}.alc{background:#E16414;color:#fff;border-radius:999px;padding:1px 8px;font-size:13px}.aln{background:#C62828;color:#fff;border-radius:6px;padding:1px 6px;font-size:11px}.all{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}.ali{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:12px;background:#F6F8FB;border:1px solid #E3E8EF;cursor:pointer}.ali.hi{background:#FFF4EC;border-color:#F5C58A}.ali b{display:block;font-size:14px}.ali small{display:block;color:var(--mut);font-size:12.5px;margin-top:2px}.aic{font-size:18px;line-height:1.3}html.ui-dark .ali,body.dark .ali{background:#1E2A36;border-color:#2c3a4d}html.ui-dark .ali.hi,body.dark .ali.hi{background:#33251a;border-color:#6b4a2c}
 .aimx{white-space:pre-wrap;line-height:1.9;font-size:15px;background:#F6F8FB;border:1px solid #E3E8EF;border-radius:12px;padding:12px 14px;margin-top:10px}html.ui-dark .aimx,body.dark .aimx{background:#1E2A36;border-color:#2c3a4d}
 .cpl{display:flex;flex-direction:column;gap:6px}.cpr{display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--line,#E3E8EF);padding:6px 0}.cpn{flex:1;min-width:0;font-size:14px}.cpn small{display:block;color:var(--mut);font-size:11.5px}.cpr select{flex:0 0 42%;width:42%;min-width:0;padding:6px 4px;font-size:14px}
+.urow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line,#E3E8EF);border-radius:12px;margin-bottom:8px;cursor:pointer}.urow.off{opacity:.55}.uchip{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;background:#ECEFF1;color:#455A64;margin-inline-start:4px}.uchip.a{background:#E3F2FD;color:#1565C0}.uopts{display:flex;flex-direction:column;gap:8px;margin-top:10px}.uopts label{display:flex;gap:10px;align-items:center;font-size:14px;line-height:1.5}.uopts input,.utbl input{width:22px!important;height:22px!important;min-height:0!important;min-width:0!important;flex:0 0 22px;padding:0!important;margin:0;box-shadow:none!important;accent-color:var(--c,#1F4E79)}.utbl{width:100%;min-width:0!important;table-layout:fixed;border-collapse:collapse}.utbl th:first-child,.utbl td:first-child{width:34%}.utbl td,.utbl th{text-align:center;padding:8px 2px;border-bottom:1px solid var(--line,#E3E8EF);font-size:13.5px;white-space:normal}.utbl td.l,.utbl th.l{text-align:start}.alog{padding:8px 0;border-bottom:1px solid var(--line,#E3E8EF)}.alog small{display:block;color:var(--mut);font-size:12px}.alog code{display:block;font-size:11px;color:#637082;white-space:pre-wrap;word-break:break-all;max-height:60px;overflow:hidden;direction:ltr;text-align:left}body.nomoney #kpis,body.nomoney #dash2,body.nomoney #alr,body.nomoney #lyc{display:none!important}
 </style>
 <style>
 /* تنبيه ارتفاع السعر، تذكير اليومية، مقارنة العام الماضي، زر واتساب */
@@ -175,7 +176,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.28';
+window.APP_VER = '2.0';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 /* الأمان: هوية هذا الجهاز تُرسل مع الدخول (سجل الدخول، وخروج جهاز محدد) — نفس مفتاح «الأجهزة المتصلة» */
 function secDev() {
@@ -183,6 +184,23 @@ function secDev() {
   var u = navigator.userAgent, d = /iPad/.test(u) || (/Macintosh/.test(u) && navigator.maxTouchPoints > 1) ? 'آيباد' : /iPhone/.test(u) ? 'آيفون' : /Android/.test(u) ? (/Mobile/.test(u) ? 'جوال أندرويد' : 'تابلت أندرويد') : /Windows/.test(u) ? 'كمبيوتر ويندوز' : /Macintosh/.test(u) ? 'ماك' : 'جهاز';
   try { var m = navigator.userAgentData && navigator.userAgentData.model; if (m) d += ' ' + m; } catch (e) { /* */ }
   return { id: v, n: d };
+}
+/* ===== المستخدمون والصلاحيات (الخادم يفرضها؛ الواجهة تخفي ما لا يُسمح به) =====
+   B.me = { u, name, admin, money, perm: { pur|items|jour|sup|rep|set|sales: { v,a,e,d } } } من webBoot/webCheckPin */
+function lastUser() { try { return localStorage.getItem('safa_user') || 'admin'; } catch (e) { return 'admin'; } }
+function splitCred(c) { c = String(c || ''); var i = c.indexOf('\n'); return i < 0 ? { u: lastUser(), p: c } : { u: c.slice(0, i), p: c.slice(i + 1) }; }
+function can(sec, act) { var m = window.B && B.me; if (!m) return true; if (m.admin) return true; return !!(m.perm && m.perm[sec] && m.perm[sec][act || 'v']); }
+function canMoney() { var m = window.B && B.me; return !m || !!(m.admin || m.money); }
+var TAB_PERM = { inv: ['pur', 'a'], pinv: ['pur', 'v'], psearch: ['pur', 'v'], plog: ['pur', 'v'], pprice: ['pur', 'v'], items: ['items', 'v'], sup: ['sup', 'v'],
+  jentry: ['jour', 'a'], daily: ['jour', 'v'], jsearch: ['jour', 'v'], jlog: ['jour', 'v'],
+  sentry: ['sup', 'a'], sstmt: ['sup', 'v'], ssum: ['sup', 'v', 1], slog: ['sup', 'v'], ssup: ['sup', 'v'], saudit: ['sup', 'v'],
+  rmon: ['rep', 'v', 1], ryear: ['rep', 'v', 1] };
+function canTab(t) { var q = TAB_PERM[t]; return !q || (can(q[0], q[1]) && (!q[2] || canMoney())); }
+function firstTab(sec) { var t = (SECTIONS[sec] && SECTIONS[sec].tabs || []).filter(function (x) { return canTab(x[0]); })[0]; return t ? t[0] : ''; }
+function applyMe() {
+  var m = window.B && B.me; if (!m) return;
+  document.body.classList.toggle('nomoney', !canMoney());
+  try { if (m.name && localStorage.getItem('rt_uname') !== m.name) { localStorage.setItem('rt_uname', m.name); window.dispatchEvent(new Event('rt-uname')); } } catch (e) { /* */ }
 }
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -234,6 +252,7 @@ function fillLists() {
   $('#dl-items').innerHTML = B.items.map(function (i) { return '<option value="' + esc(i.name) + '">'; }).join('');
   $('#dl-sup').innerHTML = B.suppliers.map(function (s) { return '<option value="' + esc(s) + '">'; }).join('');
   /* الحسابات الفرعية من webBoot مباشرة (دون انتظار فتح قيود الموردين) */
+  applyMe();
   if (B.subs) { SUBN = B.subs; try { localStorage.setItem('safa_subs', JSON.stringify(SUBN)); } catch (e) { /* */ } }
 }
 function reboot(cb) { return call('webBoot').then(function (b) { B = b; fillLists(); if (cb) cb(); }); }
@@ -254,6 +273,8 @@ var ICON = {
   s: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.5a3 3 0 0 1 0 6M18 14c2 .8 3 3 3 6"/></svg>'
 };
 function tile(k, to, title, desc, stat) {
+  if (!canTab(to)) { to = firstTab(k); if (!to) return ''; }
+  if (!canMoney() && k !== 'p') stat = '';
   return '<button class="tile ' + k + '" onclick="go(\'' + to + '\')">' + ICON[k] + '<b>' + title + '</b><small>' + desc + '</small><em' + (k === 's' ? ' id="supHome"' : '') + '>' + stat + '</em></button>';
 }
 /* ---------- إدخال فاتورة ---------- */
@@ -383,8 +404,8 @@ function doPLog(off) {
 /* ---------- الأصناف: كل أعمدة الصفحة + إضافة صنف ---------- */
 function vItems() {
   $('#view').innerHTML =
-    '<div class="row" style="margin-bottom:12px"><button class="btn grn" onclick="itemPop()">＋ إضافة صنف</button>' +
-    '<button class="btn sec" id="afill" onclick="fillCodes()">ترقيم الأصناف التي بلا كود</button><button class="btn sec" id="aicat" onclick="aiCat()">🤖 تصنيف الأصناف تلقائيًا</button></div>' +
+    '<div class="row" style="margin-bottom:12px">' + (can('items', 'a') ? '<button class="btn grn" onclick="itemPop()">＋ إضافة صنف</button>' : '') +
+    (can('items', 'e') ? '<button class="btn sec" id="afill" onclick="fillCodes()">ترقيم الأصناف التي بلا كود</button><button class="btn sec" id="aicat" onclick="aiCat()">🤖 تصنيف الأصناف تلقائيًا</button>' : '') + '</div>' +
     '<div class="card"><div class="itf"><div class="f"><label class="vsl">المورد</label><select id="itsup" onchange="try{localStorage.setItem(\'safa_items_sup\',this.value)}catch(e){}renderItems()">' + supOpts(itSupSaved(), 'كل الموردين') + '</select></div>' +
     '<div class="f"><label>التصنيف</label><select id="itcat" onchange="renderItems()"><option value="">كل التصنيفات</option></select></div>' +
     '<div class="f"><label>بحث في الأصناف</label><input id="iq" autocomplete="off" oninput="renderItems()"></div></div></div><div id="itl"><div class="muted">جارٍ التحميل…</div></div>';
@@ -887,7 +908,7 @@ var SUP = (function () {
   P.suppliers = {
     html: function () {
       return '<h1>الموردون</h1><p class="sub">الرصيد الافتتاحي الموجب يُعامل كوارد، والسالب كصادر.</p>' +
-        '<div class="row" style="margin-bottom:12px"><button class="btn grn" data-act="newsup">＋ إضافة مورد</button><button class="btn sec" data-act="newsub">＋ إضافة حساب فرعي</button></div>' +
+        (can('sup', 'a') ? '<div class="row" style="margin-bottom:12px"><button class="btn grn" data-act="newsup">＋ إضافة مورد</button><button class="btn sec" data-act="newsub">＋ إضافة حساب فرعي</button></div>' : '') +
         /* نموذج المورد في نافذة منبثقة (للإضافة والتعديل) */
         '<div class="dpop" id="s-pop" style="display:none"><div class="dbox" style="max-width:560px"><div class="dhd" style="background:linear-gradient(135deg,#6D2E5B,#8E4A7C)"><button data-act="cancelsup">✕</button><b id="s-h">إضافة مورد</b><span style="min-width:40px"></span></div><div class="dbd"><div class="grid">' +
         '<label class="f"><span>اسم المورد</span><input id="s-name" autocomplete="off"></label><label class="f"><span>رصيد افتتاحي</span><input id="s-open" ' + IN + '></label>' +
@@ -1674,6 +1695,7 @@ function navBack() {
   return false;
 }
 function go(v) {
+  if (!canTab(v)) { var fs = firstTab(VIEW_SEC[v] || ''); toast('ليس لديك صلاحية لهذه الصفحة', 'err'); v = fs || 'home'; }
   var prevSec = VIEW_SEC[CUR] || '';
   if (v === 'home') NAVH = [];
   else if (!NAVBACK && CUR !== v) { NAVH.push(CUR); if (NAVH.length > 30) NAVH.shift(); if (window.RT && RT.navPush) RT.navPush(); }
@@ -1685,7 +1707,7 @@ function go(v) {
   syncBar();
   $('#ttl').textContent = sec === 'x' ? XTITLE[v] : sec ? SECTIONS[sec].title : 'مكتبة الصفاء';
   $('#homeBtn').classList.toggle('hide', !sec);
-  var nav = $('#tabs'), tabs = sec ? SECTIONS[sec].tabs : [];
+  var nav = $('#tabs'), tabs = (sec ? SECTIONS[sec].tabs : []).filter(function (t) { return canTab(t[0]); });
   if (tabs.length) {
     nav.classList.remove('hide');
     nav.innerHTML = tabs.map(function (t) { return '<button class="' + (t[0] === v ? 'on' : '') + '" onclick="go(\'' + t[0] + '\')">' + t[1] + '</button>'; }).join('');
@@ -1754,16 +1776,24 @@ function pinGate() {
   if (PINP) return PINP;
   PINP = new Promise(function (res) {
     var o = document.createElement('div'); o.id = 'pin'; o.className = 'lgate';
-    o.innerHTML = RT.gateHead('أدخل رمز الدخول') + '<form><input id="pinin" type="password" inputmode="numeric" autocomplete="off" maxlength="8"><button class="lbtn">دخول</button><div id="pine" class="lerr"></div></form></div>';
+    o.innerHTML = RT.gateHead('تسجيل الدخول') + '<form><input id="pinu" placeholder="اسم المستخدم" autocomplete="username" autocapitalize="off" spellcheck="false" value="' + esc(lastUser()) + '" style="letter-spacing:0;font-size:18px;margin-bottom:8px;direction:ltr;text-align:center"><input id="pinin" type="password" placeholder="كلمة المرور" autocomplete="current-password" maxlength="40"><button class="lbtn">دخول</button><div id="pine" class="lerr"></div></form></div>';
     document.body.appendChild(o);
     var inp = $('#pinin', o);
     setTimeout(function () { inp.focus(); }, 60);
     $('form', o).onsubmit = function (ev) {
       ev.preventDefault();
       var b = $('button', o); busy(b, true);
-      google.script.run.withSuccessHandler(function (r) { setTok(r.tok); o.remove(); PINP = null; res(); })
+      var u = String($('#pinu', o).value || '').trim().toLowerCase() || 'admin', prev = lastUser();
+      google.script.run.withSuccessHandler(function (r) {
+        setTok(r.tok); try { localStorage.setItem('safa_user', u); } catch (e) { /* */ }
+        if (r.me && window.B) { B.me = r.me; applyMe(); }
+        o.remove(); PINP = null;
+        /* مستخدم مختلف على هذا الجهاز: امسح البيانات المحفوظة للمستخدم السابق وأعد التحميل */
+        if (prev !== u) { try { localStorage.removeItem('safa_alr'); localStorage.removeItem('safa_jhints'); } catch (e) { /* */ } RT.clearCache().then(function () { location.reload(); }); return; }
+        res();
+      })
         .withFailureHandler(function (e) { busy(b, false); inp.value = ''; $('#pine', o).textContent = errMsg(e); })
-        .api('webCheckPin', [en(inp.value), secDev()]);
+        .api('webCheckPin', [en(inp.value), secDev(), u]);
     };
   });
   return PINP;
@@ -1993,21 +2023,100 @@ function vSettings() {
   call('webGetSettings').then(function (s) { SETS = s; if (CUR === 'settings') renderSettings(); }).catch(function (e) { $('#view').innerHTML = ''; toast(errMsg(e), 'err'); });
 }
 function renderSettings() {
-  var s = SETS, pw = function (id) { return '<input id="' + id + '" type="password" inputmode="numeric" autocomplete="off" maxlength="8">'; };
+  var s = SETS, pw = function (id) { return '<input id="' + id + '" type="password" autocomplete="new-password" maxlength="40">'; }, se = can('set', 'e');
   $('#view').innerHTML =
-    '<div class="card"><h2>العملات</h2><div class="grid"><div class="f"><label>العملة الأساسية (تُحسب بها كل الأرصدة والتقارير)</label><input id="sbase" value="' + esc(s.set.base) + '"></div></div>' +
+    '<div class="card' + (se ? '' : ' hide') + '"><h2>العملات</h2><div class="grid"><div class="f"><label>العملة الأساسية (تُحسب بها كل الأرصدة والتقارير)</label><input id="sbase" value="' + esc(s.set.base) + '"></div></div>' +
     '<div id="scurs" style="margin-top:12px"></div><button class="btn sec sm" onclick="addCurRow()">+ إضافة عملة</button>' +
     '<div class="note">سعر الصرف هنا افتراضي ويظهر تلقائيًا عند اختيار العملة، ويمكن تعديله في كل فاتورة أو قيد. المبالغ تُحفظ بالعملة الأساسية مع حفظ العملة وسعر الصرف للمرجع.</div>' +
     '<div class="row" style="margin-top:12px"><button class="btn grn" id="scsave" onclick="saveCurs()">حفظ العملات</button></div></div>' +
-    '<div class="card"><h2>رمز الدخول</h2><p class="sub">' + (s.pin ? 'الرمز مفعّل: يُطلب عند فتح الواجهة على أي جهاز جديد.' : 'غير مفعّل.') + '</p><div class="grid">' +
-    (s.pin ? '<div class="f"><label>الرمز الحالي</label>' + pw('pold') + '</div>' : '') +
-    '<div class="f"><label>' + (s.pin ? 'الرمز الجديد' : 'الرمز') + ' (4 إلى 8 أرقام)</label>' + pw('pnew') + '</div><div class="f"><label>تأكيد الرمز</label>' + pw('pnew2') + '</div></div>' +
-    '<div class="row" style="margin-top:12px"><button class="btn grn" onclick="savePin(false)">' + (s.pin ? 'تغيير الرمز' : 'تفعيل الرمز') + '</button>' + (s.pin ? '<button class="btn warn" onclick="savePin(true)">إلغاء الرمز</button>' : '') + '</div>' +
-    '<div class="note">للحماية الكاملة اجعل إعداد النشر في Apps Script «Who has access» على «Only myself».</div></div>' +
-    '<div class="card"><h2>النسخ الاحتياطي</h2><p class="sub">نسخة تلقائية كل أسبوع من الملفين بصيغة Excel في مجلد «نسخ احتياطية - مكتبة الصفاء» على Drive، ويُحتفظ بآخر 10 نسخ لكل ملف.</p>' +
+    '<div class="card"><h2>👤 حسابي</h2><p class="sub">' + esc((B.me && B.me.name) || 'المدير') + ' — اسم الدخول: <b dir="ltr">' + esc((B.me && B.me.u) || 'admin') + '</b>' + (B.me && B.me.admin ? ' · مدير' : '') + '</p><div class="grid">' +
+    '<div class="f"><label>كلمة المرور الحالية</label>' + pw('pold') + '</div><div class="f"><label>كلمة المرور الجديدة (6 خانات على الأقل)</label>' + pw('pnew') + '</div><div class="f"><label>تأكيد كلمة المرور</label>' + pw('pnew2') + '</div></div>' +
+    '<div class="row" style="margin-top:12px"><button class="btn grn" onclick="saveMyPass()">تغيير كلمة المرور</button><button class="btn warn" onclick="logoutMe()">🚪 تسجيل الخروج</button></div></div>' +
+    (B.me && !B.me.admin ? '' : '<div class="card"><h2>👥 المستخدمون والصلاحيات</h2><p class="sub">أضف مستخدمين وحدد لكل واحد ما يرى وما يضيف وما يعدّل وما يحذف في كل قسم. كل عملية تُسجَّل باسم من قام بها.</p><div id="ulist"><div class="muted">جارٍ التحميل…</div></div>' +
+      '<div class="row" style="margin-top:12px"><button class="btn grn" onclick="userPop()">＋ مستخدم جديد</button><button class="btn sec" onclick="auditPop()">📜 سجل العمليات</button></div></div>') +
+    '<div class="card' + (se ? '' : ' hide') + '"><h2>النسخ الاحتياطي</h2><p class="sub">نسخة تلقائية كل أسبوع من الملفين بصيغة Excel في مجلد «نسخ احتياطية - مكتبة الصفاء» على Drive، ويُحتفظ بآخر 10 نسخ لكل ملف.</p>' +
     '<div class="stats"><div class="st"><small>آخر نسخة</small><b style="font-size:16px">' + (s.backup.last ? esc(new Date(s.backup.last).toLocaleString('ar-SA-u-ca-gregory-nu-latn')) : 'لم تُنشأ بعد') + '</b></div></div>' +
     '<div class="row"><button class="btn" id="bkn" onclick="backupNow()">إنشاء نسخة الآن</button>' + (s.backup.url ? '<a class="lnk" style="margin:0" href="' + esc(s.backup.url) + '" target="_blank" rel="noopener">فتح مجلد النسخ ←</a>' : '') + '</div></div>';
   s.set.curs.forEach(function (c) { addCurRow(c); });
+  if ($('#ulist')) usersLoad();
+}
+/* ===== حسابي + إدارة المستخدمين (المدير) ===== */
+function saveMyPass() {
+  var o = en($('#pold').value), a = en($('#pnew').value), a2 = en($('#pnew2').value);
+  if (a.length < 6) { toast('كلمة المرور 6 خانات على الأقل', 'err'); return; }
+  if (a !== a2) { toast('كلمتا المرور غير متطابقتين', 'err'); return; }
+  call('webMyPass', { old: o, pass: a }).then(function () {
+    toast('تم تغيير كلمة المرور — أعد تفعيل البصمة إن كانت مفعّلة', 'ok');
+    try { localStorage.removeItem('bio_' + APP.id); } catch (e) { /* */ }
+    vSettings();
+  }, function (e) { toast(errMsg(e), 'err'); });
+}
+function logoutMe() {
+  if (!confirm('تسجيل الخروج من هذا الجهاز؟')) return;
+  var done = function () { setTok(''); try { localStorage.removeItem('safa_alr'); localStorage.removeItem('safa_jhints'); localStorage.removeItem('bio_' + APP.id); } catch (e) { /* */ } RT.clearCache().then(function () { location.reload(); }); };
+  call('webLogout').then(done, done);
+}
+var USERS = null;
+function usersLoad() {
+  call('webUsers').then(function (r) {
+    USERS = r; var box = $('#ulist'); if (!box) return;
+    box.innerHTML = r.users.map(function (x) {
+      var secs = Object.keys(r.secs).filter(function (k) { return x.admin || (x.perm[k] && x.perm[k].v); }).map(function (k) { return r.secs[k]; });
+      return '<div class="urow' + (x.off ? ' off' : '') + '" onclick="userPop(\'' + esc(x.u) + '\')"><div><b>' + esc(x.name) + '</b> <small dir="ltr">' + esc(x.u) + '</small>' +
+        (x.admin ? ' <span class="uchip a">مدير</span>' : '') + (x.off ? ' <span class="uchip">موقوف</span>' : '') + (!x.admin && !x.money ? ' <span class="uchip">بلا مبالغ</span>' : '') +
+        '<small class="muted" style="display:block">' + (x.admin ? 'كل الصلاحيات' : secs.length ? 'يصل إلى: ' + esc(secs.join('، ')) : 'لا صلاحيات بعد') + '</small></div><span>✏️</span></div>';
+    }).join('');
+  }).catch(function (e) { var box = $('#ulist'); if (box) box.innerHTML = '<div class="note">' + esc(errMsg(e)) + '</div>'; });
+}
+function userPop(id) {
+  var r = USERS; if (!r) return;
+  var x = id ? r.users.filter(function (z) { return z.u === id; })[0] : { u: '', name: '', admin: 0, money: 0, off: 0, perm: {} };
+  var isAdm = x.u === 'admin', old = $('#upop'); if (old) old.remove();
+  var cb = function (k, a) { var on = x.admin || (x.perm[k] && x.perm[k][a]); return '<td><input type="checkbox" data-k="' + k + '" data-a="' + a + '"' + (on ? ' checked' : '') + '></td>'; };
+  var o = document.createElement('div'); o.className = 'dpop'; o.id = 'upop';
+  o.innerHTML = '<div class="dbox" style="max-width:640px"><div class="dhd" style="background:linear-gradient(135deg,var(--c,#1F4E79),#2E6DA4)"><button onclick="$(\'#upop\').remove()">✕</button><b>' + (id ? 'تعديل مستخدم' : 'مستخدم جديد') + '</b><span style="min-width:40px"></span></div><div class="dbd">' +
+    '<div class="grid"><div class="f"><label>الاسم (يظهر في السجل والتحية)</label><input id="u-name" value="' + esc(x.name) + '"></div>' +
+    '<div class="f"><label>اسم الدخول</label><input id="u-id" dir="ltr" autocapitalize="off" value="' + esc(x.u) + '"' + (isAdm ? ' disabled' : '') + '></div>' +
+    '<div class="f"><label>' + (id ? 'كلمة مرور جديدة (اتركها فارغة للإبقاء)' : 'كلمة المرور') + '</label><input id="u-pass" type="password" autocomplete="new-password" placeholder="6 خانات على الأقل"></div></div>' +
+    '<div class="uopts"><label><input type="checkbox" id="u-admin"' + (x.admin ? ' checked' : '') + (isAdm ? ' disabled' : '') + '> مدير (كل الصلاحيات + إدارة المستخدمين)</label>' +
+    '<label><input type="checkbox" id="u-money"' + (x.admin || x.money ? ' checked' : '') + '> يرى المبالغ الحساسة (أرصدة الموردين، رصيد الصندوق، الرئيسية، التقارير)</label>' +
+    (isAdm ? '' : '<label><input type="checkbox" id="u-off"' + (x.off ? ' checked' : '') + '> موقوف (لا يستطيع الدخول)</label>') + '</div>' +
+    '<div id="u-perm"><h3 style="margin:12px 0 6px">الصلاحيات حسب القسم</h3><table class="nocard utbl"><thead><tr><th class="l">القسم</th><th>عرض</th><th>إضافة</th><th>تعديل</th><th>حذف</th></tr></thead><tbody>' +
+    Object.keys(r.secs).map(function (k) { return '<tr><td class="l">' + esc(r.secs[k]) + (k === 'sales' ? ' <small class="muted">(قادم)</small>' : '') + '</td>' + ['v', 'a', 'e', 'd'].map(function (a) { return cb(k, a); }).join('') + '</tr>'; }).join('') +
+    '</tbody></table><div class="note">الإضافة أو التعديل أو الحذف تمنح العرض تلقائيًا. «الإعدادات»: العرض = قوالب الطباعة، والتعديل = العملات وأسعار الصرف والنسخ الاحتياطي. إدخال قيد يومية بمورد يرحّله لحساب المورد ضمن صلاحية «اليومية».</div></div>' +
+    '<div class="row" style="margin-top:12px"><button class="btn grn" id="u-save">حفظ</button>' + (id && !isAdm ? '<button class="btn warn" id="u-del">حذف المستخدم</button>' : '') + '<button class="btn sec" onclick="$(\'#upop\').remove()">إلغاء</button></div></div></div>';
+  document.body.appendChild(o);
+  o.addEventListener('click', function (e) { if (e.target === o) o.remove(); });
+  var adm = $('#u-admin', o), syncAdm = function () { $('#u-perm', o).style.opacity = adm.checked ? .4 : 1; $$('#u-perm input', o).forEach(function (c) { c.disabled = adm.checked; }); };
+  adm.onchange = syncAdm; syncAdm();
+  $('#u-save', o).onclick = function () {
+    var b = this, perm = {};
+    $$('#u-perm input[data-k]', o).forEach(function (c) { if (c.checked) { (perm[c.dataset.k] = perm[c.dataset.k] || {})[c.dataset.a] = 1; } });
+    busy(b, true);
+    call('webUserSave', { old: id || '', u: isAdm ? 'admin' : $('#u-id', o).value, name: $('#u-name', o).value, pass: $('#u-pass', o).value, admin: adm.checked, money: $('#u-money', o).checked, off: $('#u-off', o) ? $('#u-off', o).checked : false, perm: perm })
+      .then(function (rr) { USERS = rr; o.remove(); toast('تم الحفظ', 'ok'); usersLoad(); }, function (e) { busy(b, false); toast(errMsg(e), 'err'); });
+  };
+  if ($('#u-del', o)) $('#u-del', o).onclick = function () {
+    if (!confirm('حذف المستخدم «' + x.name + '»؟ لن يستطيع الدخول بعد الآن (سجل عملياته يبقى).')) return;
+    call('webUserDelete', { u: id }).then(function () { o.remove(); toast('تم الحذف', 'ok'); usersLoad(); }, function (e) { toast(errMsg(e), 'err'); });
+  };
+}
+function auditPop() {
+  var old = $('#apop'); if (old) old.remove();
+  var o = document.createElement('div'); o.className = 'dpop'; o.id = 'apop';
+  o.innerHTML = '<div class="dbox" style="max-width:760px"><div class="dhd" style="background:linear-gradient(135deg,var(--c,#1F4E79),#2E6DA4)"><button onclick="$(\'#apop\').remove()">✕</button><b>📜 سجل العمليات</b><span style="min-width:40px"></span></div><div class="dbd">' +
+    '<div class="f"><label>المستخدم</label><select id="a-u"><option value="">كل المستخدمين</option>' + ((USERS && USERS.users) || []).map(function (x) { return '<option value="' + esc(x.u) + '">' + esc(x.name) + '</option>'; }).join('') + '</select></div><div id="a-l" style="margin-top:10px"></div></div></div>';
+  document.body.appendChild(o);
+  o.addEventListener('click', function (e) { if (e.target === o) o.remove(); });
+  var load = function () {
+    $('#a-l', o).innerHTML = '<div class="muted">جارٍ التحميل…</div>';
+    call('webAuditLog', { u: $('#a-u', o).value }).then(function (l) {
+      $('#a-l', o).innerHTML = l.length ? l.map(function (x) {
+        return '<div class="alog"><b>' + esc(x.act || '') + ' · ' + esc(x.sec || '') + '</b> <span class="muted">— ' + esc(x.name || '') + '</span><small>' + new Date(x.t).toLocaleString('ar-SA-u-ca-gregory-nu-latn', { dateStyle: 'short', timeStyle: 'short' }) + ' · ' + esc(x.fn || '') + '</small><code>' + esc(x.det || '') + '</code></div>';
+      }).join('') : '<div class="muted">لا عمليات مسجّلة بعد.</div>';
+    }).catch(function (e) { $('#a-l', o).innerHTML = '<div class="note">' + esc(errMsg(e)) + '</div>'; });
+  };
+  $('#a-u', o).onchange = load; load();
 }
 function addCurRow(c) {
   c = c || { code: '', rate: '' };
@@ -3470,12 +3579,13 @@ onDom(function () { tblCards(); zebraCards(); });
     }
     function checkPin(pin) {
         ;
-        return RT.post({ fn: 'webCheckPin', args: [pin, secDev()] }).then(function (r) { if (!r || !r.tok)
+        var c = splitCred(pin);
+        return RT.post({ fn: 'webCheckPin', args: [c.p, secDev(), c.u] }).then(function (r) { if (!r || !r.tok)
             throw new Error('رمز غير صحيح'); return true; });
     }
     function bioEnable() {
-        var o = sheet('تفعيل الدخول ببصمة الوجه', [], '<div style="color:#637082;font-size:14px;margin-bottom:10px">أدخل رمز الدخول الحالي مرة واحدة، ثم أكّد ببصمة الوجه أو الإصبع.</div>' +
-            '<input id="bio-pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" style="width:100%;min-height:48px;font-size:20px;text-align:center;border:1px solid #ccc;border-radius:12px;margin-bottom:10px;box-sizing:border-box">' +
+        var o = sheet('تفعيل الدخول ببصمة الوجه', [], '<div style="color:#637082;font-size:14px;margin-bottom:10px">أدخل كلمة المرور الحالية مرة واحدة، ثم أكّد ببصمة الوجه أو الإصبع.</div>' +
+            '<input id="bio-pin" type="password" autocomplete="off" maxlength="40" placeholder="كلمة المرور" style="width:100%;min-height:48px;font-size:20px;text-align:center;border:1px solid #ccc;border-radius:12px;margin-bottom:10px;box-sizing:border-box">' +
             '<button class="it" id="bio-go" style="background:var(--ui);color:#fff;text-align:center">متابعة</button><div id="bio-err" style="color:#C62828;font-weight:700"></div>');
         var inp = o.querySelector('#bio-pin');
         setTimeout(function () { inp.focus(); }, 80);
@@ -3495,7 +3605,7 @@ onDom(function () { tblCards(); zebraCards(); });
             }).then(function (cr) {
                 if (!cr)
                     return;
-                ls(BK, JSON.stringify({ id: b64(cr.rawId), p: btoa(unescape(encodeURIComponent(pin))) }));
+                ls(BK, JSON.stringify({ id: b64(cr.rawId), p: btoa(unescape(encodeURIComponent(lastUser() + '\n' + pin))) }));
                 o.remove();
                 msg('تم تفعيل الدخول ببصمة الوجه ✓');
             }).catch(function (e) { er.textContent = (e && e.name === 'NotAllowedError') ? 'أُلغيت العملية' : (e && e.message) || 'تعذّر التفعيل'; });
@@ -3517,7 +3627,9 @@ onDom(function () { tblCards(); zebraCards(); });
     function gateFill(pin) {
         var j = document.getElementById('pinin');
         if (!j || !pin) return;
-        j.value = pin;
+        var c = splitCred(pin), ju = document.getElementById('pinu');
+        if (ju) ju.value = c.u;
+        j.value = c.p;
         var f = j.closest('form');
         if (f) { if (f.requestSubmit) f.requestSubmit(); else f.dispatchEvent(new Event('submit', { cancelable: true })); }
     }
@@ -3558,7 +3670,7 @@ onDom(function () { tblCards(); zebraCards(); });
         locked = true;
         var o = el('<div id="bio-idle" class="lgate">' + RT.gateHead('قُفل التطبيق بعد مدة من عدم الاستخدام') +
             '<button type="button" id="bi-go" class="bio-btn">🔓 فتح ببصمة الوجه</button>' +
-            '<input id="bi-pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="أو أدخل الرمز" style="margin-top:12px;font-size:20px;letter-spacing:4px">' +
+            '<input id="bi-pin" type="password" autocomplete="off" maxlength="40" placeholder="أو أدخل كلمة المرور" style="margin-top:12px;font-size:20px;letter-spacing:4px">' +
             '<div id="bi-err" class="lerr"></div></div></div>');
         document.body.appendChild(o);
         var b = bioInfo(), er = o.querySelector('#bi-err'), inp = o.querySelector('#bi-pin');
@@ -3573,7 +3685,7 @@ onDom(function () { tblCards(); zebraCards(); });
         }
         o.querySelector('#bi-go').onclick = tryBio;
         inp.oninput = function () {
-            var v = inp.value.replace(/[٠-٩]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); }).trim(), p = storedPin();
+            var v = inp.value.replace(/[٠-٩]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); }).trim(), p = splitCred(storedPin()).p;
             if (p && v === p)
                 unlockNow(o);
             else if (v.length >= p.length && p)

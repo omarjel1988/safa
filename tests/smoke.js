@@ -30,7 +30,7 @@ const srv = http.createServer((q, r) => {
   const port = srv.address().port;
   const b = await chromium.launch(process.argv[3] ? { executablePath: process.argv[3] } : {});
   for (const [app, url, reply, expect] of [
-    ['الصفاء', '/safa/', { err: 'PIN_REQUIRED' }, /رمز/],
+    ['الصفاء', '/safa/', { err: 'PIN_REQUIRED' }, /رمز|تسجيل الدخول/],
     ['غدق', '/safa/ghadaq/', { err: 'LOCKED|' }, /رمز/]]) {
     const p = await b.newPage({ viewport: { width: 412, height: 860 } }); const errs = [];
     p.on('pageerror', e => errs.push(e.message));
