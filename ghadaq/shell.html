@@ -97,8 +97,15 @@ tr.op td{background:#fdf0d5!important;font-weight:700}
 <div id='toast'></div>
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.7';
+window.APP_VER = '1.8';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
+/* الأمان: هوية هذا الجهاز تُرسل مع الدخول (سجل الدخول، وخروج جهاز محدد) — نفس مفتاح «الأجهزة المتصلة» */
+function secDev() {
+  var k = 'rt_dev_' + APP.id, v = ''; try { v = localStorage.getItem(k) || ''; if (!v) { v = Date.now().toString(36) + Math.random().toString(36).slice(2, 10); localStorage.setItem(k, v); } } catch (e) { /* */ }
+  var u = navigator.userAgent, d = /iPad/.test(u) || (/Macintosh/.test(u) && navigator.maxTouchPoints > 1) ? 'آيباد' : /iPhone/.test(u) ? 'آيفون' : /Android/.test(u) ? (/Mobile/.test(u) ? 'جوال أندرويد' : 'تابلت أندرويد') : /Windows/.test(u) ? 'كمبيوتر ويندوز' : /Macintosh/.test(u) ? 'ماك' : 'جهاز';
+  try { var m = navigator.userAgentData && navigator.userAgentData.model; if (m) d += ' ' + m; } catch (e) { /* */ }
+  return { id: v, n: d };
+}
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
   if (!hd || !m) return;
@@ -1229,7 +1236,7 @@ async function doUnlock() {
   const pin = v('lpin'), rem = $('#lrem').checked;
   if (!pin) return;
   try {
-    const r = await call('unlock', { pin: pin, remember: rem });
+    const r = await call('unlock', { pin: pin, remember: rem, dev: secDev() });
     setTok(r.token, rem);
     const L = $('#lock'); if (L) L.remove();
     S.cache = {}; go(S.page || 'dash');
@@ -2182,7 +2189,7 @@ onDom(function () { tblCards(); zebraCards(); });
         }
     }
     function checkPin(pin) {
-        return RT.post({ a: ['unlock', [{ pin: pin, remember: true }]] }).then(function (v) { var r = typeof v === 'string' ? JSON.parse(v) : v; if (!r || !r.token)
+        return RT.post({ a: ['unlock', [{ pin: pin, remember: true, dev: secDev() }]] }).then(function (v) { var r = typeof v === 'string' ? JSON.parse(v) : v; if (!r || !r.token)
             throw new Error('رمز غير صحيح'); return true; });
         return RT.post({ fn: 'webCheckPin', args: [pin] }).then(function (r) { if (!r || !r.tok)
             throw new Error('رمز غير صحيح'); return true; });
@@ -2862,7 +2869,7 @@ onDom(function () { tblCards(); zebraCards(); });
         return 'قبل ' + m + ' دقيقة'; var h = Math.round(m / 60); if (h < 24)
         return 'قبل ' + h + ' ساعة'; return 'قبل ' + Math.round(h / 24) + ' يوم'; }
     function devSheet() {
-        var o = sheet('📱 الأجهزة المتصلة', [], '<div id="u3-dl">جارٍ التحميل…</div>');
+        var o = sheet('📱 الأجهزة المتصلة والأمان', [], '<div id="u3-dl">جارٍ التحميل…</div><div id="u3-sec"></div>');
         var box = o.querySelector('#u3-dl'), me = devId();
         var draw = function (l) {
             l = (l || []).slice().sort(function (a, b) { return (b.last || 0) - (a.last || 0); });
@@ -2888,6 +2895,19 @@ onDom(function () { tblCards(); zebraCards(); });
                 return api('devList', []).then(draw);
             }).catch(function (e) { msg('تعذّر: ' + (e && e.message || e), 1); });
         };
+        /* سجل الدخول (آخر 80 محاولة) وتنبيه الرمز القصير */
+        api('secLog', []).then(function (r) {
+            var sb = o.querySelector('#u3-sec'); if (!sb || !r) return;
+            var L = r.log || [], fails = L.filter(function (x) { return !x.ok && Date.now() - x.t < 7 * 864e5; }).length;
+            sb.innerHTML = '<h3 style="margin:16px 0 6px">🔐 سجل الدخول</h3>' +
+                (r.pin && r.plen && r.plen < 6 ? '<div class="u3-row" style="background:#FFF4E5;border-color:#F5C58A"><div class="t"><b>⚠️ رمز الدخول قصير (' + r.plen + ' أرقام)</b><small>ننصح برمز من 6 أرقام أو أكثر — غيّره من الإعدادات.</small></div></div>' : '') +
+                (!r.pin ? '<div class="u3-row" style="background:#FDECEA"><div class="t"><b>⚠️ رمز الدخول غير مفعّل</b><small>أي أحد يفتح الرابط يدخل للتطبيق — فعّله من الإعدادات.</small></div></div>' : '') +
+                (fails ? '<div style="color:#C62828;font-weight:700;margin:6px 0">' + fails + ' محاولة دخول خاطئة خلال آخر 7 أيام</div>' : '') +
+                (L.length ? L.slice(0, 30).map(function (x) {
+                    return '<div class="u3-row"><div class="t"><b>' + (x.ok ? '✅ ' : '❌ ') + E(x.x || (x.ok ? 'دخول ناجح' : 'رمز خاطئ')) + '</b><small>' + E(x.n || 'جهاز غير معروف') + ' · ' + new Date(x.t).toLocaleString('ar-SA-u-nu-latn', { dateStyle: 'short', timeStyle: 'short' }) + '</small></div></div>';
+                }).join('') : '<div style="color:#8796A5">لا محاولات دخول مسجّلة بعد.</div>') +
+                '<div style="color:#8796A5;font-size:12.5px;margin-top:8px">بعد 5 محاولات خاطئة يُقفل الدخول 15 دقيقة ثم ساعة ثم 6 ساعات، ويصلك إيميل تنبيه. الجلسة على كل جهاز تنتهي بعد 30 يومًا' + ' (إن اخترت «تذكّرني»)' + '.</div>';
+        }).catch(function () { });
         api('devList', []).then(draw).catch(function (e) { box.innerHTML = '<div style="color:#C62828">' + E(e && e.message || e) + '</div>'; });
     }
     /* ================= 9) حالة النظام ================= */
@@ -2949,7 +2969,7 @@ onDom(function () { tblCards(); zebraCards(); });
             '<div class="rw"><b>👤 الاسم على هذا الجهاز: ' + E(RT.userName() || '—') + '</b><button class="ui-hbtn" data-u3="uname" style="background:var(--ui)">تغيير</button></div>' +
             '<div class="rw"><b>⭐ المفضلة</b><button class="ui-hbtn" data-u3="fav" style="background:var(--ui)">تعديل</button></div>' +
             '<div class="rw"><b>🛠 حالة النظام</b><button class="ui-hbtn" data-u3="sys" style="background:var(--ui)">فتح</button></div>' +
-            '<div class="rw"><b>📱 الأجهزة المتصلة</b><button class="ui-hbtn" data-u3="dev" style="background:var(--ui)">عرض</button></div>' +
+            '<div class="rw"><b>🔐 الأجهزة المتصلة والأمان</b><button class="ui-hbtn" data-u3="dev" style="background:var(--ui)">عرض</button></div>' +
             ('<div class="rw"><b>🔔 التذكير اليومي</b><button class="ui-hbtn" data-u3="rem" style="background:var(--ui)">إعداد</button></div>') + '</div>';
         var r = el(h), rws = bx.querySelectorAll('.rw');
         bx.insertBefore(r, rws[rws.length - 1] || null);
