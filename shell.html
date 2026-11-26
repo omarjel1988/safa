@@ -177,7 +177,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '3.1';
+window.APP_VER = '3.2';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 /* الأمان: هوية هذا الجهاز تُرسل مع الدخول (سجل الدخول، وخروج جهاز محدد) — نفس مفتاح «الأجهزة المتصلة» */
 function secDev() {
@@ -1667,7 +1667,7 @@ document.head.insertAdjacentHTML('beforeend', '<style>' +
   '.lst{list-style:none;margin:0;padding:0}.lst li{display:flex;justify-content:space-between;gap:10px;padding:9px 2px;border-top:1px solid var(--bd);cursor:pointer}.lst li:first-child{border-top:0}.lst b{font-variant-numeric:tabular-nums}' +
   '.leg{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin-top:6px}.leg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-left:5px;vertical-align:middle}' +
   '.thumbs{display:flex;flex-wrap:wrap;gap:10px}.thumbs img{height:150px;max-width:100%;border-radius:10px;border:1px solid var(--bd);object-fit:cover}' +
-  '.chips2{display:flex;flex-wrap:wrap;gap:8px}.chips2 button{border:1px solid var(--bd);background:#fff;border-radius:99px;padding:6px 14px;font-weight:700;color:var(--c)}' +
+  '.chips2{display:flex;flex-wrap:wrap;gap:8px}.chips2 button{border:1px solid var(--bd);background:#fff;border-radius:99px;padding:6px 14px;font-weight:700;color:var(--c)}.chips2 button.on{background:var(--c);color:#fff;border-color:var(--c)}' +
   /* بطاقات الموردين في الرئيسية (مثل بطاقات الحسابات في غدق) */
   '.sbar{display:flex;gap:10px;margin:16px 0 12px;flex-wrap:wrap}.sbar input{flex:1;min-width:180px}.sbar select{width:auto;min-width:170px}' +
   '.scards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}' +
@@ -1692,8 +1692,8 @@ var XTITLE = { settings: 'الإعدادات', gsearch: 'البحث الشامل
    البيانات: webSalesBoot (محفوظة في الجهاز «pos_sb» وتُحدَّث في الخلفية). الفاتورة تُحفظ بـ webSaleSave بمعرّف من الجهاز
    (صندوق الإرسال في core.js يرسلها عند عودة الاتصال، والخادم يتجاهل المكرر). الترقيم لكل جهاز: «A7-0001».
    الباركود المجهول يُربط مرة واحدة بالصنف (webItemBarcode) ويُحفظ في الجهاز فورًا «safa_pos_bcl». */
-SECTIONS.b = { title: 'المبيعات', tabs: [['pos', 'بيع'], ['sinv', 'فواتير البيع'], ['stock', 'المخزون'], ['sprice', 'الأسعار والباركود']] };
-VIEW_SEC.pos = 'b'; VIEW_SEC.sinv = 'b'; VIEW_SEC.stock = 'b'; VIEW_SEC.sprice = 'b';
+SECTIONS.b = { title: 'المبيعات', tabs: [['pos', 'بيع'], ['sinv', 'فواتير البيع'], ['stock', 'المخزون'], ['srep', 'التقارير'], ['sprice', 'الأسعار والباركود']] };
+VIEW_SEC.pos = 'b'; VIEW_SEC.sinv = 'b'; VIEW_SEC.stock = 'b'; VIEW_SEC.srep = 'b'; TAB_PERM.srep = ['sales', 'v']; VIEW_SEC.sprice = 'b';
 TAB_PERM.pos = ['sales', 'a']; TAB_PERM.sinv = ['sales', 'v']; TAB_PERM.stock = ['sales', 'v']; TAB_PERM.sprice = ['sales', 'e'];
 ICON.b = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5V3h2M19 3h2v2M21 19v2h-2M5 21H3v-2"/><path d="M7 7v10M10 7v10M13 7v10M16 7v7M17 17h.01"/></svg>';
 document.head.insertAdjacentHTML('beforeend', '<style>' +
@@ -2189,6 +2189,67 @@ function stScan() {
     bcLink(v); BCL.cb = function (y) { cntPop(y, { again: stScan }); };
   });
 }
+
+/* ======================= تقارير المبيعات والأرباح (3.2) — webSalesReport ======================= */
+var SREP = null, SRT = 'p';
+function sdStr(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+function srepRange(k) {
+  var n = new Date(), y = n.getFullYear(), m = n.getMonth(), f = n, t = n;
+  if (k === 'w') f = new Date(n.getTime() - 6 * 864e5);
+  else if (k === 'm') f = new Date(y, m, 1);
+  else if (k === 'pm') { f = new Date(y, m - 1, 1); t = new Date(y, m, 0); }
+  else if (k === 'y') f = new Date(y, 0, 1);
+  $('#srf').value = sdStr(f); $('#srt').value = sdStr(t);
+  $$('#srpre button').forEach(function (b) { b.classList.toggle('on', b.dataset.k === k); });
+  doSRep();
+}
+function vSRep() {
+  $('#view').innerHTML = '<div class="card"><div class="chips2" id="srpre" style="margin-bottom:10px">' +
+    [['d', 'اليوم'], ['w', 'آخر 7 أيام'], ['m', 'هذا الشهر'], ['pm', 'الشهر الماضي'], ['y', 'هذه السنة']].map(function (x) { return '<button data-k="' + x[0] + '" onclick="srepRange(\'' + x[0] + '\')">' + x[1] + '</button>'; }).join('') + '</div>' +
+    '<div class="grid"><div class="f"><label>من</label><input type="date" id="srf"></div><div class="f"><label>إلى</label><input type="date" id="srt"></div><div class="f" style="justify-content:flex-end"><button class="btn" onclick="$$(\'#srpre button\').forEach(function(b){b.classList.remove(\'on\')});doSRep()">عرض</button></div></div></div>' +
+    '<div id="srres"></div>';
+  srepRange('m');
+}
+function doSRep() {
+  var box = $('#srres'); if (!box) return;
+  box.innerHTML = '<div class="muted"><span class="spin"></span>جارٍ إعداد التقرير…</div>';
+  call('webSalesReport', { from: $('#srf').value, to: $('#srt').value }).then(function (r) { SREP = r; srepDraw(); })
+    .catch(function (e) { box.innerHTML = '<div class="card muted">' + esc(errMsg(e)) + '</div>'; });
+}
+function srepDraw() {
+  var r = SREP, box = $('#srres'); if (!r || !box) return;
+  var T = r.tot, k = function (t, v, c, s2) { return '<div class="kpi" style="--k:' + c + '"><span>' + t + '</span><b>' + v + '</b>' + (s2 ? '<small>' + s2 + '</small>' : '') + '</div>'; };
+  var h = '<div class="kpis">' + k('المبيعات', fmtL(T.s), '#8E2440', T.inv + ' فاتورة · متوسط ' + ls0(T.avg)) +
+    (r.money ? k('الربح', fmtL(T.p), '#2E7D32', 'هامش ' + T.m + '%' + (T.nc ? ' · ' + T.nc + ' سطر بلا تكلفة' : '')) + k('تكلفة المباع', fmtL(T.c), '#EF6C00') : '') +
+    k('القطع المباعة', ls0(T.q), '#2E6DA4') + (r.money && r.pur ? k('المشتريات في الفترة', fmtL(r.pur.syp), '#6D2E5B', '$' + fmt(r.pur.usd) + ' بسعر اليوم') : '') + '</div>';
+  /* الرسم: يومي، أو شهري للفترات الطويلة */
+  var D = r.days;
+  if (D.length) {
+    var mon = D.length > 62 || ($('#srf').value.slice(0, 7) !== $('#srt').value.slice(0, 7) && D.length > 31), G = {}, order = [];
+    D.forEach(function (x) { var key = mon ? x.d.slice(0, 7) : x.d; if (!G[key]) { G[key] = { s: 0, p: 0 }; order.push(key); } G[key].s += x.s; G[key].p += x.p || 0; });
+    var lab = order.map(function (key) { return mon ? MN[Number(key.slice(5, 7)) - 1] : key.slice(8); });
+    var ser = [{ n: 'المبيعات (ل.س)', c: '#B23A48', fm: lsy, v: order.map(function (key) { return G[key].s; }) }];
+    if (r.money) ser.push({ n: 'الربح (ل.س)', c: '#2E7D32', fm: lsy, v: order.map(function (key) { return G[key].p; }) });
+    h += '<div class="card"><h2>' + (mon ? 'المبيعات شهريًا' : 'المبيعات يوميًا') + '</h2>' + chartSvg(lab, ser) + '</div>';
+  }
+  var tabs = (r.money ? [['p', 'الأكثر ربحًا']] : []).concat([['s', 'الأكثر مبيعًا'], ['q', 'الأكثر كمية']]).concat(r.money ? [['m', 'الأقل هامشًا']] : []).concat([['slow', 'الراكدة'], ['u', 'حسب المستخدم']]);
+  if (!tabs.some(function (x) { return x[0] === SRT; })) SRT = tabs[0][0];
+  h += '<div class="card"><div class="chips2" style="margin-bottom:8px">' + tabs.map(function (x) { return '<button class="' + (x[0] === SRT ? 'on' : '') + '" onclick="SRT=\'' + x[0] + '\';srepDraw()">' + x[1] + '</button>'; }).join('') + '</div>' + srepList() + '</div>';
+  box.innerHTML = h;
+}
+function srepList() {
+  var r = SREP, row = function (a, b2, c) { return '<div class="phl" style="cursor:default"><span>' + a + (c ? '<small>' + c + '</small>' : '') + '</span><b>' + b2 + '</b></div>'; };
+  var it = function (x, main) { return row(esc(x.n), main, (x.c ? esc(x.c) + ' · ' : '') + ls0(x.q) + ' قطعة · ' + ls0(x.s) + ' ل.س' + (x.p != null ? ' · ربح ' + ls0(x.p) + (x.m != null ? ' (' + x.m + '%)' : '') : '') + (x.nc ? ' · ' + x.nc + ' بلا تكلفة' : '')); };
+  var L;
+  if (SRT === 'p') L = r.topP.map(function (x) { return it(x, ls0(x.p)); });
+  else if (SRT === 's') L = r.topS.map(function (x) { return it(x, ls0(x.s)); });
+  else if (SRT === 'q') L = r.topQ.map(function (x) { return it(x, ls0(x.q) + ' <small>قطعة</small>'); });
+  else if (SRT === 'm') L = r.lowM.map(function (x) { return it(x, '<span style="color:' + (x.m < 10 ? 'var(--red)' : 'inherit') + '">' + x.m + '%</span>'); });
+  else if (SRT === 'slow') L = r.slow.map(function (x) { return row(esc(x.n), x.v != null ? ls0(x.v) : ls0(x.st) + ' <small>قطعة</small>', esc(x.c) + ' · الباقي ' + ls0(x.st) + ' · ' + (x.last ? 'آخر بيع ' + esc(x.last) : 'لم يُبع بعد')); });
+  else L = r.users.map(function (x) { return row(esc(x.u), ls0(x.s), x.n + ' فاتورة'); });
+  var note = SRT === 'slow' ? '<div class="note" style="margin-top:0">أصناف مجرودة وباقٍ منها في المخزون ولم تُبع منذ 30 يومًا' + (r.money ? ' (مرتبة بقيمتها بسعر التكلفة)' : '') + '.</div>' : SRT === 'm' ? '<div class="note" style="margin-top:0">نسبة الربح من سعر البيع؛ راجع الأسعار الأقل من 10%.</div>' : '';
+  return note + (L.length ? L.join('') : '<div class="muted">لا توجد بيانات في هذه الفترة</div>');
+}
 /* زر الرجوع: يعود خطوة للخلف (الصفحة السابقة، أو من الفاتورة المفتوحة إلى القائمة) — يستدعيه core.js */
 var NAVH = [], NAVSUB = null, NAVBACK = false;
 function navBack() {
@@ -2218,7 +2279,7 @@ function go(v) {
   } else nav.classList.add('hide');
   window.scrollTo(0, 0);
   var V = { home: vHome, inv: vInv, pinv: vPInv, psearch: vPSearch, plog: vPLog, items: vItems, pprice: vPrice, jentry: vJEntry, daily: vDaily, jsearch: vJSearch, jlog: vJLog,
-    rmon: vRMon, ryear: vRYear, settings: vSettings, gsearch: vGSearch, pos: vPos, sinv: vSInv, stock: vStock, sprice: vSPrice };
+    rmon: vRMon, ryear: vRYear, settings: vSettings, gsearch: vGSearch, pos: vPos, sinv: vSInv, stock: vStock, srep: vSRep, sprice: vSPrice };
   if (V[v]) V[v](); else { SUP.show(v); if (prevSec !== 's') SUP.quiet(); }
 }
 
@@ -3600,7 +3661,7 @@ onDom(function () { tblCards(); zebraCards(); });
             if (!sec || sec === 'x' || !SEC || !SEC[sec])
                 return [];
             var ICO = { inv: 'plus', pinv: 'inv', psearch: 'search', plog: 'list', items: 'tag', pprice: 'chart', sup: 'users', jentry: 'plus', daily: 'cal', jsearch: 'search', jlog: 'list',
-                sentry: 'plus', sstmt: 'list', ssum: 'chart', ssup: 'users', slog: 'list', rmon: 'cal', ryear: 'chart', pos: 'cart', sinv: 'list', stock: 'archive', sprice: 'tag' };
+                sentry: 'plus', sstmt: 'list', ssum: 'chart', ssup: 'users', slog: 'list', rmon: 'cal', ryear: 'chart', pos: 'cart', sinv: 'list', stock: 'archive', srep: 'chart', sprice: 'tag' };
             return SEC[sec].tabs.filter(function (t) { return !W.canTab || W.canTab(t[0]); }).map(function (t) { return [t[0], t[1], ICO[t[0]] || (/سجل/.test(t[1]) ? 'list' : /بحث/.test(t[1]) ? 'search' : /مورد/.test(t[1]) ? 'users' : /ملخص|تقرير/.test(t[1]) ? 'chart' : /إدخال/.test(t[1]) ? 'plus' : 'inv')]; });
         },
         navKey: function () { var V = g('VIEW_SEC'), C = g('CUR'); return V && C ? (V[C] || '') : ''; },
