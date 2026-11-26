@@ -140,6 +140,7 @@ html.ui-dark .stbal,body.dark .stbal{background:#2A2216;border-color:#4a3a20}
 .icard .in{font-size:12px;color:#8A6D1F;margin-top:4px}
 body.dark .icard,html.ui-dark .icard{background:#1d2633;border-color:#2c3a4d}body.dark .icard .ip div,html.ui-dark .icard .ip div{background:#243042}body.dark .icard .ic,html.ui-dark .icard .ic{background:#2c3a4d;color:#cfe0f2}
 @media print{header,.noprint,#toast,.bar,.card:has(.grid){display:none!important}body{background:#fff}.tw,.stat,.st,.card{box-shadow:none}}
+.jsug{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 2px 0}.jsug:empty{display:none}.jsl{font-size:13px;color:var(--mut);font-weight:700}.jsc{border:1.5px solid #E16414;background:#FFF4EC;color:#B34A08;border-radius:999px;padding:5px 12px;font:inherit;font-size:14px;font-weight:800;cursor:pointer}.jsc small{font-weight:600;opacity:.75}.jsc.jai{border-style:dashed;background:transparent;color:var(--mut)}.jsw{flex-basis:100%;color:var(--mut);font-size:12px}body.dark .jsc,html.ui-dark .jsc{background:#3a2615;color:#FFB27A}
 </style>
 <style>
 /* تنبيه ارتفاع السعر، تذكير اليومية، مقارنة العام الماضي، زر واتساب */
@@ -171,7 +172,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '1.24';
+window.APP_VER = '1.25';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 function syncBar() {
   var hd = document.querySelector('header'), m = document.querySelector('meta[name=theme-color]');
@@ -1329,11 +1330,101 @@ function addJLine() {
     '<div class="f"><label>' + esc(L.out) + '</label><input class="o" inputmode="decimal" autocomplete="off"></div>' +
     '<div class="f"><label>' + esc(L.inn) + '</label><input class="i" inputmode="decimal" autocomplete="off"></div>' +
     '<div class="f wide"><label>المورد <small>(اختياري، لسطور ' + esc(L.out) + ')</small></label><select class="sp">' + supOpts('', 'بدون مورد') + '</select></div></div>' +
-    '<div class="ltot"><span></span><button type="button" class="x">حذف السطر</button></div>';
+    '<div class="jsug"></div><div class="ltot"><span></span><button type="button" class="x">حذف السطر</button></div>';
   $('#jlines').appendChild(d);
   d.addEventListener('input', calcJ);
+  var jt; $('.st', d).addEventListener('input', function () { clearTimeout(jt); jt = setTimeout(function () { jSug(d); }, 250); });
+  $('.sp', d).addEventListener('change', function () { jSug(d); });
   $('.x', d).onclick = function () { if ($$('.line').length > 1) { d.remove(); calcJ(); } else { toast('يجب أن يبقى سطر واحد على الأقل', 'err'); } };
   calcJ();
+}
+/* ===== اقتراح الحساب عند إدخال قيد اليومية =====
+   يتعلم من القيود المرحّلة سابقًا (webJHints: بيان → حساب) + أسماء الحسابات + قاعدة «دفعة/دفعة على الحساب = الوفاء»،
+   ويعرض شارة «💡 الحساب المقترح» تحت البيان؛ الضغط عليها يختار الحساب (يُرحَّل عند الحفظ). إن لم يُعرف: زر «🤖 اسأل الذكاء الاصطناعي» (Gemini). */
+var JH = null, JHP = null;
+function jHints() {
+  if (JH) return Promise.resolve(JH);
+  if (!JH) { try { JH = JSON.parse(localStorage.getItem('safa_jhints') || 'null'); } catch (e) { JH = null; } }
+  if (!JHP) JHP = call('webJHints').then(function (r) { JH = jHPrep(r); try { localStorage.setItem('safa_jhints', JSON.stringify(r)); } catch (e) { /* */ } return JH; }).catch(function () { JHP = null; return JH; });
+  if (JH && !JH.prep) JH = jHPrep(JH);
+  return JH ? Promise.resolve(JH) : JHP;
+}
+function jNorm(t) {
+  return String(t || '').replace(/[\u064B-\u0652\u0640]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/[0-9٠-٩.,،\/\\()\-_:+$]+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+var JSTOP = ['علي', 'على', 'من', 'الي', 'الى', 'في', 'عن', 'مع', 'شهر', 'دولار', 'ليره', 'لس', 'ل', 'س', 'و', 'رقم', 'تاريخ', 'نقدا', 'نقدي', 'المبلغ', 'مبلغ'];
+var JGEN = ['ابو', 'ام', 'احمد', 'محمد', 'مكتبه', 'شركه', 'دار', 'ال', 'حساب', 'الحساب', 'دفعه', 'رصيد', 'شراء'];
+function jTok(t) { return jNorm(t).split(' ').filter(function (w) { return w.length >= 2 && JSTOP.indexOf(w) < 0; }); }
+function jHPrep(r) {
+  r = r || {}; var h = (r.hints || []).map(function (x) { return { k: jNorm(x.st), t: jTok(x.st), sup: x.sup, n: x.n || 1 }; });
+  var a = (r.accts || []).map(function (x) { return { name: x.name, sub: x.sub, t: jTok(x.name).filter(function (w) { return w.length >= 3 && JGEN.indexOf(w) < 0; }) }; });
+  return { prep: 1, hints: h, accts: a, raw: r };
+}
+function jGuess(st) {
+  var H = JH, k = jNorm(st), T = jTok(st), sc = {}, why = {};
+  if (!H || k.length < 2) return [];
+  function add(sup, v, w) { if (v > (sc[sup] || 0)) { sc[sup] = v; why[sup] = w; } }
+  /* قاعدة دائمة من المستخدم */
+  if (/^دفعه( (علي|عاي|عل|على) ?(ال)?حساب)?$/.test(k)) add('الوفاء', 1, 'قاعدة');
+  /* اسم الحساب مذكور في البيان */
+  H.accts.forEach(function (a) { var m = a.t.filter(function (w) { return T.indexOf(w) > -1 || k.indexOf(w) > -1; }).length; if (m) add(a.name, Math.min(0.95, 0.6 + 0.2 * m), 'الاسم'); });
+  /* القيود السابقة: تطابق تام أو تشابه الكلمات */
+  H.hints.forEach(function (h) {
+    if (h.k === k) { add(h.sup, 0.97, 'سابقًا'); return; }
+    if (!T.length || !h.t.length) return;
+    var c = T.filter(function (w) { return h.t.indexOf(w) > -1; }).length; if (!c) return;
+    var j = c / (T.length + h.t.length - c), v = j * (0.75 + Math.min(0.2, Math.log(1 + h.n) / 15));
+    add(h.sup, v, 'سابقًا');
+  });
+  return Object.keys(sc).filter(function (x) { return sc[x] >= 0.45; }).sort(function (a, b) { return sc[b] - sc[a]; }).slice(0, 2).map(function (x) { return { sup: x, s: sc[x], why: why[x] }; });
+}
+function jSetSup(d, name) {
+  var sel = $('.sp', d);
+  if (![].some.call(sel.options, function (o) { return o.value === name; })) { var o = document.createElement('option'); o.value = o.textContent = name; sel.appendChild(o); }
+  sel.value = name; jSug(d);
+}
+function jSug(d) {
+  var box = $('.jsug', d); if (!box) return;
+  var st = $('.st', d).value.trim(), cur = $('.sp', d).value;
+  if (st.length < 2) { box.innerHTML = ''; return; }
+  jHints().then(function () {
+    if ($('.st', d).value.trim() !== st) return;
+    var G = jGuess(st).filter(function (g) { return g.sup !== cur; });
+    if (cur && (!G.length || G[0].s < 0.9)) { box.innerHTML = ''; return; }
+    box.innerHTML = G.length ? '<span class="jsl">💡 الحساب المقترح:</span>' + G.map(function (g) { return '<button type="button" class="jsc" data-s="' + esc(g.sup) + '">' + esc(g.sup) + (SUBN.indexOf(g.sup) > -1 ? ' <small>فرعي</small>' : '') + '</button>'; }).join('')
+      : (cur ? '' : '<button type="button" class="jsc jai">🤖 اسأل الذكاء الاصطناعي عن الحساب</button>');
+    [].forEach.call(box.querySelectorAll('.jsc[data-s]'), function (b) { b.onclick = function () { jSetSup(d, b.getAttribute('data-s')); toast('اختير «' + b.getAttribute('data-s') + '» — يُرحَّل عند الحفظ', 'ok'); }; });
+    var ai = box.querySelector('.jai'); if (ai) ai.onclick = function () { jAsk(d, st, ai); };
+  });
+}
+var JAI = null;
+function jAsk(d, st, btn) {
+  btn.disabled = true; btn.textContent = '🤖 يفكّر…';
+  (JAI ? Promise.resolve(JAI) : call('webAiCfg').then(function (c) { if (!c || !c.ok) throw new Error('الذكاء الاصطناعي غير مفعّل (مفتاح Gemini)'); JAI = c; return c; }))
+    .then(function (c) {
+      var H = JH || { hints: [], accts: [] }, names = H.accts.map(function (a) { return a.name + (a.sub ? ' (حساب فرعي)' : ''); });
+      var ex = H.hints.slice().sort(function (a, b) { return b.n - a.n; }).slice(0, 80).map(function (h) { return '«' + h.k + '» → ' + h.sup; }).join('\n');
+      var prompt = 'أنت محاسب لمكتبة قرطاسية. قيد مدفوعات في يومية الصندوق بيانه: «' + st + '».\nاختر الحساب الذي يُرحَّل إليه من هذه القائمة فقط:\n' + names.join('، ') +
+        '\nأمثلة من قيود سابقة (بيان → حساب):\n' + ex + '\nقواعد: «دفعة» أو «دفعة على الحساب» وحدها = الوفاء. المصاريف الصغيرة المتنوعة = نثريات. شراء نقدي من محل/مكتبة غير موجودة = مشتريات نقدية.' +
+        '\nأجب JSON فقط: {"sup":"اسم الحساب كما في القائمة أو فارغ إن لم تعرف","why":"سبب قصير"}';
+      var models = c.models || [], i = 0;
+      function one() {
+        if (i >= models.length) return Promise.reject(new Error('تعذّر الاتصال بالذكاء الاصطناعي'));
+        var m = models[i], gc = { temperature: 0, responseMimeType: 'application/json' };
+        if (/gemini-[3-9]/.test(m)) gc.thinkingConfig = { thinkingLevel: 'low' };
+        return fetch('https://generativelanguage.googleapis.com/v1beta/models/' + m + ':generateContent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': c.key }, body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: gc }) })
+          .then(function (r) { return r.json().then(function (j) { if (r.status !== 200) { i++; return one(); } var t = ((((j.candidates || [])[0] || {}).content || {}).parts || []).map(function (q) { return q.text || ''; }).join(''); return JSON.parse(t.replace(/^```(?:json)?|```$/g, '').trim()); }); });
+      }
+      return one();
+    })
+    .then(function (r) {
+      var nm = String((r && r.sup) || '').trim(), ok = JH && JH.accts.some(function (a) { return a.name === nm; });
+      if (!ok) { btn.disabled = false; btn.textContent = '🤖 لم يعرف الحساب — اختره من القائمة'; return; }
+      var box = $('.jsug', d);
+      box.innerHTML = '<span class="jsl">🤖 اقتراح الذكاء الاصطناعي:</span><button type="button" class="jsc" data-s="' + esc(nm) + '">' + esc(nm) + '</button>' + (r.why ? '<small class="jsw">' + esc(r.why) + '</small>' : '');
+      box.querySelector('.jsc').onclick = function () { jSetSup(d, nm); toast('اختير «' + nm + '» — يُرحَّل عند الحفظ', 'ok'); };
+    })
+    .catch(function (e) { btn.disabled = false; btn.textContent = '🤖 اسأل الذكاء الاصطناعي عن الحساب'; toast(errMsg(e), 'err'); });
 }
 function calcJ() {
   var a = 0, o = 0, i = 0, L = B.labels, c = $('#jcur'), cu = ' ' + esc(csym(c && c.value)), F = c && c.value === 'ل.س' ? lsy : function (v) { return fmt(v) + cu; };
@@ -1352,7 +1443,7 @@ function saveJ() {
     busy(b, false);
     if (!r.ok) { toast(r.msg, 'err'); return; }
     toast(r.msg + (withSup ? '، ورُحّلت دفعات الموردين لكشوفهم' : ''), 'ok'); B.bal = r.bal; DASH = null;
-    if (withSup) SUP.quiet();
+    if (withSup) { SUP.quiet(); JH = null; JHP = null; }
     vJEntry();
   }).catch(function (e) { busy(b, false); toast(errMsg(e), 'err'); });
 }
