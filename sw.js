@@ -1,12 +1,12 @@
 /* يحفظ ملفات التطبيق في الجهاز ليفتح دون اتصال */
-var V = 'safa-v168';
+var V = 'safa-v169';
 var FILES = ['./', './index.html', './shell.html', './core.js', './loader.js', './icon-180.png', './icon-192.png', './icon-512.png', './manifest.json',
   './ghadaq/', './ghadaq/index.html', './ghadaq/shell.html', './ghadaq/manifest.json', './ghadaq/icon-180.png', './ghadaq/icon-192.png', './ghadaq/icon-512.png'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(V).then(function (c) { return Promise.all(FILES.map(function (f) { return c.add(f).catch(function () {}); })); }).then(function () { return self.skipWaiting(); }));
 });
 self.addEventListener('activate', function (e) {
-  e.waitUntil(caches.keys().then(function (ks) { return Promise.all(ks.filter(function (k) { return k !== V && k !== 'fonts' && k !== 'share-inbox'; }).map(function (k) { return caches.delete(k); })); }).then(function () { return self.clients.claim(); }));
+  e.waitUntil(caches.keys().then(function (ks) { return Promise.all(ks.filter(function (k) { return k !== V && k !== 'fonts' && k !== 'share-inbox' && k !== 'libs'; }).map(function (k) { return caches.delete(k); })); }).then(function () { return self.clients.claim(); }));
 });
 self.addEventListener('fetch', function (e) {
   var u = new URL(e.request.url);
@@ -28,6 +28,13 @@ self.addEventListener('fetch', function (e) {
       if (r.ok) { var cl = r.clone(); caches.open(V).then(function (c) { c.put(e.request, cl); }); }
       return r;
     }).catch(function () { return caches.match(e.request, { ignoreSearch: true }).then(function (r) { return r || caches.match('./index.html'); }); }));
+    return;
+  }
+  /* مكتبات من CDN بإصدار ثابت (قارئ الباركود وملف wasm، SheetJS…): تُحفظ أول مرة وتعمل بعدها دون اتصال */
+  if (/(^|\.)jsdelivr\.net$/.test(u.hostname) && /@\d/.test(u.pathname)) {
+    e.respondWith(caches.open('libs').then(function (c) { return c.match(e.request).then(function (r) {
+      return r || fetch(e.request).then(function (n) { if (n.ok) c.put(e.request, n.clone()); return n; });
+    }); }));
     return;
   }
   if (/fonts\.(googleapis|gstatic)\.com$/.test(u.hostname)) {

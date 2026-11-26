@@ -177,7 +177,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '2.1';
+window.APP_VER = '3.0';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 /* الأمان: هوية هذا الجهاز تُرسل مع الدخول (سجل الدخول، وخروج جهاز محدد) — نفس مفتاح «الأجهزة المتصلة» */
 function secDev() {
@@ -1687,6 +1687,401 @@ SECTIONS.x = { title: '', tabs: [] };
 VIEW_SEC.pinv = 'p'; VIEW_SEC.pprice = 'p'; VIEW_SEC.rmon = 'r'; VIEW_SEC.ryear = 'r'; VIEW_SEC.settings = 'x'; VIEW_SEC.gsearch = 'x';
 var XTITLE = { settings: 'الإعدادات', gsearch: 'البحث الشامل' };
 
+/* ======================= المبيعات (3.0) =======================
+   الشاشات: «بيع» vPos (الكاميرا/البحث/أزرار الأكثر مبيعًا، تعمل دون اتصال)، «فواتير البيع» vSInv، «الأسعار والباركود» vSPrice.
+   البيانات: webSalesBoot (محفوظة في الجهاز «pos_sb» وتُحدَّث في الخلفية). الفاتورة تُحفظ بـ webSaleSave بمعرّف من الجهاز
+   (صندوق الإرسال في core.js يرسلها عند عودة الاتصال، والخادم يتجاهل المكرر). الترقيم لكل جهاز: «A7-0001».
+   الباركود المجهول يُربط مرة واحدة بالصنف (webItemBarcode) ويُحفظ في الجهاز فورًا «safa_pos_bcl». */
+SECTIONS.b = { title: 'المبيعات', tabs: [['pos', 'بيع'], ['sinv', 'فواتير البيع'], ['sprice', 'الأسعار والباركود']] };
+VIEW_SEC.pos = 'b'; VIEW_SEC.sinv = 'b'; VIEW_SEC.sprice = 'b';
+TAB_PERM.pos = ['sales', 'a']; TAB_PERM.sinv = ['sales', 'v']; TAB_PERM.sprice = ['sales', 'e'];
+ICON.b = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5V3h2M19 3h2v2M21 19v2h-2M5 21H3v-2"/><path d="M7 7v10M10 7v10M13 7v10M16 7v7M17 17h.01"/></svg>';
+document.head.insertAdjacentHTML('beforeend', '<style>' +
+  'body[data-sec="b"]{--c:#8E2440;--c2:#B23A48;--cl:#F8E6EA}.tile.b{background:linear-gradient(135deg,#8E2440,#B23A48)}' +
+  '.posbar{display:flex;gap:8px;align-items:stretch;margin-bottom:10px}.posscan{flex:0 0 auto;display:flex;align-items:center;gap:6px;font-size:16px;padding:8px 16px}' +
+  '.posq{position:relative;flex:1;min-width:0}.posq input{background:#fff;min-height:50px;border-radius:13px}' +
+  '.posr{position:absolute;top:100%;right:0;left:0;z-index:40;background:#fff;border:1px solid var(--bd);border-radius:13px;box-shadow:0 10px 30px rgba(0,0,0,.15);max-height:55vh;overflow:auto;margin-top:4px}' +
+  '.posr:empty{display:none}.posr div{padding:10px 12px;border-top:1px solid var(--bd);cursor:pointer;display:flex;justify-content:space-between;gap:10px}.posr div:first-child{border-top:0}.posr div:active{background:var(--cl)}.posr small{color:var(--mut)}.posr b{white-space:nowrap;font-variant-numeric:tabular-nums}' +
+  '.postop{display:flex;gap:7px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}.postop::-webkit-scrollbar{display:none}.postop button{flex:0 0 auto;border:1px solid var(--bd);background:#fff;border-radius:12px;padding:6px 12px;font-weight:700;color:var(--c);max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+  '.posh{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}.posh input[type=date]{width:auto;flex:0 0 150px;min-height:40px;padding:6px 10px}' +
+  '.pchip{border:1.5px solid var(--c);background:#fff;color:var(--c);border-radius:99px;padding:5px 14px;font-weight:800;min-height:38px}.pchip.on{background:var(--c);color:#fff}' +
+  '#poscu2{flex:1;min-width:140px;min-height:40px;padding:6px 10px}' +
+  '.pl{display:grid;grid-template-columns:minmax(0,1fr) auto 100px 92px 30px;gap:8px;align-items:center;padding:9px 0;border-top:1px solid var(--bd)}.pl:first-child{border-top:0}' +
+  '.pl .pn{font-weight:700;line-height:1.35;overflow-wrap:anywhere}.pl .pn small{display:block;color:var(--mut);font-weight:500;font-size:12px}' +
+  '.pq{display:flex;align-items:center;border:1px solid var(--bd);border-radius:11px;overflow:hidden;background:#F8FAFC}.pq button{border:0;background:none;width:36px;min-height:40px;font-size:20px;font-weight:800;color:var(--c)}.pq input{width:46px;min-height:40px;border:0;border-radius:0;padding:4px;text-align:center;background:transparent}' +
+  '.pl .pp{min-height:40px;padding:6px 8px;text-align:center}.pl .pp.low{border-color:var(--red);color:var(--red)}.pl .pt{text-align:left;font-variant-numeric:tabular-nums;white-space:nowrap}.pl .x{padding:4px}' +
+  '@media(max-width:600px){.pl{grid-template-columns:auto minmax(64px,1fr) minmax(78px,auto);grid-template-areas:"n n x" "q p t"}.pl .x{justify-self:end}.pl .pn{grid-area:n}.pl .pq{grid-area:q}.pl .pp{grid-area:p}.pl .pt{grid-area:t;min-width:84px}.pl .x{grid-area:x}}' +
+  '.posem{color:var(--mut);text-align:center;padding:22px 6px;line-height:1.9}' +
+  '.bar .tot b small{font-size:13px;color:var(--mut)}' +
+  '.phl{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 2px;border-top:1px solid var(--bd);cursor:pointer}.phl:first-child{border-top:0}.phl b{font-variant-numeric:tabular-nums;white-space:nowrap}.phl small{color:var(--mut);display:block}' +
+  '.pst{font-size:12px;border-radius:99px;padding:1px 9px;font-weight:700;background:#E8F5E9;color:var(--grn)}.pst.q{background:#FFF3E0;color:#E65100}' +
+  '.scan{position:fixed;inset:0;z-index:95;background:#000;display:flex;flex-direction:column}.scan video{flex:1;width:100%;object-fit:cover;min-height:0}' +
+  '.scan .sfr{position:absolute;left:10%;right:10%;top:30%;height:22%;border:3px solid rgba(255,255,255,.85);border-radius:16px;box-shadow:0 0 0 100vmax rgba(0,0,0,.35);pointer-events:none}.scan .sfr.hit{border-color:#69F0AE}' +
+  '.scan .sb{position:absolute;bottom:0;left:0;right:0;padding:14px 14px calc(14px + env(safe-area-inset-bottom));display:flex;gap:10px;align-items:center;background:linear-gradient(transparent,rgba(0,0,0,.75))}' +
+  '.scan .sb span{flex:1;color:#fff;font-weight:700;font-size:16px;line-height:1.4}.scan .sb button{border:0;border-radius:14px;padding:12px 22px;font-size:17px;font-weight:800;background:#fff;color:#8E2440}' +
+  '.scan .stop{position:absolute;top:calc(12px + env(safe-area-inset-top));right:12px;left:12px;display:flex;justify-content:space-between}.scan .stop button{border:0;border-radius:12px;background:rgba(0,0,0,.5);color:#fff;font-size:15px;font-weight:700;padding:8px 14px}' +
+  '.spi{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:10px 2px;border-top:1px solid var(--bd);cursor:pointer}.spi:first-child{border-top:0}.spi b{font-variant-numeric:tabular-nums}.spi small{color:var(--mut)}.spi .m{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}' +
+  '.spi .m span{font-size:12px;background:var(--cl);color:var(--c);border-radius:99px;padding:1px 9px;font-weight:700}.spi .m span.w{background:#FFF3E0;color:#E65100}' +
+  '</style>');
+
+var SB = null, SBX = null, SBP = null, POSD = null;
+function lsJ(k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsS(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* */ } }
+function ls0(n) { return Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+/* بيانات البيع: من الجهاز فورًا، ثم من الخادم في الخلفية (cb يُستدعى مرة أو مرتين) */
+function sbLoad(cb, force) {
+  var done = function (v, fresh) { if (!v || !v.items) return; SB = v; sbIndex(); if (fresh) RT.kset('pos_sb', JSON.stringify(v)); if (cb) cb(fresh); };
+  var net = function () { if (SBP) return SBP; SBP = call('webSalesBoot').then(function (v) { SBP = null; done(v, true); return v; }, function (e) { SBP = null; throw e; }); return SBP; };
+  if (SB && !force) { cb && cb(false); if (Date.now() - (SB._t || 0) > 120000) net().then(function () { SB._t = Date.now(); }).catch(function () { }); return Promise.resolve(SB); }
+  return RT.kget('pos_sb').then(function (v) {
+    if (v && !force) { done(JSON.parse(v), false); net().then(function () { SB._t = Date.now(); }).catch(function () { }); return SB; }
+    return net().then(function () { SB._t = Date.now(); return SB; });
+  });
+}
+function sbIndex() {
+  var X = { bc: {}, c: {}, n: {} };
+  SB.items.forEach(function (x) { if (x.c) X.c[x.c.toLowerCase()] = x; X.n[x.n.toLowerCase()] = x; (x.bc || []).forEach(function (b) { X.bc[b] = x; }); });
+  /* روابط باركود أُضيفت على هذا الجهاز (قبل وصولها للخادم) */
+  var L = lsJ('safa_pos_bcl', {}); Object.keys(L).forEach(function (b) { var x = X.c[String(L[b]).toLowerCase()] || X.n[String(L[b]).toLowerCase()]; if (x) { X.bc[b] = x; if ((x.bc || []).indexOf(b) < 0) x.bc = (x.bc || []).concat([b]); } });
+  SBX = X;
+}
+function sbFind(q, n) {
+  q = en(q).toLowerCase(); if (!q) return [];
+  var w = q.split(/\s+/), out = [];
+  for (var i = 0; i < SB.items.length && out.length < (n || 30); i++) {
+    var x = SB.items[i], h = (x.n + ' ' + x.c + ' ' + (x.bc || []).join(' ')).toLowerCase();
+    if (w.every(function (t) { return h.indexOf(t) > -1; })) out.push(x);
+  }
+  return out;
+}
+/* رقم الجهاز للفواتير (حرف + رقم، ثابت على الجهاز) والعدّاد */
+function posDev() {
+  var d = ''; try { d = localStorage.getItem('safa_pos_dev') || ''; } catch (e) { /* */ }
+  if (!d) { d = 'ABCDEFGHJKLMNPRSTUVWXYZ'.charAt(Math.floor(Math.random() * 23)) + Math.floor(Math.random() * 10); try { localStorage.setItem('safa_pos_dev', d); } catch (e) { /* */ } }
+  return d;
+}
+function posNo() { var n = (Number(lsJ('safa_pos_n', 0)) || 0) + 1; lsS('safa_pos_n', n); return posDev() + '-' + ('000' + n).slice(-4); }
+function posCart() { if (!POSD) POSD = lsJ('safa_pos_cart', null) || { lines: [], cust: '', date: '' }; return POSD; }
+function posKeep() { lsS('safa_pos_cart', POSD); }
+function todayStr() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+
+function vPos() {
+  var C = posCart();
+  $('#view').innerHTML = '<div class="posbar"><button class="btn posscan" onclick="posScan()">📷 <span>مسح</span></button>' +
+    '<div class="posq"><input id="posq" placeholder="اسم الصنف أو الكود أو الباركود" autocomplete="off" enterkeyhint="search" oninput="posFind()" onkeydown="if(event.key===\'Enter\'){event.preventDefault();posEnter()}"><div id="posr" class="posr"></div></div></div>' +
+    '<div id="postop" class="postop"></div>' +
+    '<div class="card"><div class="posh"><input type="date" id="posd" value="' + esc(C.date || todayStr()) + '" onchange="posCart().date=this.value===todayStr()?\'\':this.value;posKeep()">' +
+    '<button class="pchip' + (C.cust ? '' : ' on') + '" id="poscu" onclick="posCust()">' + (C.cust ? '👤 باسم' : '💵 نقدي') + '</button>' +
+    '<input id="poscu2" class="' + (C.cust ? '' : 'hide') + '" placeholder="اسم العميل" value="' + esc(C.cust) + '" oninput="posCart().cust=this.value.trim();posKeep()"></div>' +
+    '<div id="posl"></div></div>' +
+    '<div class="card"><h2>فواتير اليوم على هذا الجهاز</h2><div id="posh"></div></div>' +
+    '<div class="bar"><div class="tot">الإجمالي<b id="post">0</b></div><button class="btn grn" id="possv" onclick="posSave()">حفظ الفاتورة</button></div>';
+  posLines(); posHist();
+  $('#posl').innerHTML = '<div class="posem"><span class="spin"></span> جارٍ تجهيز الأصناف…</div>';
+  sbLoad(function () { if (CUR !== 'pos') return; posTop(); posLines(); }).catch(function (e) { if (!SB) $('#posl').innerHTML = '<div class="posem">' + esc(errMsg(e)) + '</div>'; });
+  bcWarm();
+}
+function posTop() {
+  var box = $('#postop'); if (!box || !SB) return;
+  var L = (SB.top || []).map(function (k) { k = String(k).toLowerCase(); return SBX.c[k] || SBX.n[k]; }).filter(Boolean).slice(0, 14);
+  POSTL = L;
+  box.innerHTML = L.map(function (x, i) { return '<button onclick="posAdd(POSTL[' + i + '])">' + esc(x.n) + '</button>'; }).join('');
+}
+function posCust() {
+  var C = posCart(), i = $('#poscu2'), on = i.classList.contains('hide');
+  i.classList.toggle('hide', !on); $('#poscu').classList.toggle('on', !on); $('#poscu').textContent = on ? '👤 باسم' : '💵 نقدي';
+  if (on) i.focus(); else { i.value = ''; C.cust = ''; posKeep(); }
+}
+function posFind() {
+  var q = $('#posq').value, box = $('#posr'); if (!SB) return;
+  if (!en(q)) { box.innerHTML = ''; return; }
+  var L = sbFind(q, 25);
+  POSR = L;
+  box.innerHTML = L.map(function (x, i) { return '<div onclick="posPick(' + i + ')"><span>' + esc(x.n) + ' <small>' + esc(x.c) + (x.u ? ' · ' + esc(x.u) : '') + '</small></span><b>' + (x.sp ? ls0(x.sp) : '—') + '</b></div>'; }).join('') +
+    '<div onclick="posFree()"><span>＋ صنف غير مسجّل: «' + esc(q.trim()) + '»</span><small>تكتب السعر</small></div>';
+}
+var POSR = [], POSTL = [];
+function posPick(i) { var x = POSR[i]; $('#posq').value = ''; $('#posr').innerHTML = ''; if (x) posAdd(x); }
+function posFree() { var q = $('#posq').value.trim(); $('#posq').value = ''; $('#posr').innerHTML = ''; if (!q) return; posCart().lines.push({ c: '', n: q, q: 1, p: 0 }); posKeep(); posLines(true); }
+/* Enter في البحث (أو قارئ باركود بلوتوث يكتب الرقم ثم Enter) */
+function posEnter() {
+  var q = en($('#posq').value).replace(/\s+/g, ''); if (!q || !SB) return;
+  var x = SBX.bc[q] || SBX.c[q.toLowerCase()];
+  if (x) { $('#posq').value = ''; $('#posr').innerHTML = ''; posAdd(x); return; }
+  if (/^\d{6,}$/.test(q)) { $('#posq').value = ''; $('#posr').innerHTML = ''; bcLink(q); return; }
+  if (POSR.length === 1) posPick(0);
+}
+function posAdd(x, n) {
+  if (!x) return;
+  var C = posCart(), l = C.lines.filter(function (y) { return (x.c && y.c === x.c) || (!x.c && y.n === x.n); })[0];
+  if (l) l.q = Math.round((Number(l.q) + (n || 1)) * 1000) / 1000;
+  else C.lines.push({ c: x.c, n: x.n, q: n || 1, p: x.sp || 0 });
+  posKeep(); posLines(!l);
+  return l ? l.q : (n || 1);
+}
+function posItem(l) { return SBX ? (l.c ? SBX.c[l.c.toLowerCase()] : SBX.n[l.n.toLowerCase()]) : null; }
+function posLines(focusLast) {
+  var box = $('#posl'); if (!box) return;
+  var C = posCart(), tot = 0;
+  if (!C.lines.length) box.innerHTML = '<div class="posem">امسح باركود الصنف بالكاميرا 📷<br>أو ابحث بالاسم، أو اختر من الأصناف الأكثر مبيعًا</div>';
+  else box.innerHTML = C.lines.map(function (l, i) {
+    var x = posItem(l), t = (Number(l.q) || 0) * (Number(l.p) || 0); tot += t;
+    var low = x && SB.money && x.cost && l.p && l.p < x.cost;
+    return '<div class="pl"><div class="pn">' + esc(l.n) + '<small>' + (x ? esc(x.c) + (x.pp > 1 ? ' · العبوة ' + x.pp + ' قطعة' : '') : 'صنف غير مسجّل') + (low ? ' · <span style="color:var(--red)">أقل من التكلفة ' + ls0(x.cost) + '</span>' : '') + '</small></div>' +
+      '<div class="pq"><button onclick="posQ(' + i + ',1)">+</button><input inputmode="decimal" value="' + esc(l.q) + '" onchange="posQv(' + i + ',this.value)"><button onclick="posQ(' + i + ',-1)">−</button></div>' +
+      '<input class="pp' + (low ? ' low' : '') + '" inputmode="numeric" placeholder="السعر" value="' + (l.p ? esc(l.p) : '') + '" onchange="posPv(' + i + ',this.value)">' +
+      '<b class="pt">' + ls0(t) + '</b><button class="x" onclick="posDel(' + i + ')">✕</button></div>';
+  }).join('');
+  var tt = $('#post'); if (tt) tt.innerHTML = ls0(tot) + ' <small>ل.س</small>';
+  if (focusLast && C.lines.length) { var ps = $$('#posl .pp'), p = ps[ps.length - 1]; if (p && !p.value) p.focus(); }
+}
+function posQ(i, d) { var l = posCart().lines[i]; if (!l) return; l.q = Math.max(1, Math.round((Number(l.q) + d) * 1000) / 1000); posKeep(); posLines(); }
+function posQv(i, v) { var l = posCart().lines[i], n = num(v); if (!l) return; if (n > 0) l.q = n; posKeep(); posLines(); }
+function posPv(i, v) { var l = posCart().lines[i]; if (!l) return; l.p = Math.max(0, num(v)); posKeep(); posLines(); }
+function posDel(i) { posCart().lines.splice(i, 1); posKeep(); posLines(); }
+function posSave() {
+  var C = posCart(), b = $('#possv');
+  if (!C.lines.length) { toast('الفاتورة فارغة', 'err'); return; }
+  var bad = C.lines.filter(function (l) { return !(l.p > 0); })[0];
+  if (bad) { toast('اكتب سعر «' + bad.n + '»', 'err'); return; }
+  var cu = String(C.cust || '').trim();
+  var p = { id: posDev() + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), no: posNo(), date: $('#posd').value || todayStr(), cust: cu,
+    dev: secDev().n, lines: C.lines.map(function (l) { return { c: l.c, n: l.n, q: l.q, p: l.p }; }) };
+  var tot = p.lines.reduce(function (s, l) { return s + l.q * l.p; }, 0);
+  var H = lsJ('safa_pos_inv', []);
+  H.unshift({ id: p.id, no: p.no, date: p.date, cust: cu, lines: p.lines, total: tot, t: Date.now() }); lsS('safa_pos_inv', H.slice(0, 300));
+  POSD = { lines: [], cust: '', date: '' }; posKeep();
+  busy(b, true);
+  call('webSaleSave', p).then(function (r) {
+    busy(b, false);
+    toast(r && r.offline ? '📴 حُفظت دون اتصال — ستُرسل تلقائيًا' : '✓ حُفظت الفاتورة ' + p.no, 'ok');
+    if (CUR === 'pos') vPos();
+  }, function (e) {
+    busy(b, false); toast(errMsg(e), 'err');
+    /* لم تُحفظ ولم تدخل صندوق الإرسال: أرجعها للسلة */
+    var H2 = lsJ('safa_pos_inv', []).filter(function (x) { return x.id !== p.id; }); lsS('safa_pos_inv', H2);
+    POSD = { lines: p.lines, cust: cu, date: p.date === todayStr() ? '' : p.date }; posKeep(); if (CUR === 'pos') vPos();
+  });
+}
+function posPending() { var s = {}; try { RT.out().forEach(function (x) { var a = x.a && x.a[1] && x.a[1][0]; if (x.fn === 'webSaleSave' && a) s[a.id] = 1; }); } catch (e) { /* */ } return s; }
+function posHist() {
+  var box = $('#posh'); if (!box) return;
+  var q = posPending(), td0 = todayStr(), H = lsJ('safa_pos_inv', []).filter(function (x) { return x.date === td0 || q[x.id]; });
+  POSH = H;
+  var sum = H.reduce(function (s, x) { return s + x.total; }, 0);
+  box.innerHTML = H.length ? '<div class="note" style="margin:0 0 6px">' + H.length + ' فاتورة · ' + ls0(sum) + ' ل.س</div>' + H.slice(0, 40).map(function (x, i) {
+    var tm = new Date(x.t);
+    return '<div class="phl" onclick="saleView(POSH[' + i + '])"><span><b>' + esc(x.no) + '</b> ' + (q[x.id] ? '<span class="pst q">⏳ بانتظار الإرسال</span>' : '<span class="pst">✓</span>') +
+      '<small>' + ('0' + tm.getHours()).slice(-2) + ':' + ('0' + tm.getMinutes()).slice(-2) + ' · ' + esc(x.cust || 'نقدي') + ' · ' + x.lines.length + ' صنف</small></span><b>' + ls0(x.total) + '</b></div>';
+  }).join('') : '<div class="muted">لا توجد فواتير اليوم بعد</div>';
+}
+var POSH = [];
+/* عرض فاتورة بيع ومشاركتها */
+function saleText(x) {
+  var o = ['مكتبة الصفاء', 'فاتورة بيع ' + x.no + ' — ' + x.date, 'العميل: ' + (x.cust || 'نقدي'), ''];
+  x.lines.forEach(function (l) { o.push('• ' + l.n + ' × ' + l.q + ' = ' + ls0(l.q * l.p)); });
+  o.push('', 'الإجمالي: ' + ls0(x.total) + ' ل.س');
+  return o.join('\n');
+}
+var SALEV = null;
+function saleView(x) {
+  if (!x) return; SALEV = x;
+  var o = document.createElement('div'); o.className = 'dpop'; o.id = 'svpop';
+  o.innerHTML = '<div class="dbox" style="max-width:520px"><div class="dhd" style="background:linear-gradient(135deg,#8E2440,#B23A48)"><button onclick="this.closest(\'.dpop\').remove()">✕</button><b>فاتورة بيع ' + esc(x.no) + '</b><span style="min-width:40px"></span></div>' +
+    '<div class="dbd"><div class="note" style="margin-top:0">' + esc(x.date) + ' · ' + esc(x.cust || 'نقدي') + (x.user ? ' · ' + esc(x.user) : '') + '</div>' +
+    x.lines.map(function (l) { return '<div class="phl" style="cursor:default"><span>' + esc(l.n) + '<small>' + esc(l.q) + ' × ' + ls0(l.p) + (l.cost ? ' · التكلفة ' + ls0(l.cost) : '') + '</small></span><b>' + ls0(l.q * l.p) + '</b></div>'; }).join('') +
+    '<div class="phl" style="cursor:default;border-top:2px solid var(--bd)"><span><b>الإجمالي</b>' + (x.profit != null && x.nc !== undefined ? '<small>الربح ' + ls0(x.profit) + ' ل.س' + (x.nc ? ' (' + x.nc + ' صنف بلا تكلفة)' : '') + '</small>' : '') + '</span><b>' + ls0(x.total) + ' ل.س</b></div>' +
+    '<div class="row" style="margin-top:12px"><button class="btn grn" onclick="window.open(\'https://wa.me/?text=\'+encodeURIComponent(saleText(SALEV)),\'_blank\')">واتساب</button>' +
+    (navigator.share ? '<button class="btn sec" onclick="navigator.share({text:saleText(SALEV)}).catch(function(){})">مشاركة</button>' : '') +
+    (x.user !== undefined && can('sales', 'd') ? '<button class="btn warn" onclick="saleDel(this)">حذف</button>' : '') + '</div></div></div>';
+  o.onclick = function (e) { if (e.target === o) o.remove(); };
+  document.body.appendChild(o);
+}
+function saleDel(b) {
+  if (!confirm('حذف فاتورة البيع ' + SALEV.no + '؟')) return;
+  busy(b, true);
+  call('webSaleDelete', { id: SALEV.id }).then(function (r) {
+    if (r && r.ok === false) { busy(b, false); toast(r.msg, 'err'); return; }
+    lsS('safa_pos_inv', lsJ('safa_pos_inv', []).filter(function (x) { return x.id !== SALEV.id; }));
+    var p = $('#svpop'); if (p) p.remove(); toast('حُذفت الفاتورة', 'ok'); if (CUR === 'sinv') doSInv();
+  }, function (e) { busy(b, false); toast(errMsg(e), 'err'); });
+}
+
+/* ---------- الكاميرا: BarcodeDetector المدمج (أندرويد) أو مكتبة ZXing من CDN (الآيباد/الآيفون، تُحفظ للعمل دون اتصال) ---------- */
+var BCD = null, BCDP = null, BCLIB = 'https://fastly.jsdelivr.net/npm/barcode-detector@3.2.3/dist/iife/index.min.js';
+var BCF = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'code_93', 'itf', 'codabar', 'qr_code'];
+function bcScript() {
+  if (window.BarcodeDetectionAPI) return Promise.resolve();
+  return new Promise(function (res, rej) { var s = document.createElement('script'); s.crossOrigin = 'anonymous'; s.src = BCLIB; s.onload = res; s.onerror = function () { rej(new Error('تعذّر تحميل قارئ الباركود (يحتاج اتصالًا أول مرة)')); }; document.head.appendChild(s); });
+}
+function bcDetector() {
+  if (BCD) return Promise.resolve(BCD);
+  if (BCDP) return BCDP;
+  var nat = window.BarcodeDetector && BarcodeDetector.getSupportedFormats ? BarcodeDetector.getSupportedFormats().then(function (s) {
+    return s.indexOf('ean_13') > -1 ? new BarcodeDetector({ formats: BCF.filter(function (f) { return s.indexOf(f) > -1; }) }) : null;
+  }).catch(function () { return null; }) : Promise.resolve(null);
+  BCDP = nat.then(function (d) { return d || bcScript().then(function () { return new window.BarcodeDetectionAPI.BarcodeDetector({ formats: BCF }); }); })
+    .then(function (d) { BCD = d; BCDP = null; return d; }, function (e) { BCDP = null; throw e; });
+  return BCDP;
+}
+/* تجهيز القارئ مسبقًا وهو متصل (يُحفظ ملف wasm في الجهاز) */
+function bcWarm() {
+  if (!navigator.onLine || bcWarm.done) return; bcWarm.done = 1;
+  setTimeout(function () { bcDetector().then(function (d) { var c = document.createElement('canvas'); c.width = c.height = 8; return d.detect(c); }).catch(function () { bcWarm.done = 0; }); }, 1500);
+}
+var SCAN = null;
+/* mode: 'pos' يضيف للفاتورة؛ دالة = يرجع الرقم إليها مرة واحدة */
+function posScan(mode) {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { toast('الكاميرا غير متاحة في هذا المتصفح', 'err'); return; }
+  scanClose();
+  var o = document.createElement('div'); o.className = 'scan'; o.id = 'scan';
+  o.innerHTML = '<video playsinline muted autoplay></video><div class="sfr"></div><div class="stop"><button onclick="scanClose()">✕ إغلاق</button><button id="storch" class="hide" onclick="scanTorch()">🔦 إضاءة</button></div>' +
+    '<div class="sb"><span id="slast">جارٍ تشغيل الكاميرا…</span><button onclick="scanClose()">تم</button></div>';
+  document.body.appendChild(o);
+  var S = SCAN = { o: o, v: $('video', o), mode: mode || 'pos', last: '', lt: 0, on: true, stream: null };
+  Promise.all([navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false }), bcDetector()]).then(function (r) {
+    if (!S.on) { r[0].getTracks().forEach(function (t) { t.stop(); }); return; }
+    S.stream = r[0]; S.d = r[1]; S.v.srcObject = r[0];
+    try { var tr = r[0].getVideoTracks()[0], cp = tr.getCapabilities && tr.getCapabilities(); if (cp && cp.torch) $('#storch').classList.remove('hide'); } catch (e) { /* */ }
+    $('#slast').textContent = 'وجّه الكاميرا نحو الباركود';
+    var loop = function () {
+      if (!S.on) return;
+      if (S.v.readyState < 2) { setTimeout(loop, 200); return; }
+      S.d.detect(S.v).then(function (L) {
+        var x = L && L[0], v = x && String(x.rawValue || '').trim();
+        if (v && !(v === S.last && Date.now() - S.lt < 1800)) { S.last = v; S.lt = Date.now(); scanHit(v); }
+      }).catch(function () { }).then(function () { if (S.on) setTimeout(loop, 120); });
+    };
+    S.v.play().catch(function () { }); loop();
+  }).catch(function (e) {
+    var m = e && e.name === 'NotAllowedError' ? 'اسمح للتطبيق باستخدام الكاميرا من إعدادات المتصفح' : errMsg(e);
+    $('#slast').textContent = m;
+  });
+}
+function scanTorch() { try { var tr = SCAN.stream.getVideoTracks()[0]; SCAN.torch = !SCAN.torch; tr.applyConstraints({ advanced: [{ torch: SCAN.torch }] }); } catch (e) { /* */ } }
+function scanClose() { var S = SCAN; SCAN = null; if (!S) return; S.on = false; try { S.stream && S.stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) { /* */ } S.o.remove(); }
+function beep() {
+  try { if (navigator.vibrate) navigator.vibrate(60); } catch (e) { /* */ }
+  try { var A = beep.a || (beep.a = new (window.AudioContext || window.webkitAudioContext)()), g = A.createGain(), o = A.createOscillator(); o.frequency.value = 1500; g.gain.value = 0.12; o.connect(g); g.connect(A.destination); o.start(); o.stop(A.currentTime + 0.09); } catch (e) { /* */ }
+}
+function scanHit(v) {
+  var S = SCAN; beep();
+  var fr = $('.sfr', S.o); fr.classList.add('hit'); setTimeout(function () { fr.classList.remove('hit'); }, 400);
+  if (typeof S.mode === 'function') { var f = S.mode; scanClose(); f(v); return; }
+  var x = SBX && SBX.bc[v];
+  if (x) { var q = posAdd(x); $('#slast').innerHTML = '✓ ' + esc(x.n) + ' <small style="opacity:.8">(' + q + ')</small> — ' + ls0(x.sp) + ' ل.س'; return; }
+  scanClose(); bcLink(v);
+}
+/* باركود غير معروف: اختيار الصنف مرة واحدة ثم يُحفظ عليه */
+var BCL = null;
+function bcLink(code) {
+  BCL = { code: code, L: [] };
+  var o = document.createElement('div'); o.className = 'dpop'; o.id = 'bclpop';
+  o.innerHTML = '<div class="dbox" style="max-width:560px"><div class="dhd" style="background:linear-gradient(135deg,#8E2440,#B23A48)"><button onclick="this.closest(\'.dpop\').remove()">✕</button><b>باركود جديد</b><span style="min-width:40px"></span></div>' +
+    '<div class="dbd"><div class="note" style="margin-top:0">الرقم <b style="direction:ltr;display:inline-block">' + esc(code) + '</b> غير مربوط بأي صنف. اختر الصنف مرة واحدة، وسيُعرف تلقائيًا في كل مرة قادمة.</div>' +
+    '<input id="bclq" placeholder="ابحث باسم الصنف أو الكود" autocomplete="off" oninput="bcLinkFind()"><div id="bclr" style="margin-top:8px"></div></div></div>';
+  o.onclick = function (e) { if (e.target === o) o.remove(); };
+  document.body.appendChild(o);
+  setTimeout(function () { var i = $('#bclq'); if (i) i.focus(); }, 80);
+  bcLinkFind();
+}
+function bcLinkFind() {
+  if (!SB) return;
+  var q = $('#bclq').value, L = q.trim() ? sbFind(q, 30) : [];
+  BCL.L = L;
+  $('#bclr').innerHTML = L.length ? L.map(function (x, i) { return '<div class="phl" onclick="bcLinkPick(' + i + ')"><span>' + esc(x.n) + '<small>' + esc(x.c) + ((x.bc || []).length ? ' · له باركود آخر' : '') + '</small></span><b>' + (x.sp ? ls0(x.sp) : '—') + '</b></div>'; }).join('')
+    : '<div class="muted">' + (q.trim() ? 'لا يوجد صنف بهذا الاسم — أضفه من «الأصناف» أولًا' : 'اكتب جزءًا من اسم الصنف') + '</div>';
+}
+function bcLinkPick(i) {
+  var x = BCL.L[i], code = BCL.code; if (!x) return;
+  var p = $('#bclpop'); if (p) p.remove();
+  var L = lsJ('safa_pos_bcl', {}); L[code] = x.c || x.n; lsS('safa_pos_bcl', L); sbIndex();
+  call('webItemBarcode', { c: x.c, n: x.n, bc: code }).then(function (r) {
+    if (r && r.moved) toast('نُقل الباركود من «' + r.moved + '» إلى «' + x.n + '»', 'ok');
+  }).catch(function (e) { toast(errMsg(e), 'err'); });
+  if (BCL.cb) { BCL.cb(x); return; }
+  if (CUR === 'pos') { posAdd(x); toast('✓ رُبط الباركود بـ «' + x.n + '»', 'ok'); }
+}
+
+/* ---------- فواتير البيع ---------- */
+function vSInv() {
+  var t = todayStr();
+  $('#view').innerHTML = '<div class="card"><div class="grid"><div class="f"><label>من</label><input type="date" id="sif" value="' + t + '"></div><div class="f"><label>إلى</label><input type="date" id="sit" value="' + t + '"></div>' +
+    '<div class="f"><label>بحث</label><input id="siq" placeholder="رقم، عميل، صنف…"></div></div><br><div class="row"><button class="btn" onclick="doSInv()">عرض</button>' +
+    '<button class="btn sec" onclick="sinvRange(7)">آخر 7 أيام</button><button class="btn sec" onclick="sinvRange(30)">آخر 30 يومًا</button></div></div><div id="sires"></div>';
+  doSInv();
+}
+function sinvRange(n) { var d = new Date(Date.now() - (n - 1) * 864e5); $('#sif').value = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); $('#sit').value = todayStr(); doSInv(); }
+var SINV = [];
+function doSInv() {
+  var box = $('#sires'); if (!box) return;
+  box.innerHTML = '<div class="muted"><span class="spin"></span>جارٍ التحميل…</div>';
+  call('webSaleList', { from: $('#sif').value, to: $('#sit').value, q: $('#siq').value }).then(function (r) {
+    var q = posPending(), loc = lsJ('safa_pos_inv', []).filter(function (x) { return q[x.id]; });
+    SINV = loc.map(function (x) { return Object.assign({ pend: 1 }, x); }).concat(r.inv);
+    var s = r.sum || { n: 0, total: 0 };
+    var k = function (t, v, c) { return '<div class="kpi" style="--k:' + c + '"><span>' + t + '</span><b>' + v + '</b></div>'; };
+    box.innerHTML = '<div class="kpis">' + k('عدد الفواتير', s.n, '#8E2440') + k('المبيعات', fmtL(s.total), '#2E6DA4') + (r.money ? k('الربح', fmtL(s.profit), '#2E7D32') + k('نسبة الربح', s.total ? Math.round(s.profit / s.total * 100) + '%' : '—', '#EF6C00') : '') + '</div>' +
+      '<div class="card">' + (SINV.length ? SINV.map(function (x, i) {
+        return '<div class="phl" onclick="saleView(SINV[' + i + '])"><span><b>' + esc(x.no) + '</b> ' + (x.pend ? '<span class="pst q">⏳ بانتظار الإرسال</span>' : '') + '<small>' + esc(x.date) + ' · ' + esc(x.cust || 'نقدي') + (x.user ? ' · ' + esc(x.user) : '') + ' · ' + x.lines.length + ' صنف' +
+          (r.money && x.profit != null ? ' · ربح ' + ls0(x.profit) : '') + '</small></span><b>' + ls0(x.total) + '</b></div>';
+      }).join('') : '<div class="muted">لا توجد فواتير بيع في هذه الفترة</div>') + '</div>';
+  }).catch(function (e) { box.innerHTML = '<div class="card muted">' + esc(errMsg(e)) + '</div>'; });
+}
+
+/* ---------- الأسعار والباركود (قطع العبوة، نسبة الربح، سعر يدوي، الباركودات) ---------- */
+var SPL = [];
+function vSPrice() {
+  $('#view').innerHTML = '<div class="card" id="spset"></div><div class="sbar" style="margin-top:0"><input id="spq" placeholder="بحث في الأصناف…" oninput="spDraw()">' +
+    '<select id="spf" onchange="spDraw()"><option value="">كل الأصناف</option><option value="nobc">بلا باركود</option><option value="nosp">بلا سعر بيع</option><option value="ppg">قطع العبوة تقديرية</option><option value="man">سعر يدوي</option></select></div>' +
+    '<div class="card" id="spl"><div class="muted"><span class="spin"></span>جارٍ التحميل…</div></div>';
+  sbLoad(function () { if (CUR === 'sprice') { spSetBox(); spDraw(); } }, true).catch(function (e) { $('#spl').innerHTML = '<div class="muted">' + esc(errMsg(e)) + '</div>'; });
+}
+function spSetBox() {
+  var s = SB.set || {};
+  $('#spset').innerHTML = '<h2>التسعير التلقائي</h2><div class="grid"><div class="f"><label>نسبة الربح الافتراضية %</label><input id="spmk" inputmode="decimal" value="' + esc(s.mk) + '"></div>' +
+    '<div class="f"><label>التقريب لأعلى (ل.س)</label><input id="sprn" inputmode="numeric" value="' + esc(s.rnd) + '"></div>' +
+    '<div class="f"><label>سعر الدولار المستخدم</label><input readonly value="' + (SB.syp ? ls0(SB.syp) + ' ل.س' : 'غير محدد') + '"></div></div><br>' +
+    '<div class="row"><button class="btn" onclick="spSetSave(this)">حفظ</button></div><div class="note">سعر القطعة = آخر سعر شراء ÷ قطع العبوة × سعر الدولار اليوم، ثم تُضاف نسبة الربح ويُقرَّب. يمكنك تغيير النسبة لصنف معيّن أو كتابة سعره يدويًا.</div>';
+}
+function spSetSave(b) {
+  busy(b, true);
+  call('webSalesSet', { mk: $('#spmk').value, rnd: $('#sprn').value }).then(function () { busy(b, false); toast('تم الحفظ — جارٍ إعادة حساب الأسعار', 'ok'); sbLoad(function () { if (CUR === 'sprice') spDraw(); }, true); }, function (e) { busy(b, false); toast(errMsg(e), 'err'); });
+}
+function spDraw() {
+  var box = $('#spl'); if (!box || !SB) return;
+  var q = $('#spq').value, f = $('#spf').value, L = q.trim() ? sbFind(q, 400) : SB.items.slice();
+  L = L.filter(function (x) { return !f || (f === 'nobc' && !(x.bc || []).length) || (f === 'nosp' && !x.sp) || (f === 'ppg' && x.ppg && x.pp > 1) || (f === 'man' && x.pr > 0); });
+  SPL = L;
+  box.innerHTML = (L.length ? '<div class="note" style="margin-top:0">' + L.length + ' صنف</div>' : '') + (L.length ? L.slice(0, 200).map(function (x, i) {
+    return '<div class="spi" onclick="spEdit(' + i + ')"><span><b style="font-variant-numeric:normal">' + esc(x.n) + '</b> <small>' + esc(x.c) + (x.u ? ' · ' + esc(x.u) : '') + '</small></span><b>' + (x.sp ? ls0(x.sp) + ' <small>ل.س</small>' : '—') + '</b>' +
+      '<div class="m"><span' + (x.ppg && x.pp > 1 ? ' class="w"' : '') + '>العبوة ' + x.pp + (x.ppg && x.pp > 1 ? ' (تقدير)' : '') + '</span><span>ربح ' + x.mk + '%' + (x.mks ? '' : ' (افتراضي)') + '</span>' + (x.pr > 0 ? '<span class="w">سعر يدوي</span>' : '') +
+      ((x.bc || []).length ? '<span>▮▮ ' + x.bc.length + ' باركود</span>' : '<span class="w">بلا باركود</span>') + (SB.money && x.cost ? '<span>تكلفة القطعة ' + ls0(x.cost) + '</span>' : '') + '</div></div>';
+  }).join('') + (L.length > 200 ? '<div class="muted">… اكتب في البحث لتضييق القائمة</div>' : '') : '<div class="muted">لا توجد أصناف</div>');
+}
+var SPE = null;
+function spEdit(i) {
+  var x = SPE = SPL[i]; if (!x) return;
+  var o = document.createElement('div'); o.className = 'dpop'; o.id = 'sppop';
+  o.innerHTML = '<div class="dbox" style="max-width:560px"><div class="dhd" style="background:linear-gradient(135deg,#8E2440,#B23A48)"><button onclick="this.closest(\'.dpop\').remove()">✕</button><b>' + esc(x.n) + '</b><span style="min-width:40px"></span></div>' +
+    '<div class="dbd"><div class="note" style="margin-top:0">' + esc(x.c) + (x.u ? ' · الوحدة: ' + esc(x.u) : '') + (SB.money && x.cost ? ' · تكلفة القطعة ' + ls0(x.cost) + ' ل.س · السعر التلقائي ' + ls0(x.auto) : '') + '</div><div class="grid">' +
+    '<div class="f"><label>قطع العبوة</label><input id="spe1" inputmode="numeric" value="' + (x.ppg ? '' : esc(x.pp)) + '" placeholder="' + esc(x.pp) + ' (تقدير)"></div>' +
+    '<div class="f"><label>نسبة الربح %</label><input id="spe2" inputmode="decimal" value="' + (x.mks ? esc(x.mk) : '') + '" placeholder="' + esc(SB.set.mk) + ' (افتراضي)"></div>' +
+    '<div class="f"><label>سعر بيع يدوي (ل.س)</label><input id="spe3" inputmode="numeric" value="' + (x.pr > 0 ? esc(x.pr) : '') + '" placeholder="تلقائي"></div>' +
+    '<div class="f wide"><label>الباركود <small>(أكثر من رقم بفاصلة)</small></label><div style="display:flex;gap:8px"><input id="spe4" style="direction:ltr" value="' + esc((x.bc || []).join(', ')) + '"><button class="btn sec" onclick="posScan(function(v){var i=$(\'#spe4\');i.value=(i.value.trim()?i.value.trim()+\', \':\'\')+v})">📷</button></div></div></div><br>' +
+    '<div class="row"><button class="btn grn" onclick="spEditSave(this)">حفظ</button><button class="btn sec" onclick="this.closest(\'.dpop\').remove()">إلغاء</button></div>' +
+    '<div class="note">اترك الخانة فارغة لتبقى تلقائية. قطع العبوة: كم قطعة تبيع من الوحدة التي تشتريها.</div></div></div>';
+  o.onclick = function (e) { if (e.target === o) o.remove(); };
+  document.body.appendChild(o);
+}
+function spEditSave(b) {
+  var x = SPE; busy(b, true);
+  call('webItemSaleSet', { c: x.c, n: x.n, pp: $('#spe1').value, mk: $('#spe2').value, pr: $('#spe3').value, bc: $('#spe4').value }).then(function (r) {
+    if (r && r.ok === false) { busy(b, false); toast(r.msg, 'err'); return; }
+    var p = $('#sppop'); if (p) p.remove(); toast('تم الحفظ', 'ok');
+    sbLoad(function () { if (CUR === 'sprice') spDraw(); }, true);
+  }, function (e) { busy(b, false); toast(errMsg(e), 'err'); });
+}
 /* زر الرجوع: يعود خطوة للخلف (الصفحة السابقة، أو من الفاتورة المفتوحة إلى القائمة) — يستدعيه core.js */
 var NAVH = [], NAVSUB = null, NAVBACK = false;
 function navBack() {
@@ -1716,7 +2111,7 @@ function go(v) {
   } else nav.classList.add('hide');
   window.scrollTo(0, 0);
   var V = { home: vHome, inv: vInv, pinv: vPInv, psearch: vPSearch, plog: vPLog, items: vItems, pprice: vPrice, jentry: vJEntry, daily: vDaily, jsearch: vJSearch, jlog: vJLog,
-    rmon: vRMon, ryear: vRYear, settings: vSettings, gsearch: vGSearch };
+    rmon: vRMon, ryear: vRYear, settings: vSettings, gsearch: vGSearch, pos: vPos, sinv: vSInv, sprice: vSPrice };
   if (V[v]) V[v](); else { SUP.show(v); if (prevSec !== 's') SUP.quiet(); }
 }
 
@@ -1835,6 +2230,7 @@ function vHome() {
     tile('p', 'inv', 'فواتير الشراء', 'إدخال فاتورة، الفواتير، البحث، الأصناف، مقارنة الأسعار', B.items.length + ' صنف · ' + B.suppliers.length + ' مورد') +
     tile('j', 'jentry', 'اليومية', 'إدخال اليومية، الملخص اليومي، البحث والتقارير', 'الرصيد الحالي: ' + (B.bal.lcash != null ? fmtL(B.bal.lcash) : money(B.bal.cash))) +
     tile('s', 'sentry', 'قيود الموردين', 'إدخال قيد، كشف حساب، ملخص الأرصدة، السجل', SUP.homeStat()) +
+    tile('b', 'pos', 'المبيعات', 'بيع بالباركود والكاميرا، فواتير البيع، الأسعار', 'يعمل دون اتصال') +
     tile('r', 'rmon', 'التقارير', 'تقارير شهرية وسنوية للمشتريات واليومية والموردين', 'شهريًا وسنويًا') + '</div>' +
     '<div id="kpis" class="kpis" style="margin-top:14px"><div class="muted" style="grid-column:1/-1"><span class="spin"></span>جارٍ تجهيز اللوحة…</div></div>' +
     '<div id="dash2"></div>';
@@ -3086,6 +3482,7 @@ onDom(function () { tblCards(); zebraCards(); });
         check: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
         archive: '<path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/>',
         cal: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+        cart: '<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.4a1.5 1.5 0 0 0 1.5 1.1h9.2a1.5 1.5 0 0 0 1.5-1.1L22 7H6"/>',
         more: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'
     };
     function svg(k) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + IC[k] + '</svg>'; }
@@ -3096,8 +3493,8 @@ onDom(function () { tblCards(); zebraCards(); });
             if (!sec || sec === 'x' || !SEC || !SEC[sec])
                 return [];
             var ICO = { inv: 'plus', pinv: 'inv', psearch: 'search', plog: 'list', items: 'tag', pprice: 'chart', sup: 'users', jentry: 'plus', daily: 'cal', jsearch: 'search', jlog: 'list',
-                sentry: 'plus', sstmt: 'list', ssum: 'chart', ssup: 'users', slog: 'list', rmon: 'cal', ryear: 'chart' };
-            return SEC[sec].tabs.map(function (t) { return [t[0], t[1], ICO[t[0]] || (/سجل/.test(t[1]) ? 'list' : /بحث/.test(t[1]) ? 'search' : /مورد/.test(t[1]) ? 'users' : /ملخص|تقرير/.test(t[1]) ? 'chart' : /إدخال/.test(t[1]) ? 'plus' : 'inv')]; });
+                sentry: 'plus', sstmt: 'list', ssum: 'chart', ssup: 'users', slog: 'list', rmon: 'cal', ryear: 'chart', pos: 'cart', sinv: 'list', sprice: 'tag' };
+            return SEC[sec].tabs.filter(function (t) { return !W.canTab || W.canTab(t[0]); }).map(function (t) { return [t[0], t[1], ICO[t[0]] || (/سجل/.test(t[1]) ? 'list' : /بحث/.test(t[1]) ? 'search' : /مورد/.test(t[1]) ? 'users' : /ملخص|تقرير/.test(t[1]) ? 'chart' : /إدخال/.test(t[1]) ? 'plus' : 'inv')]; });
         },
         navKey: function () { var V = g('VIEW_SEC'), C = g('CUR'); return V && C ? (V[C] || '') : ''; },
         scroll: true,
@@ -4386,7 +4783,7 @@ html .ui-bnav,html body.dark~.ui-bnav{background:var(--ui-hb,#0f4c5c)!important;
 
 body.ui-has-nav #tabs{display:none!important}.ui-bnav.sc button{flex:1 0 auto;min-width:72px}
 body.ui-no-nav .ui-fab{bottom:calc(20px + env(safe-area-inset-bottom))}
-body[data-sec=p],body[data-sec=j],body[data-sec=s]{--ui:var(--c)}
+body[data-sec=p],body[data-sec=j],body[data-sec=s],body[data-sec=b]{--ui:var(--c)}
 .ui-sheet{position:fixed;inset:0;z-index:9990;background:rgba(15,23,32,.45);display:flex;align-items:flex-end;justify-content:center;animation:uiF .15s}
 .ui-sheet .bx{background:#fff;color:#17212B;width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:10px 14px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.25);animation:uiU .2s ease-out;max-height:85vh;overflow:auto;font-family:Cairo,-apple-system,sans-serif;direction:rtl}
 @media (min-width:700px){.ui-sheet{align-items:center}.ui-sheet .bx{border-radius:20px}}
