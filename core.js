@@ -72,13 +72,14 @@
     writes: ['webSaveInvoice', 'webSaveJournal', 'webJUpdate', 'webJDelete', 'webPUpdate', 'webPDelete', 'webAddItem', 'webFillCodes', 'webAddSupplier',
       'webSupSaveEntry', 'webSupDeleteEntry', 'webSupSaveSupplier', 'webSupDeleteSupplier', 'webInvReplace', 'webInvDelete', 'webInvAttach',
       'webSaveSettings', 'webSetPin', 'webBackupNow', 'webAutoBackup', 'webSetRate', 'webSetGeminiKey',
-      'webSaleSave', 'webSaleDelete', 'webItemBarcode', 'webItemSaleSet', 'webSalesSet'],
+      'webSaleSave', 'webSaleDelete', 'webItemBarcode', 'webItemSaleSet', 'webSalesSet', 'webStockCount'],
     nocache: ['webDevPing', 'webDevList', 'webDevOut', 'webPdf', 'webInvPdf', 'webSupPdf', 'webInvExtract', 'webAiState', 'webAiCfg', 'webStmtImport', 'webPFindPdf', 'webAiCategorize', 'webAiMonth'],
     swr: ['webBoot', 'webDash'],
     offline: {
       /* المبيعات: الفاتورة تُحفظ في الجهاز وتُرسل عند عودة الاتصال (الخادم يتجاهل المعرّف المكرر) */
       webSaleSave: function (p) { return { ok: true, offline: true, id: p && p.id, no: p && p.no }; },
       webItemBarcode: function () { return { ok: true, offline: true }; },
+      webStockCount: function (p) { return { ok: true, offline: true, st: p && p.q }; },
       webSaveJournal: function (p) {
         return { ok: true, offline: true, msg: '📴 حُفظت دون اتصال، وستُرسل تلقائيًا عند عودة الإنترنت', bal: (W.B && W.B.bal) || { cash: 0, due: 0 } };
       },
@@ -182,6 +183,7 @@
     if (c.fn === 'webSaveJournal') return 'يومية ' + (p.date || '') + ' (' + ((p.lines || []).length) + ' سطر)';
     if (c.fn === 'webSupSaveEntry') return 'قيد ' + (p.sid || '') + ' ' + (p.date || '');
     if (c.fn === 'webSaleSave') return 'فاتورة بيع ' + (p.no || '');
+    if (c.fn === 'webStockCount') return 'جرد ' + (p.n || '') + ': ' + (p.q || 0);
     if (c.fn === 'webItemBarcode') return 'ربط باركود ' + (p.bc || '') + ' — ' + (p.n || '');
     return c.fn;
   }
