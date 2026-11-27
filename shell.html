@@ -177,7 +177,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '3.6';
+window.APP_VER = '3.7';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 /* الأمان: هوية هذا الجهاز تُرسل مع الدخول (سجل الدخول، وخروج جهاز محدد) — نفس مفتاح «الأجهزة المتصلة» */
 function secDev() {
@@ -195,7 +195,7 @@ function canMoney() { var m = window.B && B.me; return !m || !!(m.admin || m.mon
 var TAB_PERM = { inv: ['pur', 'a'], pinv: ['pur', 'v'], psearch: ['pur', 'v'], plog: ['pur', 'v'], pprice: ['pur', 'v'], items: ['items', 'v'], sup: ['sup', 'v'],
   jentry: ['jour', 'a'], daily: ['jour', 'v'], jsearch: ['jour', 'v'], jlog: ['jour', 'v'],
   sentry: ['sup', 'a'], sstmt: ['sup', 'v'], ssum: ['sup', 'v', 1], slog: ['sup', 'v'], ssup: ['sup', 'v'], saudit: ['sup', 'v'],
-  rmon: ['rep', 'v', 1], ryear: ['rep', 'v', 1] };
+  rmon: ['rep', 'v', 1], ryear: ['rep', 'v', 1], prep: ['rep', 'v', 1], jrep: ['rep', 'v', 1] };
 function canTab(t) { var q = TAB_PERM[t]; return !q || (can(q[0], q[1]) && (!q[2] || canMoney())); }
 function firstTab(sec) { var t = (SECTIONS[sec] && SECTIONS[sec].tabs || []).filter(function (x) { return canTab(x[0]); })[0]; return t ? t[0] : ''; }
 function applyMe() {
@@ -1720,7 +1720,9 @@ var MN = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', '�
 SECTIONS.p.tabs = [['inv', 'إدخال فاتورة'], ['pinv', 'الفواتير'], ['psearch', 'بحث وتقارير'], ['plog', 'سجل المشتريات'], ['items', 'الأصناف'], ['pprice', 'مقارنة الأسعار'], ['sup', 'الموردين']];
 SECTIONS.r = { title: 'التقارير', tabs: [['rmon', 'تقرير شهري'], ['ryear', 'تقرير سنوي']] };
 SECTIONS.x = { title: '', tabs: [] };
-VIEW_SEC.pinv = 'p'; VIEW_SEC.pprice = 'p'; VIEW_SEC.rmon = 'r'; VIEW_SEC.ryear = 'r'; VIEW_SEC.settings = 'x'; VIEW_SEC.gsearch = 'x';
+VIEW_SEC.pinv = 'p'; VIEW_SEC.pprice = 'p'; VIEW_SEC.rmon = 'r'; VIEW_SEC.ryear = 'r'; VIEW_SEC.prep = 'p'; VIEW_SEC.jrep = 'j';
+/* 3.7: التقارير داخل أقسامها (الشراء ← prep، اليومية ← jrep، المبيعات ← srep)؛ القسم r القديم بقي للروابط القديمة فقط */
+SECTIONS.p.tabs.splice(3, 0, ['prep', 'التقارير']); SECTIONS.j.tabs.splice(3, 0, ['jrep', 'التقارير']); VIEW_SEC.settings = 'x'; VIEW_SEC.gsearch = 'x';
 var XTITLE = { settings: 'الإعدادات', gsearch: 'البحث الشامل' };
 
 /* ======================= المبيعات (3.0) =======================
@@ -2403,7 +2405,7 @@ function go(v) {
   } else nav.classList.add('hide');
   window.scrollTo(0, 0);
   var V = { home: vHome, inv: vInv, pinv: vPInv, psearch: vPSearch, plog: vPLog, items: vItems, pprice: vPrice, jentry: vJEntry, daily: vDaily, jsearch: vJSearch, jlog: vJLog,
-    rmon: vRMon, ryear: vRYear, settings: vSettings, gsearch: vGSearch, pos: vPos, sinv: vSInv, stock: vStock, srep: vSRep, sprice: vSPrice };
+    rmon: vRMon, ryear: vRYear, prep: vPRep, jrep: vJRep, settings: vSettings, gsearch: vGSearch, pos: vPos, sinv: vSInv, stock: vStock, srep: vSRep, sprice: vSPrice };
   if (V[v]) V[v](); else { SUP.show(v); if (prevSec !== 's') SUP.quiet(); }
 }
 
@@ -2563,7 +2565,7 @@ function vHome() {
     tile('j', 'jentry', 'اليومية', 'إدخال اليومية، الملخص اليومي، البحث والتقارير', 'الرصيد الحالي: ' + (B.bal.lcash != null ? fmtL(B.bal.lcash) : money(B.bal.cash))) +
     tile('s', 'sentry', 'قيود الموردين', 'إدخال قيد، كشف حساب، ملخص الأرصدة، السجل', SUP.homeStat()) +
     tile('b', 'pos', 'المبيعات', 'بيع بالباركود والكاميرا، فواتير البيع، الأسعار', 'يعمل دون اتصال') +
-    tile('r', 'rmon', 'التقارير', 'تقارير شهرية وسنوية للمشتريات واليومية والموردين', 'شهريًا وسنويًا') + '</div>' +
+    '</div>' +
     '<div id="kpis" class="kpis" style="margin-top:14px"><div class="muted" style="grid-column:1/-1"><span class="spin"></span>جارٍ تجهيز اللوحة…</div></div>' +
     '<div id="dash2"></div>';
   if (DASH) renderDash();
@@ -3088,7 +3090,7 @@ var QREAD = { webDash: 1, webDaily: 1, webInvList: 1, webSearchPurchases: 1, web
   webJLog: 1, webJDay: 1, webReport: 1, webGetSettings: 1, webGlobalSearch: 1, webInvGet: 1, webListSuppliers: 1 };
 var QQUIET = { webAutoBackup: 1, webPinState: 1, webCheckPin: 1, webPdf: 1, webInvPdf: 1, webSupPdf: 1, webBoot: 1, webSupLoad: 1 };
 /* صفحات يُعاد رسمها تلقائيًا إذا وصلت بيانات أحدث (لا تحتوي نماذج إدخال) */
-var QAUTO = { home: 1, daily: 1, pinv: 1, items: 1, rmon: 1, ryear: 1 };
+var QAUTO = { home: 1, daily: 1, pinv: 1, items: 1, rmon: 1, ryear: 1, prep: 1, jrep: 1 };
 function qClear() { QC = {}; }
 /* إذا انتقلت لقسم آخر قبل وصول الرد، لا يُكتب الرد القديم فوق القسم الجديد */
 var QGEN = 0, QPF = false;
@@ -3707,8 +3709,11 @@ renderDash = (function (orig) {
   return function () {
     orig();
     var d = DASH, box = document.getElementById('dash2'); if (!box || !d) return;
-    var first = box.querySelector('.card'); if (first) { first.id = 'dch'; dashCharts(); }
-    var h = '';
+    /* 3.7: الرسوم انتقلت لتقارير الأقسام؛ الرئيسية فيها اختصارات التقارير + أعلى الموردين رصيدًا */
+    var cards = box.querySelectorAll('.card'), tsup = cards[1] ? cards[1].outerHTML : '';
+    box.innerHTML = repShortcuts(d) + (tsup ? '<div style="margin-top:16px">' + tsup + '</div>' : '');
+    return;
+    var first, h = '';
     if (d.cashEnd && d.cashEnd.length) h += '<div class="card" style="margin-top:16px"><div class="chd"><h2>رصيد صندوق اليومية آخر كل شهر</h2><b class="' + ((d.lcash != null ? d.lcash : d.cash) < 0 ? 'neg' : '') + '">الآن: ' + jm(d.lcash, d.cash) + '</b></div>' +
       lineSvg(d.cashEnd.map(function (m) { return MN[+m.k.slice(5) - 1]; }), d.cashEnd.map(function (m) { return m.lv != null ? m.lv : m.v; }), '#00695C', d.cashEnd[0].lv != null ? lsy : null) + '</div>';
     if (d.supShare && d.supShare.length) h += '<div class="card" style="margin-top:16px"><h2>توزيع المشتريات على الموردين — ' + d.year + '</h2>' + donutSvg(d.supShare) + '</div>';
@@ -3716,6 +3721,76 @@ renderDash = (function (orig) {
   };
 })(renderDash);
 
+
+/* ======================= التقارير داخل الأقسام (3.7) =======================
+   prep (الشراء) و jrep (اليومية): «هذا الشهر يوميًا» من webDash، «شهري» و«سنوي» من webReport. المبيعات: srep.
+   الرئيسية: repShortcuts() بطاقة اختصارات بثلاثة أزرار مع رسم صغير لآخر 6 أشهر. */
+var RPM = { p: 'm', j: 'm' };
+function miniBars(vals, col) {
+  vals = vals.map(function (v) { return Math.max(0, Number(v) || 0); }); var mx = Math.max.apply(null, vals.concat([1])), w = 10, g = 5;
+  return '<svg class="rqs" viewBox="0 0 ' + (vals.length * (w + g)) + ' 34" preserveAspectRatio="none">' + vals.map(function (v, i) { var hh = Math.max(2, v / mx * 32); return '<rect x="' + (i * (w + g)) + '" y="' + (34 - hh) + '" width="' + w + '" height="' + hh + '" rx="2" fill="' + col + '" opacity="' + (i === vals.length - 1 ? 1 : .45) + '"/>'; }).join('') + '</svg>';
+}
+function repShortcuts(d) {
+  var m6 = (d && d.months || []).slice(-6), B3 = [];
+  if (canTab('prep')) B3.push('<button class="rq" style="--q:#1F4E79" onclick="go(\'prep\')"><span class="rqt"><b>🧾 تقارير الشراء</b><small>المشتريات شهريًا وسنويًا، الموردون، أكثر الأصناف</small></span>' + (m6.length ? miniBars(m6.map(function (x) { return x.p; }), '#1F4E79') : '') + '<em>هذا الشهر: ' + money(d.pMonth) + '</em></button>');
+  if (canTab('jrep')) B3.push('<button class="rq" style="--q:#00695C" onclick="go(\'jrep\')"><span class="rqt"><b>📒 تقارير اليومية</b><small>المقبوضات والمدفوعات وصافي النقد، رصيد الصندوق</small></span>' + (m6.length ? miniBars(m6.map(function (x) { return x.linn != null ? x.linn : x.inn; }), '#00695C') : '') + '<em>مقبوضات الشهر: ' + jm(d.ljin, d.jin) + '</em></button>');
+  if (canTab('srep')) B3.push('<button class="rq" style="--q:#8E2440" onclick="go(\'srep\')"><span class="rqt"><b>🛒 تقارير المبيعات</b><small>المبيعات والأرباح، الأكثر مبيعًا، الراكد</small></span><em id="rqsale">الربح ونسبته يوميًا</em></button>');
+  return B3.length ? '<div class="card rqc" style="margin-top:16px"><h2>📊 التقارير والرسوم البيانية</h2><div class="rqg">' + B3.join('') + '</div></div>' : '';
+}
+function vPRep() { repPage('p'); }
+function vJRep() { repPage('j'); }
+function repPage(k) {
+  $('#view').innerHTML = '<div class="card noprint"><div class="chips2" id="rpm">' + [['d', 'هذا الشهر يوميًا'], ['m', 'شهري'], ['y', 'سنوي']].map(function (x) {
+    return '<button data-m="' + x[0] + '" onclick="RPM.' + k + '=\'' + x[0] + '\';repLoad(\'' + k + '\')">' + x[1] + '</button>'; }).join('') + '</div>' +
+    '<div class="row" style="margin-top:10px;align-items:flex-end"><div class="f" id="ryw" style="flex:0 1 160px"><label>السنة</label><select id="ry" onchange="RYEAR=this.value;repLoad(\'' + k + '\')"></select></div>' +
+    '<button class="btn sec" onclick="window.print()">طباعة</button></div></div><div id="rres">' + SPIN + '</div>';
+  repLoad(k);
+}
+function repLoad(k) {
+  var m = RPM[k], box = $('#rres'); if (!box) return;
+  $$('#rpm button').forEach(function (b) { b.classList.toggle('on', b.dataset.m === m); });
+  $('#ryw').classList.toggle('hide', m !== 'm');
+  box.innerHTML = SPIN;
+  var dP = DASH ? Promise.resolve(DASH) : call('webDash').then(function (d) { DASH = d; return d; }).catch(function () { return null; });
+  Promise.all([m === 'd' ? dP : call('webReport', m === 'm' ? { year: RYEAR } : {}), dP]).then(function (a) {
+    if (CUR !== (k === 'p' ? 'prep' : 'jrep')) return;
+    var r = a[0], d = a[1] || {}, rows, labels, head, title;
+    if (m === 'd') { rows = (r && r.days) || []; labels = rows.map(function (x, i) { return (i % 2 === 0 || rows.length < 16) ? String(x.k).slice(-2) : ''; }); head = 'اليوم'; title = 'هذا الشهر يومًا بيوم'; }
+    else if (m === 'm') {
+      RYEAR = r.year; $('#ry').innerHTML = r.years.map(function (y) { return '<option' + (y == r.year ? ' selected' : '') + '>' + y + '</option>'; }).join('');
+      rows = r.byMonth; labels = rows.map(function (x) { return MN[x.m - 1]; }); head = 'الشهر'; title = 'شهريًا — ' + r.year;
+    } else { rows = r.byYear.slice().reverse(); labels = rows.map(function (x) { return String(x.y); }); head = 'السنة'; title = 'سنويًا'; }
+    var t = repSum(rows), K = function (c, a2, v, s) { return '<div class="kpi" style="--k:' + c + '"><span>' + a2 + '</span><b>' + v + '</b>' + (s ? '<small>' + s + '</small>' : '') + '</div>'; };
+    var tl = m === 'd' ? rows.map(function (x) { return esc(x.k); }) : labels, h;
+    if (k === 'p') {
+      h = '<h1>تقارير الشراء — ' + title + '</h1><p class="sub">المبالغ بالدولار.</p><div class="kpis">' + K('#1F4E79', 'المشتريات', money(t.p), t.n ? t.n + ' فاتورة' : '') + K('#2E6DA4', 'متوسط الفاتورة', t.n ? money(t.p / t.n) : '—') +
+        K('#6D2E5B', 'وارد الموردين', money(t.sin)) + K('#9B4A85', 'صادر الموردين', money(t.sout)) + '</div>' +
+        (rows.length > 1 ? '<div class="card"><h2>المشتريات</h2>' + chartSvg(labels, SER(rows)) + '</div>' : '') +
+        (d.supShare && d.supShare.length ? '<div class="card"><h2>توزيع المشتريات على الموردين — ' + esc(d.year) + '</h2>' + donutSvg(d.supShare) + '</div>' : '') +
+        (d.topItems && d.topItems.length ? '<div class="card"><h2>أكثر الأصناف شراءً هذا العام</h2><ul class="lst">' + d.topItems.map(function (it, i) {
+          return '<li onclick="PQ=DASH.topItems[' + i + '].item;go(\'pprice\')"><span>' + esc(it.item) + ' <small style="color:var(--mut)">× ' + esc(String(+it.qty.toFixed(2))) + '</small></span><b>' + money(it.total) + '</b></li>'; }).join('') + '</ul></div>' : '') +
+        tbl([head, 'المشتريات', 'عدد الفواتير', 'وارد الموردين', 'صادر الموردين'], rows.map(function (x, i) {
+          return '<tr>' + td('<b>' + tl[i] + '</b>', 'l') + td(money(x.p)) + td(x.n || 0) + td(money(x.sin)) + td(money(x.sout)) + '</tr>'; }),
+          '<tr class="tot">' + td('الإجمالي', 'l') + td(money(t.p)) + td(t.n) + td(money(t.sin)) + td(money(t.sout)) + '</tr>');
+    } else {
+      h = '<h1>تقارير اليومية — ' + title + '</h1><p class="sub">بالليرة السورية، والدولار صغيرًا حيث يلزم.</p><div class="kpis">' + K('#13907F', 'المقبوضات', jf(t, 'inn')) + K('#EF6C00', 'المدفوعات', jf(t, 'out')) +
+        K('#00695C', 'صافي النقد', '<span class="' + (t.lnet < 0 ? 'neg' : '') + '">' + jf(t, 'net') + '</span>') + K('#8796A5', 'الذمم', jf(t, 'due')) + '</div>' +
+        (m === 'm' ? '<div class="card aim"><h2>🤖 الملخص الشهري المكتوب</h2><div class="row noprint"><div class="f" style="flex:0 1 160px"><label>الشهر</label><select id="aimm">' +
+          MN.map(function (n, i) { var cm = (r.year == new Date().getFullYear() ? new Date().getMonth() : 11); return '<option value="' + (i + 1) + '"' + (i === cm ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
+          '</select></div><button class="btn grn" id="aimb" onclick="aiMonth()" style="align-self:flex-end">اكتب الملخص</button></div><div id="aimt"></div></div>' : '') +
+        (rows.length > 1 ? '<div class="card"><h2>المقبوضات والمدفوعات</h2>' + chartSvg(labels, SERJ(rows)) + '</div>' : '') +
+        (d.cashEnd && d.cashEnd.length ? '<div class="card"><div class="chd"><h2>رصيد الصندوق آخر كل شهر</h2><b class="' + ((d.lcash != null ? d.lcash : d.cash) < 0 ? 'neg' : '') + '">الآن: ' + jm(d.lcash, d.cash) + '</b></div>' +
+          lineSvg(d.cashEnd.map(function (x) { return MN[+x.k.slice(5) - 1]; }), d.cashEnd.map(function (x) { return x.lv != null ? x.lv : x.v; }), '#00695C', d.cashEnd[0].lv != null ? lsy : null) + '</div>' : '') +
+        tbl([head, 'المقبوضات', 'المدفوعات', 'صافي النقد', 'الذمم'], rows.map(function (x, i) {
+          return '<tr>' + td('<b>' + tl[i] + '</b>', 'l') + td(jf(x, 'inn')) + td(jf(x, 'out')) + td(jf(x, 'net'), (x.lnet != null ? x.lnet : x.net) < 0 ? 'neg' : '') + td(jf(x, 'due')) + '</tr>'; }),
+          '<tr class="tot">' + td('الإجمالي', 'l') + td(jf(t, 'inn')) + td(jf(t, 'out')) + td(jf(t, 'net')) + td(jf(t, 'due')) + '</tr>');
+    }
+    box.innerHTML = h;
+  }).catch(function (e) { box.innerHTML = ''; toast(errMsg(e), 'err'); });
+}
+document.head.insertAdjacentHTML('beforeend', '<style>.rqg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}@media(max-width:640px){.rqg{grid-template-columns:1fr}}' +
+  '.rq{border:1px solid var(--bd);border-top:4px solid var(--q);background:#fff;border-radius:14px;padding:12px 14px;text-align:start;display:flex;flex-direction:column;gap:6px;cursor:pointer;font:inherit;color:inherit}' +
+  '.tiles{margin-bottom:14px}.rq:active{transform:scale(.99)}.rq b{color:var(--q);font-size:16px}.rq small{display:block;color:var(--mut);font-size:12.5px;line-height:1.5;margin-top:2px}.rq em{font-style:normal;font-weight:700;font-size:13px;color:var(--q)}.rqs{width:100%;height:34px;display:block}</style>');
 /* ---------- البدء ---------- */
 function bootApp() {
   $('#view').innerHTML = SPIN;
@@ -3843,7 +3918,7 @@ onDom(function () { tblCards(); zebraCards(); });
             if (!sec || sec === 'x' || !SEC || !SEC[sec])
                 return [];
             var ICO = { inv: 'plus', pinv: 'inv', psearch: 'search', plog: 'list', items: 'tag', pprice: 'chart', sup: 'users', jentry: 'plus', daily: 'cal', jsearch: 'search', jlog: 'list',
-                sentry: 'plus', sstmt: 'list', ssum: 'chart', ssup: 'users', slog: 'list', rmon: 'cal', ryear: 'chart', pos: 'cart', sinv: 'list', stock: 'archive', srep: 'chart', sprice: 'tag' };
+                sentry: 'plus', sstmt: 'list', ssum: 'chart', ssup: 'users', slog: 'list', rmon: 'cal', ryear: 'chart', prep: 'chart', jrep: 'chart', pos: 'cart', sinv: 'list', stock: 'archive', srep: 'chart', sprice: 'tag' };
             return SEC[sec].tabs.filter(function (t) { return !W.canTab || W.canTab(t[0]); }).map(function (t) { return [t[0], t[1], ICO[t[0]] || (/سجل/.test(t[1]) ? 'list' : /بحث/.test(t[1]) ? 'search' : /مورد/.test(t[1]) ? 'users' : /ملخص|تقرير/.test(t[1]) ? 'chart' : /إدخال/.test(t[1]) ? 'plus' : 'inv')]; });
         },
         navKey: function () { var V = g('VIEW_SEC'), C = g('CUR'); return V && C ? (V[C] || '') : ''; },
