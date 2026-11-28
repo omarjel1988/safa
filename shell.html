@@ -177,7 +177,7 @@ html.ui-dark .idd{background:#16202B;color:#E6EDF3;border-color:#2A3644}html.ui-
 
 <script>
 /* رقم إصدار التطبيق: تعديل ثانوي ← +0.1 (1.0 → 1.1)، تعديل رئيسي ← الرقم التالي (1.x → 2.0) */
-window.APP_VER = '3.7.1';
+window.APP_VER = '3.7.2';
 /* لون منطقة الساعة والبطارية (theme-color) = لون الشريط العلوي الفعلي (يتغير حسب القسم والوضع الداكن) */
 /* الأمان: هوية هذا الجهاز تُرسل مع الدخول (سجل الدخول، وخروج جهاز محدد) — نفس مفتاح «الأجهزة المتصلة» */
 function secDev() {
@@ -2828,7 +2828,7 @@ function userPop(id) {
     '<label><input type="checkbox" id="u-money"' + (x.admin || x.money ? ' checked' : '') + '> يرى المبالغ الحساسة (أرصدة الموردين، رصيد الصندوق، الرئيسية، التقارير)</label>' +
     (isAdm ? '' : '<label><input type="checkbox" id="u-off"' + (x.off ? ' checked' : '') + '> موقوف (لا يستطيع الدخول)</label>') + '</div>' +
     '<div id="u-perm"><h3 style="margin:12px 0 6px">الصلاحيات حسب القسم</h3><table class="nocard utbl"><thead><tr><th class="l">القسم</th><th>عرض</th><th>إضافة</th><th>تعديل</th><th>حذف</th></tr></thead><tbody>' +
-    Object.keys(r.secs).map(function (k) { return '<tr><td class="l">' + esc(r.secs[k]) + (k === 'sales' ? ' <small class="muted">(قادم)</small>' : '') + '</td>' + ['v', 'a', 'e', 'd'].map(function (a) { return cb(k, a); }).join('') + '</tr>'; }).join('') +
+    Object.keys(r.secs).map(function (k) { return '<tr><td class="l">' + esc(r.secs[k]) + '</td>' + ['v', 'a', 'e', 'd'].map(function (a) { return cb(k, a); }).join('') + '</tr>'; }).join('') +
     '</tbody></table><div class="note">الإضافة أو التعديل أو الحذف تمنح العرض تلقائيًا. «الإعدادات»: العرض = قوالب الطباعة، والتعديل = العملات وأسعار الصرف والنسخ الاحتياطي. إدخال قيد يومية بمورد يرحّله لحساب المورد ضمن صلاحية «اليومية».</div></div>' +
     '<div class="row" style="margin-top:12px"><button class="btn grn" id="u-save">حفظ</button>' + (id && !isAdm ? '<button class="btn warn" id="u-del">حذف المستخدم</button>' : '') + '<button class="btn sec" onclick="$(\'#upop\').remove()">إلغاء</button></div></div></div>';
   document.body.appendChild(o);
@@ -2847,23 +2847,99 @@ function userPop(id) {
     call('webUserDelete', { u: id }).then(function () { o.remove(); toast('تم الحذف', 'ok'); usersLoad(); }, function (e) { toast(errMsg(e), 'err'); });
   };
 }
+/* سجل العمليات (3.7.2): جملة مفهومة لكل عملية (auditDesc)، تجميع حسب اليوم، تصفية بالمستخدم والقسم والنوع والبحث،
+   التفاصيل التقنية مطوية، وعمليات الاختبار الآلية (معرّف يبدأ بـ job) مخفية افتراضيًا */
+var AUD = [], AUDF = { a: '', s: '', q: '', job: 0 };
+function audJ(x) { try { return JSON.parse(x.det || '{}') || {}; } catch (e) { return null; } }
+function audTest(x) { return /"(id|no)":"(job|T-0)/.test(x.det || '') || /"dev":"job"/.test(x.det || ''); }
+function auditDesc(x) {
+  var d = audJ(x) || {}, q = function (s) { return '«' + esc(s) + '»'; }, L = d.lines || [];
+  var tot = function () { return L.reduce(function (s, l) { return s + (Number(l.q) || 0) * (Number(l.p) || 0); }, 0); };
+  switch (x.fn) {
+    case 'webSaleSave': return (/^R/.test(d.no || '') ? '↩︎ مرتجع مبيعات ' : '🛒 فاتورة بيع ') + esc(d.no || '') + ' — ' + L.filter(function (l) { return l.c !== '#DISC'; }).length + ' صنف — <b>' + ls0(tot()) + ' ل.س</b>' + (d.cust ? ' · ' + esc(d.cust) : '');
+    case 'webSaleDelete': return '🗑 حذف فاتورة بيع';
+    case 'webItemBarcode': return '▮▮ ربط الباركود ' + esc(d.bc || '') + ' بـ ' + q(d.n || d.c) + (d.k > 1 ? ' (' + esc(d.u || 'علبة') + ' ' + d.k + ')' : '');
+    case 'webItemSaleSet': return d.pp === undefined && d.mn !== undefined ? '⚠️ حد التنبيه لـ ' + q(d.n || d.c) + ': ' + esc(d.mn || '—') : '🏷 تعديل أسعار البيع والباركود لـ ' + q(d.n || d.c);
+    case 'webSalesSet': return '⚙️ التسعير التلقائي: نسبة الربح ' + esc(d.mk) + '%' + (d.rnd ? ' والتقريب ' + esc(d.rnd) : '');
+    case 'webStockCount': return '📦 جرد ' + q(d.n || d.c) + ': ' + esc(d.q) + ' حبة';
+    case 'webItemRename': return '✏️ تغيير اسم صنف: ' + q(d.n) + ' ← ' + q(d.nw);
+    case 'webCashClose': return '🔒 إغلاق الصندوق: الفعلي ' + ls0(num(d.counted)) + ' ل.س' + (d.post ? ' مع ترحيل الفرق' : '');
+    case 'webSaveInvoice': return '🧾 فاتورة شراء ' + esc(d.inv || '') + (d.sup ? ' من ' + q(d.sup) : '') + (L.length ? ' — ' + L.length + ' صنف' : '');
+    case 'webInvReplace': case 'webPUpdate': return '✏️ تعديل فاتورة شراء' + (d.inv ? ' ' + esc(d.inv) : '') + (d.sup ? ' من ' + q(d.sup) : '');
+    case 'webInvDelete': case 'webPDelete': return '🗑 حذف فاتورة شراء' + (d.inv ? ' ' + esc(d.inv) : '');
+    case 'webInvAttach': return '📎 إرفاق ملف بفاتورة شراء';
+    case 'webStmtImport': return '📥 استيراد كشف مورد' + (d.sup ? ' ' + q(d.sup) : '');
+    case 'webAddItem': return '➕ إضافة صنف ' + q(d.name || d.n || '');
+    case 'webFillCodes': return '🔢 توليد أكواد الأصناف';
+    case 'webAiCategorize': return '🤖 تصنيف الأصناف تلقائيًا';
+    case 'webSaveJournal': return '📒 قيد يومية' + (d.date ? ' بتاريخ ' + esc(d.date) : '') + (L.length ? ' — ' + L.length + ' سطر' : '');
+    case 'webJUpdate': return '✏️ تعديل قيد يومية' + (d.st || d.desc ? ' ' + q(d.st || d.desc) : '');
+    case 'webJDelete': return '🗑 حذف قيد يومية' + (d.orig && d.orig.desc ? ' ' + q(d.orig.desc) : '') + (d.orig && d.orig.date ? ' (' + esc(d.orig.date) + ')' : '');
+    case 'webAddSupplier': return '➕ إضافة مورد ' + q(d.name || d.n || '');
+    case 'webSupSaveEntry': return '👥 قيد للمورد ' + q(d.sid || d.sup || '');
+    case 'webSupDeleteEntry': return '🗑 حذف قيد مورد';
+    case 'webSupDeleteSupplier': return '🗑 حذف مورد' + (d.name ? ' ' + q(d.name) : '');
+    case 'webUserSave': return '👤 ' + (d.old ? 'تعديل المستخدم ' : 'إضافة المستخدم ') + q(d.name || d.u) + (d.off ? ' (موقوف)' : d.admin ? ' (مدير)' : '');
+    case 'webUserDelete': return '👤 حذف المستخدم ' + q(d.u || '');
+    case 'webDevOut': return '🔐 إخراج جهاز من الحساب';
+    case 'webBackupNow': return '💾 إنشاء نسخة احتياطية';
+    case 'webDownloadBackup': return '⬇️ تنزيل نسخة احتياطية';
+    case 'webSaveSettings': return '💱 تعديل العملات';
+    case 'webSetRate': return '💱 تعديل سعر صرف ' + esc(d.code || '');
+    case 'webSetGeminiKey': return '🔑 تغيير مفتاح الذكاء الاصطناعي';
+    case 'webTplSet': return '🖨 تعديل قالب الطباعة';
+  }
+  return esc((x.act || '') + ' · ' + (x.sec || ''));
+}
+function audKind(x) { if (x.fn === 'webUserSave') { var d = audJ(x) || {}; return d.old ? 'e' : 'a'; } return /حذف/.test(x.act) || /Delete|DevOut/.test(x.fn) ? 'd' : /تعديل/.test(x.act) ? 'e' : 'a'; }
 function auditPop() {
   var old = $('#apop'); if (old) old.remove();
   var o = document.createElement('div'); o.className = 'dpop'; o.id = 'apop';
   o.innerHTML = '<div class="dbox" style="max-width:760px"><div class="dhd" style="background:linear-gradient(135deg,var(--c,#1F4E79),#2E6DA4)"><button onclick="$(\'#apop\').remove()">✕</button><b>📜 سجل العمليات</b><span style="min-width:40px"></span></div><div class="dbd">' +
-    '<div class="f"><label>المستخدم</label><select id="a-u"><option value="">كل المستخدمين</option>' + ((USERS && USERS.users) || []).map(function (x) { return '<option value="' + esc(x.u) + '">' + esc(x.name) + '</option>'; }).join('') + '</select></div><div id="a-l" style="margin-top:10px"></div></div></div>';
+    '<div class="grid"><div class="f"><label>المستخدم</label><select id="a-u"><option value="">كل المستخدمين</option>' + ((USERS && USERS.users) || []).map(function (x) { return '<option value="' + esc(x.u) + '">' + esc(x.name) + '</option>'; }).join('') + '</select></div>' +
+    '<div class="f"><label>القسم</label><select id="a-s" onchange="AUDF.s=this.value;audDraw()"><option value="">كل الأقسام</option></select></div>' +
+    '<div class="f"><label>بحث</label><input id="a-q" placeholder="رقم فاتورة، صنف، مورد…" oninput="AUDF.q=this.value.trim().toLowerCase();audDraw()"></div></div>' +
+    '<div class="chips2" id="a-k" style="margin:10px 0 4px">' + [['', 'الكل'], ['a', '➕ إضافة'], ['e', '✏️ تعديل'], ['d', '🗑 حذف']].map(function (k) { return '<button data-k="' + k[0] + '" onclick="AUDF.a=\'' + k[0] + '\';audDraw()">' + k[1] + '</button>'; }).join('') +
+    '<button id="a-job" onclick="AUDF.job=!AUDF.job;audDraw()">🧪 عمليات الاختبار</button></div><div id="a-l" style="margin-top:8px"></div></div></div>';
   document.body.appendChild(o);
   o.addEventListener('click', function (e) { if (e.target === o) o.remove(); });
+  AUDF = { a: '', s: '', q: '', job: 0 };
   var load = function () {
-    $('#a-l', o).innerHTML = '<div class="muted">جارٍ التحميل…</div>';
+    $('#a-l', o).innerHTML = '<div class="muted"><span class="spin"></span>جارٍ التحميل…</div>';
     call('webAuditLog', { u: $('#a-u', o).value }).then(function (l) {
-      $('#a-l', o).innerHTML = l.length ? l.map(function (x) {
-        return '<div class="alog"><b>' + esc(x.act || '') + ' · ' + esc(x.sec || '') + '</b> <span class="muted">— ' + esc(x.name || '') + '</span><small>' + new Date(x.t).toLocaleString('ar-SA-u-ca-gregory-nu-latn', { dateStyle: 'short', timeStyle: 'short' }) + ' · ' + esc(x.fn || '') + '</small><code>' + esc(x.det || '') + '</code></div>';
-      }).join('') : '<div class="muted">لا عمليات مسجّلة بعد.</div>';
+      AUD = l || [];
+      var secs = {}; AUD.forEach(function (x) { if (x.sec) secs[x.sec] = 1; });
+      $('#a-s', o).innerHTML = '<option value="">كل الأقسام</option>' + Object.keys(secs).map(function (s) { return '<option' + (s === AUDF.s ? ' selected' : '') + '>' + esc(s) + '</option>'; }).join('');
+      audDraw();
     }).catch(function (e) { $('#a-l', o).innerHTML = '<div class="note">' + esc(errMsg(e)) + '</div>'; });
   };
   $('#a-u', o).onchange = load; load();
 }
+function audDraw() {
+  var box = $('#a-l'); if (!box) return;
+  $$('#a-k button[data-k]').forEach(function (b) { b.classList.toggle('on', b.dataset.k === AUDF.a); });
+  var nj = AUD.filter(audTest).length, jb = $('#a-job'); if (jb) { jb.classList.toggle('on', !!AUDF.job); jb.classList.toggle('hide', !nj); jb.textContent = '🧪 عمليات الاختبار (' + nj + ')'; }
+  var L = AUD.filter(function (x) {
+    if (!AUDF.job && audTest(x)) return false;
+    if (AUDF.a && audKind(x) !== AUDF.a) return false;
+    if (AUDF.s && x.sec !== AUDF.s) return false;
+    if (AUDF.q && (String(x.det || '') + ' ' + (x.name || '')).toLowerCase().indexOf(AUDF.q) < 0) return false;
+    return true;
+  });
+  var td0 = new Date(); td0.setHours(0, 0, 0, 0);
+  var dayL = function (t) { var d = new Date(t); d.setHours(0, 0, 0, 0); var df = Math.round((td0 - d) / 864e5); return df === 0 ? 'اليوم' : df === 1 ? 'أمس' : d.toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); };
+  var last = '', h = '';
+  L.slice(0, 300).forEach(function (x, i) {
+    var dl = dayL(x.t); if (dl !== last) { h += '<div class="aday">' + dl + '</div>'; last = dl; }
+    var k = audKind(x), tm = new Date(x.t).toLocaleTimeString('ar-SA-u-nu-latn', { hour: 'numeric', minute: '2-digit' });
+    h += '<div class="alog2 ' + k + '" onclick="this.classList.toggle(\'open\')"><div class="am"><div class="ad">' + auditDesc(x) + '</div><small>' + esc(x.name || '') + ' · ' + esc(x.sec || '') + ' · ' + tm + (audTest(x) ? ' · <span class="uchip">اختبار</span>' : '') + '</small></div>' +
+      '<code>' + esc(x.fn || '') + '\n' + esc(x.det || '') + '</code></div>';
+  });
+  box.innerHTML = L.length ? '<div class="note" style="margin:0 0 6px">' + L.length + ' عملية' + (L.length > 300 ? ' (يُعرض آخر 300)' : '') + ' — اضغط على أي عملية لعرض تفاصيلها التقنية</div>' + h : '<div class="muted">لا توجد عمليات مطابقة.</div>';
+}
+document.head.insertAdjacentHTML('beforeend', '<style>.aday{font-weight:800;color:var(--mut);font-size:13px;margin:14px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--bd)}' +
+  '.alog2{background:#fff;border:1px solid var(--bd);border-inline-start:4px solid #2E7D32;border-radius:10px;padding:8px 12px;margin-bottom:6px;cursor:pointer}.alog2.e{border-inline-start-color:#1F6FB5}.alog2.d{border-inline-start-color:#C62828}' +
+  '.alog2 .ad{font-weight:700;line-height:1.6;overflow-wrap:anywhere}.alog2 small{color:var(--mut);font-size:12px}.alog2 code{display:none;white-space:pre-wrap;overflow-wrap:anywhere;direction:ltr;text-align:left;font-size:11px;color:#556;background:#F5F7FA;border-radius:8px;padding:6px 8px;margin-top:6px}.alog2.open code{display:block}</style>');
 function addCurRow(c) {
   c = c || { code: '', rate: '' };
   var d = document.createElement('div'); d.className = 'row cur-row'; d.style.marginBottom = '10px';
